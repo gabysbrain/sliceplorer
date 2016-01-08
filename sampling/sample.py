@@ -7,7 +7,9 @@ from sys import argv, stderr
 import pygraphviz as pgv
 import re
 from tempfile import mkdtemp
+from time import process_time
 from sampler import sample
+from pymonad import *
 
 SAMPLESET = {
   "function":  ["spherical"],
@@ -38,6 +40,8 @@ class Times(object): # times are in seconds!
   def __init__(self, sampling, pathing):
     self.sampling = sampling
     self.pathing = pathing
+  def __str__(self):
+    return "sampling: %ssec pathing: %ssec" % (self.sampling, self.pathing)
 
 def sample_dict(d):
   # random sampling
@@ -75,12 +79,16 @@ def climber(basename, samples, mesh, meshparam, distFunName, pathGen, pathAccum)
     "--pathdata=%s" % (pathcsv),
     inputcsv
   ])
+  start_t = process_time()
   os.system("%s %s" % (CLIMBER, climber_args))
+  end_t = process_time()
   mesh = pgv.AGraph(basename + '_bskel.dot')
   pathgr = pgv.AGraph(basename + '_path.dot')
   pathcsv = pd.read_csv(basename + '.path.csv')
 
-  return mesh, pathgr, pathcsv
+  gg = combine_graphs(mesh, pathgr, pathcsv)
+
+  return (end_t-start_t), gg
 
 def combine_graphs(mesh, pathgraph, pathcsv):
   # The mesh is guaranteed to have all the nodes
@@ -125,27 +133,43 @@ def run_sample():
   argname, meshval = convert_meshparam(s['meshing'], s['meshparam'])
   s[argname] = meshval
   print("sampling", s)
+  st_start = process_time()
   samples = sample(s['function'], s['sampling'], s['N'])
+  st_end = process_time()
   dirname = mkdtemp()
   #print(s)
-  g = climber(dirname + "/climber", samples,
-    s['meshing'], s['meshparam'], 
-    s['distance'], 
-    s['pathGen'], s['pathAccum'])
-  gg = combine_graphs(*g)
-  return (s, gg)
+  try:
+    pathtime, g = climber(dirname + "/climber", samples,
+      s['meshing'], s['meshparam'], 
+      s['distance'], 
+      s['pathGen'], s['pathAccum'])
+    t = Times(st_end-st_start, pathtime)
+    return Right((s, t, g))
+  except Exception as e:
+    return Left((s, str(type(e)) + str(e)))
 
-def to_dict(sample, graphs):
-  return {
-    "sample": sample,
-    "nodes": graphs.nodes.to_dict(orient='records'),
-    "mesh_edges": graphs.mesh_edges.to_dict(orient='records'),
-    "path_edges": graphs.path_edges.to_dict(orient='records')
-  }
+def to_dict(rM):
+  if isinstance(rM, Right):
+    sample, times, graphs = rM.getValue()
+    return {
+      "sample": sample,
+      "times": times,
+      "success": True,
+      "nodes": graphs.nodes.to_dict(orient='records'),
+      "mesh_edges": graphs.mesh_edges.to_dict(orient='records'),
+      "path_edges": graphs.path_edges.to_dict(orient='records')
+    }
+  else:
+    sample, errmsg = rM.getValue()
+    return {
+      "sample": sample,
+      "success": False,
+      "errmsg": errmsg
+    }
 
 def to_json(samples):
   #print(to_dict(*samples[0]))
-  return json.dumps([to_dict(*s) for s in samples], default=str)
+  return json.dumps([to_dict(s) for s in samples], default=str)
 
 if __name__ == '__main__':
   if len(argv) < 2:
@@ -155,7 +179,7 @@ if __name__ == '__main__':
   num_samples = int(argv[1])
   samples = [run_sample() for i in range(num_samples)]
   print(to_json(samples))
-  # TODO: add timing and success
+  # TODO: generate contour tree too
   # TODO: generate images for the graphs (maybe)
   # TODO: generate html browser for all the graphs (maybe)
 
