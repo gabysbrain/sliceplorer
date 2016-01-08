@@ -14,6 +14,8 @@ from pymonad import *
 import ct
 from multiprocess import Pool
 
+MAXTIME = 60 * 5 # 5 minute limit on running climber
+
 SAMPLESET = {
   "function":  ["spherical"],
   "sampling":  ["lh", "hexagonal", "torus", "sobol", "halton", "random"],
@@ -89,7 +91,7 @@ def climber(basename, samples, mesh, meshparam, distFunName, pathGen, pathAccum)
     inputcsv
   ]
   start_t = process_time()
-  subprocess.run(climber_args, timeout=60)
+  subprocess.run(climber_args, timeout=MAXTIME)
   #os.system("%s %s" % (CLIMBER, climber_args))
   end_t = process_time()
   mesh = pgv.AGraph(basename + '_bskel.dot')
@@ -217,7 +219,6 @@ if __name__ == '__main__':
   #samples = sample_sync(num_samples)
   samples = sample_sync(num_samples)
   print(to_json(samples))
-  # TODO: generate contour tree too
   # TODO: generate images for the graphs (maybe)
   # TODO: generate html browser for all the graphs (maybe)
 
