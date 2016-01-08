@@ -1,0 +1,6 @@
+__pycache__/
+bin/
+lib/
+share/
+pip-selfcheck.json
+pyvenv.cfg
