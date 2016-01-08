@@ -1,7 +1,8 @@
 
 import pandas as pd
 import numpy as np
-import os
+#import os
+import subprocess
 import json
 from sys import argv, stderr
 import pygraphviz as pgv
@@ -11,6 +12,7 @@ from time import process_time
 from sampler import sample
 from pymonad import *
 import ct
+from multiprocess import Pool
 
 SAMPLESET = {
   "function":  ["spherical"],
@@ -57,7 +59,7 @@ def write_samples(basename, samples):
   #samples = samples.rename({'y1':'y'}) # rename y column
   #print(samples.columns)
   samples.to_csv(csvfile, index=False)
-  print(csvfile)
+  print(csvfile, file=stderr)
   return csvfile
 
 def convert_meshparam(mesh, meshparam):
@@ -68,23 +70,27 @@ def convert_meshparam(mesh, meshparam):
 
 def meshargs(mesh, meshparam):
   argname, argval = convert_meshparam(mesh, meshparam)
-  return "--neighborhood=%s --%s=%s" % (mesh, argname, argval)
+  return "--neighborhood=%s" % (mesh), "--%s=%s" % (argname, argval)
 
 def climber(basename, samples, mesh, meshparam, distFunName, pathGen, pathAccum):
   inputcsv = write_samples(basename, samples)
   pathcsv = basename + '.path.csv'
-  climber_args = " ".join([
+  mesharg, meshval = meshargs(mesh, meshparam)
+  climber_args = [
+    CLIMBER,
     "--jitter", 
-    meshargs(mesh, meshparam),
+    mesharg, 
+    meshval,
     "--distanceFunction=%s" % (distFunName),
     "--pathGen=%s" % (pathGen),
     "--pathAccum=%s" % (pathAccum),
     "--graph=%s" % (basename),
     "--pathdata=%s" % (pathcsv),
     inputcsv
-  ])
+  ]
   start_t = process_time()
-  os.system("%s %s" % (CLIMBER, climber_args))
+  subprocess.run(climber_args, timeout=60)
+  #os.system("%s %s" % (CLIMBER, climber_args))
   end_t = process_time()
   mesh = pgv.AGraph(basename + '_bskel.dot')
   pathgr = pgv.AGraph(basename + '_path.dot')
@@ -145,7 +151,7 @@ def run_sample():
   # also append the mesh info
   argname, meshval = convert_meshparam(s['meshing'], s['meshparam'])
   s[argname] = meshval
-  print("sampling", s)
+  print("sampling", s, file=stderr)
   st_start = process_time()
   samples = sample(s['function'], s['sampling'], s['N'])
   st_end = process_time()
@@ -161,7 +167,7 @@ def run_sample():
     gg = combine_graphs(mesh, pathg, path1d, ctg)
     return Right((s, t, gg))
   except Exception as e:
-    raise
+    #raise
     return Left((s, str(type(e)) + str(e)))
 
 def to_dict(rM):
@@ -188,13 +194,28 @@ def to_json(samples):
   #print(to_dict(*samples[0]))
   return json.dumps([to_dict(s) for s in samples], default=str)
 
+def sample_sync(n):
+  return [run_sample() for i in range(n)]
+
+def _fake_run(x):
+  return run_sample()
+
+def sample_async(n):
+  pool = Pool()
+  result = pool.map_async(_fake_run, range(n))
+  print(type(result), file=stderr)
+  print(result, file=stderr)
+  samples = result.get(1)
+  return samples
+
 if __name__ == '__main__':
   if len(argv) < 2:
     print("number of samples is required", file=stderr)
     exit(-1)
 
   num_samples = int(argv[1])
-  samples = [run_sample() for i in range(num_samples)]
+  #samples = sample_sync(num_samples)
+  samples = sample_sync(num_samples)
   print(to_json(samples))
   # TODO: generate contour tree too
   # TODO: generate images for the graphs (maybe)
