@@ -10,6 +10,7 @@ from tempfile import mkdtemp
 from time import process_time
 from sampler import sample
 from pymonad import *
+import ct
 
 SAMPLESET = {
   "function":  ["spherical"],
@@ -31,17 +32,20 @@ MARGMAP = {
 CLIMBER = '/Users/tom/Projects/mountain_climber_vis/src/lib/dist/build/Climber/climber'
 
 class Graph(object):
-  def __init__(self, nodes, mesh_edges, path_edges):
+  def __init__(self, nodes, mesh_edges, path_edges, ct_edges):
     self.nodes = nodes
     self.mesh_edges = mesh_edges
     self.path_edges = path_edges
+    self.ct_edges = ct_edges
 
 class Times(object): # times are in seconds!
-  def __init__(self, sampling, pathing):
+  def __init__(self, sampling, pathing, contourtreeing):
     self.sampling = sampling
     self.pathing = pathing
+    self.contourtreeing = contourtreeing
   def __str__(self):
-    return "sampling: %ssec pathing: %ssec" % (self.sampling, self.pathing)
+    return "sampling: %ssec pathing: %ssec ct: %ssec" % \
+        (self.sampling, self.pathing, self.contourtreeing)
 
 def sample_dict(d):
   # random sampling
@@ -86,11 +90,17 @@ def climber(basename, samples, mesh, meshparam, distFunName, pathGen, pathAccum)
   pathgr = pgv.AGraph(basename + '_path.dot')
   pathcsv = pd.read_csv(basename + '.path.csv')
 
-  gg = combine_graphs(mesh, pathgr, pathcsv)
+  return (end_t-start_t), mesh, pathgr, pathcsv
 
-  return (end_t-start_t), gg
+def contourtree(basename, mesh):
+  start_t = process_time()
+  ctg = ct.contourtree(mesh)
+  end_t = process_time()
+  ct.savetree(basename + '_ct.dot', ctg)
+  ctgraph = pgv.AGraph(basename + '_ct.dot')
+  return (end_t-start_t), ctgraph
 
-def combine_graphs(mesh, pathgraph, pathcsv):
+def combine_graphs(mesh, pathgraph, pathcsv, ct):
   # The mesh is guaranteed to have all the nodes
   nodes = [[nid, mesh.get_node(nid).attr['pid'], mesh.get_node(nid).attr['label']] \
            for nid in mesh.nodes()]
@@ -125,7 +135,10 @@ def combine_graphs(mesh, pathgraph, pathcsv):
   path_edges = pd.DataFrame(path_edges, 
     columns=['id', 'source', 'target', 'distance', 'd_1', 'v_1', 'd_2', 'v_2'])
 
-  return Graph(nodes, mesh_edges, path_edges)
+  ct_edges = [[i, e[0], e[1]] for i, e in enumerate(ct.edges())]
+  ct_edges = pd.DataFrame(ct_edges, columns=['id', 'source', 'target'])
+
+  return Graph(nodes, mesh_edges, path_edges, ct_edges)
 
 def run_sample():
   s = sample_dict(SAMPLESET)
@@ -139,13 +152,16 @@ def run_sample():
   dirname = mkdtemp()
   #print(s)
   try:
-    pathtime, g = climber(dirname + "/climber", samples,
+    pathtime, mesh, pathg, path1d = climber(dirname + "/climber", samples,
       s['meshing'], s['meshparam'], 
       s['distance'], 
       s['pathGen'], s['pathAccum'])
-    t = Times(st_end-st_start, pathtime)
-    return Right((s, t, g))
+    cttime, ctg = contourtree(dirname + '/climber', mesh)
+    t = Times(st_end-st_start, pathtime, cttime)
+    gg = combine_graphs(mesh, pathg, path1d, ctg)
+    return Right((s, t, gg))
   except Exception as e:
+    raise
     return Left((s, str(type(e)) + str(e)))
 
 def to_dict(rM):
@@ -157,7 +173,8 @@ def to_dict(rM):
       "success": True,
       "nodes": graphs.nodes.to_dict(orient='records'),
       "mesh_edges": graphs.mesh_edges.to_dict(orient='records'),
-      "path_edges": graphs.path_edges.to_dict(orient='records')
+      "path_edges": graphs.path_edges.to_dict(orient='records'),
+      "ct_edges": graphs.ct_edges.to_dict(orient='records')
     }
   else:
     sample, errmsg = rM.getValue()
