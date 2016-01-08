@@ -1,7 +1,7 @@
 
 import pygraphviz as pgv
 from tempfile import NamedTemporaryFile
-from sys import argv
+from sys import argv, stderr
 import os 
 import re
 
@@ -69,7 +69,7 @@ def contourtree(graph):
 
   ctree = "/Applications/Denali.app/Contents/MacOS/ctree"
   cmd = "%s %s %s %s" % (ctree, nodefile.name, edgefile.name, treefile.name)
-  print(cmd)
+  print(cmd, file=stderr)
   os.system(cmd)
 
   graph_txt = None

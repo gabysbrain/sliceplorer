@@ -192,7 +192,7 @@ def to_dict(rM):
 
 def to_json(samples):
   #print(to_dict(*samples[0]))
-  return json.dumps([to_dict(s) for s in samples], default=str)
+  return json.dumps([to_dict(s) for s in samples], default=str, indent=2)
 
 def sample_sync(n):
   return [run_sample() for i in range(n)]
