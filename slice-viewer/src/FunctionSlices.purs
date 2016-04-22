@@ -7,6 +7,7 @@ import Data.Either.Unsafe (fromRight)
 import Data.Array (length)
 
 import Control.Monad.Aff (attempt)
+import Control.Monad.Eff.Exception (Error)
 import Network.HTTP.Affjax (AJAX, get)
 
 import Pux (EffModel, noEffects)
@@ -22,7 +23,7 @@ type State =
   , samples :: Maybe SampleGroup
   }
 
-data Action = RequestSamples | ReceiveSamples SampleGroup
+data Action = RequestSamples | ReceiveSamples (Either Error SampleGroup)
 
 init :: State
 init = 
@@ -38,13 +39,15 @@ update (RequestSamples) state =
   , effects: [ do
       --res <- attempt $ get "/data/spherical_2_slices.csv"
       res <- attempt $ get "/data/test.csv"
-      let x = fromRight res
-      let samples = parse x.response
+      --x = fromRight res
+      let samples = either Left (\r -> Right $ parse r.response) res
       return $ ReceiveSamples samples
     ]
   }
-update (ReceiveSamples s) state =
-  noEffects $ state {samples = Just s, errorMsg = "test"}
+update (ReceiveSamples (Left err)) state =
+  noEffects $ state {errorMsg = show err}
+update (ReceiveSamples (Right s)) state =
+  noEffects $ state {samples = Just s}
 
 view :: State -> Html Action
 view state = 
