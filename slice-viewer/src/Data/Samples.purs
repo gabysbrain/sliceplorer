@@ -18,7 +18,7 @@ numSamples :: Int
 numSamples = 21 -- defined by python
 
 rows :: String -> Array String
-rows = split "\n"
+rows s = split "\n" $ trim s
 
 cols :: String -> Array String
 cols = split ","
@@ -46,7 +46,7 @@ chunk i xs = chunk'' 0 i xs []
 
 chunk'' :: forall a. Int -> Int -> Array a -> Array (Array a) -> Array (Array a)
 chunk'' x i xs rest =
-  if x > length xs
+  if x >= length xs
      then rest
      else chunk'' (x+i) i xs $ snoc rest (slice x (x+i) xs)
 
