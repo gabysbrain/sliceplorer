@@ -7,7 +7,7 @@ from sobol import i4_sobol
 from sys import stdout
 
 FUNCTIONS = ["spherical", "ackley", "rosenbrock", "schwefel", "zakharov"]
-SAMPLE_N = 51 # sampling density
+SAMPLE_N = 21 # sampling density
 
 parser = argparse.ArgumentParser(description='Generate 1D orthogonal slices.')
 parser.add_argument('--seed', default=0, type=int)
