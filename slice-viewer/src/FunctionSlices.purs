@@ -5,24 +5,30 @@ import Data.Maybe (Maybe(Just, Nothing))
 import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..), either)
 import Data.Either.Unsafe (fromRight)
-import Data.Array (length, (..), head)
+import Data.Array (length, (..), head, slice)
 import Data.Int (fromString)
 import Data.Tuple (fst, snd)
+import Math (min)
 
 import Control.Monad.Aff (attempt)
 import Control.Monad.Eff.Exception (Error)
 import Network.HTTP.Affjax (AJAX, get)
 
 import Pux (EffModel, noEffects)
-import Pux.Html (Html, div, span, button, input, text, p, select, option)
+import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value)
 
 import Data.Samples (SampleGroup(..), DimSamples(..), Samples(..), parse)
 import Vis.Vega (vegaChart)
 
+pageSize :: Int
+pageSize = 10
+
 type State =
-  { d :: Int
+  { pageStart :: Int
+  , pageEnd :: Int
+  , d :: Int
   , function :: String
   , error :: Maybe Error
   , samples :: Maybe SampleGroup
@@ -33,10 +39,14 @@ data Action
   | ReceiveSamples (Either Error SampleGroup)
   | DimChange FormEvent
   | FunctionChange FormEvent
+  | NextPage
+  | PrevPage
 
 init :: State
 init = 
-  { d: 2
+  { pageStart: 0
+  , pageEnd: 0
+  , d: 2
   , function: "spherical"
   , error: Nothing
   , samples: Nothing
@@ -57,7 +67,8 @@ update (RequestSamples) state =
 update (ReceiveSamples (Left err)) state =
   noEffects $ state {error = Just err}
 update (ReceiveSamples (Right s)) state =
-  noEffects $ state {samples = Just s, error = Nothing}
+  noEffects $ state {samples = Just s, error = Nothing, 
+                     pageStart = 0, pageEnd = pageSize}
 update (DimChange ev) state = 
   -- TODO: maybe some error checking?
   { state: state {d=fromJust $ fromString ev.target.value}
@@ -72,14 +83,18 @@ update (FunctionChange ev) state =
       return RequestSamples
     ]
   }
-
+update (NextPage) state =
+  noEffects $ state {pageStart=state.pageStart+pageSize, pageEnd=state.pageEnd+pageSize}
+update (PrevPage) state =
+  noEffects $ state {pageStart=state.pageStart-pageSize, pageEnd=state.pageEnd-pageSize}
 
 view :: State -> Html Action
 view state = 
   div []
     [ viewControls state
+    , pageControls state.samples
     , viewError state.error
-    , viewSamples state.samples
+    , viewSamples state.samples state.pageStart state.pageEnd
     ]
 
 viewControls :: State -> Html Action
@@ -88,6 +103,15 @@ viewControls state =
     [ dimSelector state.d
     , funcSelector state.function
     , button [onClick (const RequestSamples)] [text "Fetch samples"]
+    ]
+
+pageControls :: Maybe SampleGroup -> Html Action
+pageControls Nothing = 
+  div [] []
+pageControls (Just s) =
+  div [] 
+    [ a [onClick $ pure PrevPage] [text "Prev"]
+    , a [onClick $ pure NextPage] [text "Next"] 
     ]
 
 dimSelector :: Int -> Html Action
@@ -105,18 +129,17 @@ viewError :: Maybe Error -> Html Action
 viewError Nothing  = text ""
 viewError (Just err) = span [className "error"] [text $ show err]
 
-viewSamples :: Maybe SampleGroup -> Html Action
-viewSamples Nothing = p [] [text "Nothing loaded"]
-viewSamples (Just (SampleGroup s)) = 
-  div [className "sample-group"] [
-    viewSample $ (fromJust <<< head) s
-  ]
+viewSamples :: Maybe SampleGroup -> Int -> Int -> Html Action
+viewSamples Nothing _ _ = p [] [text "Nothing loaded"]
+viewSamples (Just (SampleGroup s)) mnVal mxVal = 
+  div [className "sample-group"] $ map viewSample (slice mnVal mxVal s)
+  --[ viewSample $ (fromJust <<< head) s ]
 
 viewSample :: DimSamples -> Html Action
 viewSample s = div [className "sample"] $ map viewSingleSlice s
 
 viewSingleSlice :: Samples -> Html Action
-viewSingleSlice s = vegaChart [] jsonSamples
+viewSingleSlice s = vegaChart [className "dim-slice"] jsonSamples
   where
   jsonSamples = map (\x -> {"x": fst x, "y": snd x}) s
 

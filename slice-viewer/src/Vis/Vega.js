@@ -9,8 +9,8 @@ var vg = require('vega');
 
 
 var lineSpec = {
-  'width': 400,
-  'height': 400,
+  'width': 170,
+  'height': 170,
   //'padding': { 'top': 10, 'left': 50, 'bottom': 50, right: 10 },
   'data': [{ 'name': 'points' }],
   'scales': [
@@ -118,8 +118,9 @@ var VegaLineChart = React.createClass({
 
   // dummy render method that creates the container vega draws inside
   render: function() {
+    var props = Object.assign({}, this.props, {ref: 'chartContainer'});
     return (
-      React.createElement("div", {ref: "chartContainer"})
+      React.createElement("div", props)
     );
   }
 });
