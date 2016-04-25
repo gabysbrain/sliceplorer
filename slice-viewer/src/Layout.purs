@@ -33,7 +33,7 @@ view :: State -> Html Action
 view state =
   div
     []
-    [ h1 [] [ text "Pux Starter App" ]
+    [ h1 [] [ text "Slice viewer" ]
     , map SliceView $ Slices.view state.slices
     --, map Child $ Todo.view Todo.init
     {--, case state.route of--}
