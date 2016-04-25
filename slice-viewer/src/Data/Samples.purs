@@ -3,14 +3,15 @@ module Data.Samples where
 import Prelude
 import Global (readFloat)
 import Data.String
-import Data.Array (snoc, slice, length, head, last, take)
+import Data.Array (snoc, slice, length, head, last, take, zipWith, (..), (!!))
 import Data.Tuple (Tuple(..))
 import Data.Maybe.Unsafe (fromJust)
 
 type Inputs = Array Number
 type Output = Number
 type Row = Tuple Inputs Output
-type Samples = Array Row
+type Sample = Tuple Number Number
+type Samples = Array Sample
 type DimSamples = Array Samples
 newtype SampleGroup = SampleGroup (Array DimSamples)
 
@@ -51,13 +52,16 @@ chunk'' x i xs rest =
      else chunk'' (x+i) i xs $ snoc rest (slice x (x+i) xs)
 
 chunkSamples :: Int -> Array (Array Number) -> SampleGroup
-chunkSamples d xs = SampleGroup $ map (chunkDims d) $ chunk (d*numSamples) xs
+chunkSamples dims xs = SampleGroup $ map (chunkDims dims) $ chunk (dims*numSamples) xs
 
 chunkDims :: Int -> Array (Array Number) -> DimSamples
-chunkDims d xs = map (createRows d) $ chunk numSamples xs
+chunkDims dims xs = zipWith createSamples (0..(dims-1)) $ chunk numSamples xs
   
-createRows :: Int -> Array (Array Number) -> Samples
-createRows d = map (createRow d)
+createSamples :: Int -> Array (Array Number) -> Samples
+createSamples d = map (createSample d)
+
+createSample :: Int -> Array Number -> Sample
+createSample d xs = Tuple (fromJust $ xs !! d) (fromJust $ last xs)
 
 createRow :: Int -> Array Number -> Row
 createRow d xs = Tuple (take d xs) (fromJust $ last xs)

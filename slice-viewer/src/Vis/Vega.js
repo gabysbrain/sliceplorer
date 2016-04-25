@@ -34,7 +34,7 @@ var lineSpec = {
       'scale': 'x',
       'offset': 5,
       'ticks': 5,
-      'title': 'Distance',
+      //'title': 'Distance',
       'layer': 'back'
     },
     {
@@ -42,7 +42,7 @@ var lineSpec = {
       'scale': 'y',
       'offset': 5,
       'ticks': 5,
-      'title': 'Value',
+      //'title': 'Value',
       'layer': 'back'
     }
   ],

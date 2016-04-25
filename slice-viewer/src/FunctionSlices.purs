@@ -7,6 +7,7 @@ import Data.Either (Either(..), either)
 import Data.Either.Unsafe (fromRight)
 import Data.Array (length, (..), head)
 import Data.Int (fromString)
+import Data.Tuple (fst, snd)
 
 import Control.Monad.Aff (attempt)
 import Control.Monad.Eff.Exception (Error)
@@ -78,8 +79,6 @@ view state =
   div []
     [ viewControls state
     , viewError state.error
-    , p [] [text $ show state.d]
-    , p [] [text state.function]
     , viewSamples state.samples
     ]
 
@@ -112,10 +111,7 @@ viewSamples (Just (SampleGroup s)) =
   singleSlice $ (fromJust <<< head <<< fromJust <<< head) s
 
 singleSlice :: Samples -> Html Action
-singleSlice s = vegaChart [] [{"x": 1.0, "y": 1.0},
-                              {"x": 2.0, "y": 2.0},
-                              {"x": 3.0, "y": 3.0},
-                              {"x": 4.0, "y": 4.0},
-                              {"x": 5.0, "y": 5.0}]
-
+singleSlice s = vegaChart [] jsonSamples
+  where
+  jsonSamples = map (\x -> {"x": fst x, "y": snd x}) s
 
