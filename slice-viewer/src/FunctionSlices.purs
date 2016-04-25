@@ -92,13 +92,13 @@ viewControls state =
 
 dimSelector :: Int -> Html Action
 dimSelector d =
-  select [onChange DimChange] $
-    map (\i -> option [value (show i), selected (i==d)] [text $ show i]) (2..10)
+  select [onChange DimChange, value (show d)] $
+    map (\i -> option [value (show i)] [text $ show i]) (2..10)
 
 funcSelector :: String -> Html Action
 funcSelector fname =
-  select [onChange FunctionChange] $
-    map (\f -> option [value f, selected (f==fname)] [text f])
+  select [onChange FunctionChange, value fname] $
+    map (\f -> option [value f] [text f])
       ["ackley", "rosenbrock", "spherical", "schwefel", "zakharov"]
 
 viewError :: Maybe Error -> Html Action
