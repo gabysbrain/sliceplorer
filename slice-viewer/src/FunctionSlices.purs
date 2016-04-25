@@ -17,7 +17,7 @@ import Network.HTTP.Affjax (AJAX, get)
 import Pux (EffModel, noEffects)
 import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
-import Pux.Html.Attributes (className, selected, value)
+import Pux.Html.Attributes (className, selected, value, href)
 
 import Data.Samples (SampleGroup(..), DimSamples(..), Samples(..), parse)
 import Vis.Vega (vegaChart)
@@ -110,8 +110,8 @@ pageControls Nothing =
   div [] []
 pageControls (Just s) =
   div [] 
-    [ a [onClick $ pure PrevPage] [text "Prev"]
-    , a [onClick $ pure NextPage] [text "Next"] 
+    [ a [href "#", onClick $ pure PrevPage] [text "Prev"]
+    , a [href "#", onClick $ pure NextPage] [text "Next"] 
     ]
 
 dimSelector :: Int -> Html Action
