@@ -1,14 +1,16 @@
 module Main where
 
+import Prelude (bind, return, ($), (==))
+import Data.Maybe (Maybe(..), fromMaybe)
 import App.Routes (match)
 import App.Layout (Action(PageView), State, view, update)
 import Control.Monad.Eff (Eff)
 import Debug.Trace (traceAny)
 import DOM (DOM)
-import Prelude (bind, return)
-import Pux (App, CoreEffects, fromSimple, start, renderToDOM)
+import Pux (App, CoreEffects, fromSimple, renderToDOM)
 import Pux.Router (sampleUrl)
 import Signal ((~>))
+import Node.Process (lookupEnv)
 
 type AppEffects = (dom :: DOM)
 
@@ -21,7 +23,8 @@ main state = do
   -- | Map a signal of URL changes to PageView actions.
   --let routeSignal = urlSignal ~> \r -> PageView (match r)
 
-  app <- start
+  -- TODO: turn of devtools when compiling in production mode
+  app <- Pux.Devtool.start
     { initialState: state
     , update:
         -- | Logs all actions and states (removed in production builds).
