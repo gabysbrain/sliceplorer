@@ -18,7 +18,7 @@ import Pux.Html (Html, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value)
 
-import Data.Samples (SampleGroup(..), Samples(..), parse)
+import Data.Samples (SampleGroup(..), DimSamples(..), Samples(..), parse)
 import Vis.Vega (vegaChart)
 
 type State =
@@ -108,10 +108,15 @@ viewError (Just err) = span [className "error"] [text $ show err]
 viewSamples :: Maybe SampleGroup -> Html Action
 viewSamples Nothing = p [] [text "Nothing loaded"]
 viewSamples (Just (SampleGroup s)) = 
-  singleSlice $ (fromJust <<< head <<< fromJust <<< head) s
+  div [className "sample-group"] [
+    viewSample $ (fromJust <<< head) s
+  ]
 
-singleSlice :: Samples -> Html Action
-singleSlice s = vegaChart [] jsonSamples
+viewSample :: DimSamples -> Html Action
+viewSample s = div [className "sample"] $ map viewSingleSlice s
+
+viewSingleSlice :: Samples -> Html Action
+viewSingleSlice s = vegaChart [] jsonSamples
   where
   jsonSamples = map (\x -> {"x": fst x, "y": snd x}) s
 
