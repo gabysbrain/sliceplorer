@@ -55,7 +55,8 @@ var lineSpec = {
           'x': { 'scale': 'x', 'field': 'x' },
           'y': { 'scale': 'y', 'field': 'y' },
           'stroke': { 'value': '#5357a1' },
-          'strokeWidth': { 'value': 2 }
+          'strokeWidth': { 'value': 2 },
+          'interpolate': { 'value': 'basis'}
         }
       }
     }
