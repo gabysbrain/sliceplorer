@@ -127,7 +127,7 @@ funcSelector fname =
 
 viewError :: Maybe Error -> Html Action
 viewError Nothing  = text ""
-viewError (Just err) = span [className "error"] [text $ show err]
+viewError (Just err) = div [className "error"] [text $ show err]
 
 viewSamples :: Maybe SampleGroup -> Int -> Int -> Html Action
 viewSamples Nothing _ _ = p [] [text "Nothing loaded"]

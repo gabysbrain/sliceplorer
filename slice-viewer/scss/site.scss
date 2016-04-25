@@ -13,3 +13,7 @@
   }
 }
 
+.error {
+  @include callout($alert-color);
+}
+
