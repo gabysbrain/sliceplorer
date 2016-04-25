@@ -5,7 +5,7 @@ import Data.Maybe (Maybe(Just, Nothing))
 import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..), either)
 import Data.Either.Unsafe (fromRight)
-import Data.Array (length, (..))
+import Data.Array (length, (..), head)
 import Data.Int (fromString)
 
 import Control.Monad.Aff (attempt)
@@ -17,7 +17,8 @@ import Pux.Html (Html, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value)
 
-import Data.Samples (SampleGroup(..), parse)
+import Data.Samples (SampleGroup(..), Samples(..), parse)
+import Vis.Vega (vegaChart)
 
 type State =
   { d :: Int
@@ -107,5 +108,14 @@ viewError (Just err) = span [className "error"] [text $ show err]
 
 viewSamples :: Maybe SampleGroup -> Html Action
 viewSamples Nothing = p [] [text "Nothing loaded"]
-viewSamples (Just (SampleGroup s)) = p [] [text (show (length s))]
+viewSamples (Just (SampleGroup s)) = 
+  singleSlice $ (fromJust <<< head <<< fromJust <<< head) s
+
+singleSlice :: Samples -> Html Action
+singleSlice s = vegaChart [] [{"x": 1.0, "y": 1.0},
+                              {"x": 2.0, "y": 2.0},
+                              {"x": 3.0, "y": 3.0},
+                              {"x": 4.0, "y": 4.0},
+                              {"x": 5.0, "y": 5.0}]
+
 

@@ -20,7 +20,7 @@ var config = {
   module: {
     loaders: [
       { test: /\.js$/, loader: 'source-map-loader', exclude: /node_modules|bower_components/ },
-      { test: /\.purs$/, loader: 'purs-loader', exclude: /node_modules/ }
+      { test: /\.purs$/, loader: 'purs-loader', exclude: /node_modules/ },
     ],
   },
   plugins: [

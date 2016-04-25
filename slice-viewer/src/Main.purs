@@ -10,7 +10,7 @@ import DOM (DOM)
 import Pux (App, CoreEffects, fromSimple, renderToDOM)
 import Pux.Router (sampleUrl)
 import Signal ((~>))
-import Node.Process (lookupEnv)
+--import Node.Process (lookupEnv)
 
 type AppEffects = (dom :: DOM)
 
@@ -25,6 +25,7 @@ main state = do
 
   -- TODO: turn of devtools when compiling in production mode
   app <- Pux.Devtool.start
+  --app <- Pux.start
     { initialState: state
     , update:
         -- | Logs all actions and states (removed in production builds).
