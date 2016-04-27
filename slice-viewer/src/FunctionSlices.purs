@@ -20,18 +20,15 @@ import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value, href)
 
 import Data.Samples (SampleGroup(..), DimSamples(..), Samples(..), parse)
-import Vis.Vega (vegaChart)
-
-pageSize :: Int
-pageSize = 10
+import App.Pager as Pager
+import App.SampleView as SampleView
 
 type State =
-  { pageStart :: Int
-  , pageEnd :: Int
-  , d :: Int
+  { d :: Int
   , function :: String
   , error :: Maybe Error
   , samples :: Maybe SampleGroup
+  , pager :: Pager.State
   }
 
 data Action 
@@ -39,17 +36,15 @@ data Action
   | ReceiveSamples (Either Error SampleGroup)
   | DimChange FormEvent
   | FunctionChange FormEvent
-  | NextPage
-  | PrevPage
+  | PagerView Pager.Action
 
 init :: State
 init = 
-  { pageStart: 0
-  , pageEnd: 0
-  , d: 2
+  { d: 2
   , function: "spherical"
   , error: Nothing
   , samples: Nothing
+  , pager: Pager.init SampleView.view
   }
 
 update :: Action -> State -> EffModel State Action (ajax :: AJAX)
@@ -66,9 +61,14 @@ update (RequestSamples) state =
   }
 update (ReceiveSamples (Left err)) state =
   noEffects $ state {error = Just err}
-update (ReceiveSamples (Right s)) state =
-  noEffects $ state {samples = Just s, error = Nothing, 
-                     pageStart = 0, pageEnd = pageSize}
+update (ReceiveSamples (Right s@(SampleGroup xs))) state =
+  { state: state {samples = Just s
+                 , error = Nothing
+                 }
+  , effects: [do
+      return $ PagerView (Pager.ChangeChildren xs)
+    ]
+  }
 update (DimChange ev) state = 
   -- TODO: maybe some error checking?
   { state: state {d=fromJust $ fromString ev.target.value}
@@ -83,18 +83,15 @@ update (FunctionChange ev) state =
       return RequestSamples
     ]
   }
-update (NextPage) state =
-  noEffects $ state {pageStart=state.pageStart+pageSize, pageEnd=state.pageEnd+pageSize}
-update (PrevPage) state =
-  noEffects $ state {pageStart=state.pageStart-pageSize, pageEnd=state.pageEnd-pageSize}
+update (PagerView action) state =
+  noEffects $ state {pager=Pager.update action state.pager}
 
 view :: State -> Html Action
 view state = 
   div []
     [ viewControls state
-    , pageControls state.samples
     , viewError state.error
-    , viewSamples state.samples state.pageStart state.pageEnd
+    , viewSamples state
     ]
 
 viewControls :: State -> Html Action
@@ -103,15 +100,6 @@ viewControls state =
     [ dimSelector state.d
     , funcSelector state.function
     , button [onClick (const RequestSamples)] [text "Fetch samples"]
-    ]
-
-pageControls :: Maybe SampleGroup -> Html Action
-pageControls Nothing = 
-  div [] []
-pageControls (Just s) =
-  div [] 
-    [ a [href "#", onClick $ pure PrevPage] [text "Prev"]
-    , a [href "#", onClick $ pure NextPage] [text "Next"] 
     ]
 
 dimSelector :: Int -> Html Action
@@ -129,17 +117,13 @@ viewError :: Maybe Error -> Html Action
 viewError Nothing  = text ""
 viewError (Just err) = div [className "error"] [text $ show err]
 
-viewSamples :: Maybe SampleGroup -> Int -> Int -> Html Action
-viewSamples Nothing _ _ = p [] [text "Nothing loaded"]
-viewSamples (Just (SampleGroup s)) mnVal mxVal = 
-  div [className "sample-group"] $ map viewSample (slice mnVal mxVal s)
+viewSamples :: State -> Html Action
+viewSamples {samples=Nothing} = p [] [text "Nothing loaded"]
+{--viewSamples (Just (SampleGroup s)) mnVal mxVal = --}
+  {--div [className "sample-group"] $ map viewSample (slice mnVal mxVal s)--}
   --[ viewSample $ (fromJust <<< head) s ]
-
-viewSample :: DimSamples -> Html Action
-viewSample s = div [className "sample"] $ map viewSingleSlice s
-
-viewSingleSlice :: Samples -> Html Action
-viewSingleSlice s = vegaChart [className "dim-slice"] jsonSamples
-  where
-  jsonSamples = map (\x -> {"x": fst x, "y": snd x}) s
+viewSamples state@{samples=Just (SampleGroup s)} = 
+  div [className "samples"] 
+    [ map PagerView $ Pager.view state.pager
+    ]
 
