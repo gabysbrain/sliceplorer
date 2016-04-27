@@ -6,9 +6,9 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var port = process.env.PORT || 3000;
 
 var config = {
-  entry: [
-    'webpack-hot-middleware/client?reload=true',
-    path.join(__dirname, 'support/index.js'),
+  entry: [ 
+    'webpack-hot-middleware/client?reload=true', 
+    path.join(__dirname, 'support/index.js')
   ],
   debug: true,
   devtool: 'cheap-module-eval-source-map',
