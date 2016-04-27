@@ -3,7 +3,7 @@ module Data.Samples where
 import Prelude
 import Global (readFloat)
 import Data.String
-import Data.Array (snoc, slice, length, head, last, take, zipWith, (..), (!!))
+import Data.Array (snoc, slice, init, length, head, last, take, drop, zipWith, (..), (!!))
 import Data.Tuple (Tuple(..))
 import Data.Maybe.Unsafe (fromJust)
 
@@ -12,7 +12,10 @@ type Output = Number
 type Row = Tuple Inputs Output
 type Sample = Tuple Number Number
 type Samples = Array Sample
-type DimSamples = Array Samples
+data DimSamples = DimSamples 
+  { focusPoint :: Array Number
+  , slices     :: Array Samples
+  }
 newtype SampleGroup = SampleGroup (Array DimSamples)
 
 numSamples :: Int
@@ -55,7 +58,10 @@ chunkSamples :: Int -> Array (Array Number) -> SampleGroup
 chunkSamples dims xs = SampleGroup $ map (chunkDims dims) $ chunk (dims*numSamples) xs
 
 chunkDims :: Int -> Array (Array Number) -> DimSamples
-chunkDims dims xs = zipWith createSamples (0..(dims-1)) $ chunk numSamples xs
+chunkDims dims xs = DimSamples
+  { focusPoint: focusPoint xs
+  , slices: zipWith createSamples (0..(dims-1)) $ chunk numSamples xs
+  }
   
 createSamples :: Int -> Array (Array Number) -> Samples
 createSamples d = map (createSample d)
@@ -65,4 +71,10 @@ createSample d xs = Tuple (fromJust $ xs !! d) (fromJust $ last xs)
 
 createRow :: Int -> Array Number -> Row
 createRow d xs = Tuple (take d xs) (fromJust $ last xs)
+
+focusPoint :: Array (Array Number) -> Array Number
+focusPoint xs = fromJust $ init ((take 1 d2) ++ (drop 1 d1))
+  where 
+  d1 = fromJust $ xs !! 0
+  d2 = fromJust $ xs !! numSamples
 
