@@ -3,6 +3,7 @@ module App.SampleView where
 import Prelude
 import Data.Tuple (fst, snd)
 import Data.String (joinWith)
+import Data.Array (zipWith, (..), length)
 import Vis.Vega (vegaChart)
 
 import Data.Samples (DimSamples(..), Samples)
@@ -17,7 +18,7 @@ data Action = Null
 view :: State -> Html Action
 view (DimSamples {focusPoint=fp, slices=s}) = div [className "sample"] 
   [ viewFocusPoint fp
-  , div [className "sample-slices"] $ map viewSingleSlice s
+  , div [className "sample-slices"] $ zipWith viewSingleSlice (0..(length s)) s
   ]
 
 viewFocusPoint :: Array Number -> Html Action
@@ -25,8 +26,8 @@ viewFocusPoint fp =
   div [className "sample-focus-point"]
     [text $ "Point: " ++ joinWith ", " (map show fp)]
 
-viewSingleSlice :: Samples -> Html Action
-viewSingleSlice s = vegaChart [className "dim-slice"] jsonSamples
+viewSingleSlice :: Int -> Samples -> Html Action
+viewSingleSlice dim s = vegaChart [className "dim-slice"] ("x" ++ show (dim+1)) jsonSamples
   where
   jsonSamples = map (\x -> {"x": fst x, "y": snd x}) s
 

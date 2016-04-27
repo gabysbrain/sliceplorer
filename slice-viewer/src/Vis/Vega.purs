@@ -17,6 +17,6 @@ foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> H
 dataAttr :: forall a. Data -> Attribute a
 dataAttr = attr "data"
 
-vegaChart :: forall a. Array (Attribute a) -> Data -> Html a
-vegaChart attrs d = fromReact (snoc attrs $ dataAttr d) []
+vegaChart :: forall a. Array (Attribute a) -> String -> Data -> Html a
+vegaChart attrs dim d = fromReact (attrs ++ [attr "xAxisName" dim, dataAttr d]) []
 

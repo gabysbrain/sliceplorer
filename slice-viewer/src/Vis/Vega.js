@@ -79,13 +79,15 @@ var VegaLineChart = React.createClass({
   },
 
   propTypes: {
-    data: PropTypes.array.isRequired
+    data: PropTypes.array.isRequired,
+    xAxisName: PropTypes.string.isRequired
   },
 
   // On initial load, generate the initial vis and attach signal listeners
   componentDidMount: function() {
     var data = this.props.data;
-    var spec = lineSpec;
+    var spec = Object.assign({}, lineSpec);
+    spec.axes[0].title = this.props.xAxisName;
     var self = this;
 
     // parse the vega spec and create the vis
