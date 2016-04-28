@@ -5,6 +5,10 @@
   @include grid-row;
 }
 
+.full-slice {
+  @include grid-column(3);
+}
+
 .dim-slice {
   @include grid-column(2);
 

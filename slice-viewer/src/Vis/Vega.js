@@ -8,7 +8,83 @@ var Pux = require('purescript-pux');
 var vg = require('vega');
 
 
-var lineSpec = {
+var multiLineSpec = {
+  'width': 170,
+  'height': 170,
+  //'padding': { 'top': 10, 'left': 50, 'bottom': 50, right: 10 },
+  'data': [{ 'name': 'points' }],
+  'scales': [
+    {
+      'name': 'x',
+      'type': 'linear',
+      'domain': { 'data': 'points', 'field': 'x' },
+      'range': 'width'
+    },
+    {
+      'name': 'y',
+      'type': 'linear',
+      'domain': { 'data': 'points', 'field': 'y' },
+      'range': 'height',
+      'nice': true
+    },
+    {
+      'name': 'color',
+      'type': 'ordinal',
+      'domain': {'data': 'points', 'field': 'd'},
+      'range': 'category10'
+    }
+  ],
+  'axes': [
+    {
+      'type': 'x',
+      'scale': 'x',
+      'offset': 5,
+      'ticks': 5,
+      //'title': 'Distance',
+      'layer': 'back'
+    },
+    {
+      'type': 'y',
+      'scale': 'y',
+      'offset': 5,
+      'ticks': 5,
+      //'title': 'Value',
+      'layer': 'back'
+    }
+  ],
+  'legends': [
+    {
+      'fill': 'color', 
+      'title': 'dim',
+      'orient': 'left'
+    }
+  ],
+  'marks': [
+    {
+      'type': 'group',
+      'from': {
+        'data': 'points', 
+        'transform': [{'type': 'facet', 'groupby': ['d']}]
+      },
+      'marks': [
+        {
+          'type': 'line',
+          'properties': {
+            'enter': {
+              'x': { 'scale': 'x', 'field': 'x' },
+              'y': { 'scale': 'y', 'field': 'y' },
+              'stroke': {'scale': 'color', 'field': 'd'},
+              'strokeWidth': { 'value': 2 },
+              'interpolate': { 'value': 'basis'}
+            }
+          }
+        }
+      ]
+    }
+  ]
+};
+
+var lineSpecBase = {
   'width': 170,
   'height': 170,
   //'padding': { 'top': 10, 'left': 50, 'bottom': 50, right: 10 },
@@ -34,7 +110,7 @@ var lineSpec = {
       'scale': 'x',
       'offset': 5,
       'ticks': 5,
-      //'title': 'Distance',
+      'title': 'x',
       'layer': 'back'
     },
     {
@@ -63,14 +139,8 @@ var lineSpec = {
   ]
 };
 
-exports.vegaParseImpl = vg.parse.spec;
-exports.parse2 = function(el, data) {
-  var chart = vg.parse.spec(lineSpec);
-  chart(el, {"table": data});
-};
-
 // from https://gist.github.com/pbeshai/5f0a4d2cd8bb0bc9d96e
-var VegaLineChart = React.createClass({
+var VegaChart = React.createClass({
   getInitialState: function() {
     // use PureRenderMixin to limit updates when they are not necessary
     this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
@@ -79,15 +149,15 @@ var VegaLineChart = React.createClass({
   },
 
   propTypes: {
-    data: PropTypes.array.isRequired,
-    xAxisName: PropTypes.string.isRequired
+    spec: PropTypes.object.isRequired,
+    data: PropTypes.array.isRequired
   },
 
   // On initial load, generate the initial vis and attach signal listeners
   componentDidMount: function() {
     var data = this.props.data;
-    var spec = Object.assign({}, lineSpec);
-    spec.axes[0].title = this.props.xAxisName;
+    var spec = this.props.spec;
+    //spec.axes[0].title = this.props.xAxisName;
     var self = this;
 
     // parse the vega spec and create the vis
@@ -127,5 +197,11 @@ var VegaLineChart = React.createClass({
   }
 });
 
-exports.fromReact = Pux.fromReact(VegaLineChart);
+exports.lineSpec = function(xAxisName) {
+  var s = Object.assign({}, lineSpecBase);
+  s.axes[0].title = xAxisName;
+  return s;
+};
+exports.multiLineSpec = multiLineSpec;
+exports.fromReact = Pux.fromReact(VegaChart);
 
