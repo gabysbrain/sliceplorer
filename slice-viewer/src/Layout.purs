@@ -1,7 +1,6 @@
 module App.Layout where
 
 import App.FunctionSlices as Slices
---import AjaxExample.Todos as Todo
 import App.Routes (Route(Home, NotFound))
 import Network.HTTP.Affjax (AJAX)
 import Prelude (($), map)

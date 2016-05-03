@@ -13,7 +13,8 @@ import Signal ((~>))
 import Signal.Channel (CHANNEL)
 import Network.HTTP.Affjax (AJAX)
 
-type AppEffects = (dom :: DOM, ajax :: AJAX)
+--type AppEffects = (dom :: DOM, ajax :: AJAX)
+type AppEffects = (ajax :: AJAX)
 
 -- | App configuration
 {--config :: forall eff.--}
@@ -36,7 +37,7 @@ config state = do
     }
 
 -- | Entry point for the browser.
---main :: State -> Eff (CoreEffects AppEffects) (App State Action)
+main :: State -> Eff (CoreEffects AppEffects) (App State Action)
 main state = do
   app <- Pux.start =<< config state
   renderToDOM "#app" app.html
@@ -44,7 +45,7 @@ main state = do
   return app
 
 -- | Entry point for the browser with pux-devtool injected.
---debug :: State -> Eff (CoreEffects AppEffects) (App State (Pux.Devtool.Action Action))
+debug :: State -> Eff (CoreEffects AppEffects) (App State (Pux.Devtool.Action Action))
 debug state = do
   app <- Pux.Devtool.start =<< config state
   renderToDOM "#app" app.html
