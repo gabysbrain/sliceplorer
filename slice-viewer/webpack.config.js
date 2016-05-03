@@ -2,13 +2,14 @@ var path = require('path');
 var webpack = require('webpack');
 var PurescriptWebpackPlugin = require('purescript-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 var port = process.env.PORT || 3000;
 
 var config = {
-  entry: [ 
-    'webpack-hot-middleware/client?reload=true', 
-    path.join(__dirname, 'support/index.js')
+  entry: [
+    'webpack-hot-middleware/client?reload=true',
+    path.join(__dirname, 'support/index.js'),
   ],
   debug: true,
   devtool: 'cheap-module-eval-source-map',
@@ -20,12 +21,8 @@ var config = {
   module: {
     loaders: [
       { test: /\.js$/, loader: 'source-map-loader', exclude: /node_modules|bower_components/ },
-      { test: /\.purs$/, loader: 'purs-loader', exclude: /node_modules/ },
-      { test: /\.scss$/, loaders: ['style', 'css?sourceMap', 'sass?sourceMap'] }
+      { test: /\.purs$/, loader: 'purs-loader', exclude: /node_modules/ }
     ],
-  },
-  sassLoader: {
-    includePaths: [path.resolve(__dirname, './bower_components/foundation-sites/scss/')]
   },
   plugins: [
     {
@@ -41,7 +38,7 @@ var config = {
     },
     new PurescriptWebpackPlugin({
       src: ['bower_components/purescript-*/src/**/*.purs', 'src/**/*.purs'],
-      ffi: ['bower_components/purescript-*/src/**/*.js',   'src/**/*.js'],
+      ffi: ['bower_components/purescript-*/src/**/*.js', 'src/**/*.js'],
       bundle: false,
       psc: 'psa',
       pscArgs: {
@@ -49,19 +46,23 @@ var config = {
       }
     }),
     new webpack.DefinePlugin({
+      'process.env.WEBPACK_ENV': '"dev"',
       'process.env.NODE_ENV': JSON.stringify('development')
     }),
     new webpack.optimize.OccurenceOrderPlugin(true),
-    new HtmlWebpackPlugin({
-      template: 'html/index.html',
-      inject: 'body',
-      filename: 'index.html'
-    }),
     new webpack.SourceMapDevToolPlugin({
       filename: '[file].map',
       moduleFilenameTemplate: '[absolute-resource-path]',
       fallbackModuleFilenameTemplate: '[absolute-resource-path]'
     }),
+    new HtmlWebpackPlugin({
+      template: 'html/index.html',
+      inject: 'body',
+      filename: 'index.html'
+    }),
+    new CopyWebpackPlugin([
+      { from: 'static' }
+    ]),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoErrorsPlugin(),
   ],
@@ -85,23 +86,17 @@ if (require.main === module) {
   var express = require('express');
   var app = express();
 
-  // Serve the slice files staticly
-  app.use('/data', express.static('../sampling/slice_samples'));
-
   // Use webpack-dev-middleware and webpack-hot-middleware instead of
   // webpack-dev-server, because webpack-hot-middleware provides more reliable
   // HMR behavior, and an in-browser overlay that displays build errors
   app
     .use(require("webpack-dev-middleware")(compiler, {
       publicPath: config.output.publicPath,
-      watchOptions: {
-        poll: false,
-      },
       stats: {
         hash: false,
         timings: false,
         version: false,
-        assets: true,
+        assets: false,
         errors: true,
         colors: false,
         chunks: false,

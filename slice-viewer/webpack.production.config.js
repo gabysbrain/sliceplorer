@@ -2,12 +2,13 @@ var path = require('path');
 var webpack = require('webpack');
 var PurescriptWebpackPlugin = require('purescript-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: [ path.join(__dirname, 'support/index.js') ],
   debug: false,
   output: {
-    path: path.join(__dirname, '/dist/'),
+    path: path.resolve('./dist'),
     filename: '[name]-[hash].min.js',
     publicPath: '/'
   },
@@ -25,9 +26,8 @@ module.exports = {
       psc: 'psa'
     }),
     new webpack.DefinePlugin({
-      'process.env': {
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
-      }
+      'process.env.WEBPACK_ENV': '"prod"',
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
     }),
     new webpack.optimize.OccurenceOrderPlugin(true),
     new webpack.optimize.UglifyJsPlugin({ minimize: true }),
@@ -36,7 +36,9 @@ module.exports = {
       inject: 'body',
       filename: 'index.html'
     }),
-    new webpack.NoErrorsPlugin()
+    new CopyWebpackPlugin([
+      { from: 'static' }
+    ]),
   ],
   resolveLoader: {
     root: path.join(__dirname, 'node_modules')
