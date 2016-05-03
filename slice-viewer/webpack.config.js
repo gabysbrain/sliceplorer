@@ -86,6 +86,9 @@ if (require.main === module) {
   var express = require('express');
   var app = express();
 
+  // Serve the slice files staticly
+  app.use('/data', express.static('../sampling/slice_samples'));
+
   // Use webpack-dev-middleware and webpack-hot-middleware instead of
   // webpack-dev-server, because webpack-hot-middleware provides more reliable
   // HMR behavior, and an in-browser overlay that displays build errors
