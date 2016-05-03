@@ -2,7 +2,7 @@ var Main = require('../src/Main.purs');
 var initialState = require('../src/Layout.purs').init;
 var debug = process.env.WEBPACK_ENV == 'dev';
 
-//require('../scss/site.scss');
+require('../scss/site.scss');
 
 if(module.hot) {
 	var app = Main[debug ? 'debug' : 'main'](window.puxLastState || initialState)();

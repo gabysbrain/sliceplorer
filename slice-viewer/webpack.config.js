@@ -21,8 +21,12 @@ var config = {
   module: {
     loaders: [
       { test: /\.js$/, loader: 'source-map-loader', exclude: /node_modules|bower_components/ },
-      { test: /\.purs$/, loader: 'purs-loader', exclude: /node_modules/ }
+      { test: /\.purs$/, loader: 'purs-loader', exclude: /node_modules/ },
+      { test: /\.scss$/, loaders: ['style', 'css?sourceMap', 'sass?sourceMap'] }
     ],
+  },
+  sassLoader: {
+    includePaths: [path.resolve(__dirname, './bower_components/foundation-sites/scss/')]
   },
   plugins: [
     {
