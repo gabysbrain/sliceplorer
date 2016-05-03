@@ -34,8 +34,8 @@ view state =
     []
     [ h1 [] [ text "Slice viewer" ]
     , map SliceView $ Slices.view state.slices
-    --, map Child $ Todo.view Todo.init
     {--, case state.route of--}
         {--Home -> map Child $ Counter.view state.count--}
         {--NotFound -> App.NotFound.view state--}
     ]
+
