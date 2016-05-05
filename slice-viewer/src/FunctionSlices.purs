@@ -27,6 +27,11 @@ import App.SampleView as SampleView
 data SortKey
   = SliceSort
   | VarianceSort
+  | MinValueSort
+  | MaxValueSort
+  | AvgValueSort
+  | AvgGradSort
+  | AvgAbsGradSort
 
 data SortAggregation
   = Avg
@@ -106,6 +111,16 @@ update (SortKeyChange ev) state | ev.target.value == "Slice" =
   updateSortState SliceSort state.sortAgg state
 update (SortKeyChange ev) state | ev.target.value == "Variance" =
   updateSortState VarianceSort state.sortAgg state
+update (SortKeyChange ev) state | ev.target.value == "Min Value" =
+  updateSortState MinValueSort state.sortAgg state
+update (SortKeyChange ev) state | ev.target.value == "Max Value" =
+  updateSortState MaxValueSort state.sortAgg state
+update (SortKeyChange ev) state | ev.target.value == "Avg Value" =
+  updateSortState AvgValueSort state.sortAgg state
+update (SortKeyChange ev) state | ev.target.value == "Avg Gradient" =
+  updateSortState AvgGradSort state.sortAgg state
+update (SortKeyChange ev) state | ev.target.value == "Avg Abs Gradient" =
+  updateSortState AvgAbsGradSort state.sortAgg state
 update (SortKeyChange ev) state =
   noEffects $ state {error=Just (error (ev.target.value ++ " is not a valid sort key"))}
 update (SortAggChange ev) state | ev.target.value == "Average" =
@@ -156,11 +171,16 @@ metricSorter :: SortKey -> Html Action
 metricSorter sortKey = 
   select [onChange SortKeyChange, value sv] $
     map (\f -> option [value f] [text f])
-      ["Slice", "Variance"]
+      ["Slice", "Variance", "Min Value", "Max Value", "Avg Value", "Avg Gradient", "Avg Abs Gradient"]
   where
     sv = case sortKey of
               SliceSort -> "Slice"
               VarianceSort -> "Variance"
+              MinValueSort -> "Min Value"
+              MaxValueSort -> "Max Value"
+              AvgValueSort -> "Avg Value"
+              AvgGradSort -> "Avg Gradient"
+              AvgAbsGradSort -> "Avg Abs Gradient"
   {--radioGroup []--}
     {--[ radio [value "Slice"] []--}
     {--, radio [value "Variance" []--}
@@ -208,8 +228,23 @@ sortFunc :: SortKey -> SortAggregation -> DimSamples -> DimSamples -> Ordering
 sortFunc SliceSort _ (DimSamples {focusPoint=f1}) (DimSamples {focusPoint=f2}) = 
   compare f1 f2
 sortFunc VarianceSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
-  compare (aggFunc agg $ map (\(Slice x) -> x.variance) s2)
-          (aggFunc agg $ map (\(Slice x) -> x.variance) s1) -- this should sort backwards
+  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.variance) s2)
+          (aggFunc agg $ map (\(Slice x) -> x.metrics.variance) s1) -- this should sort backwards
+sortFunc MinValueSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
+  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.minValue) s1)
+          (aggFunc agg $ map (\(Slice x) -> x.metrics.minValue) s2)
+sortFunc MaxValueSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
+  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.maxValue) s2)
+          (aggFunc agg $ map (\(Slice x) -> x.metrics.maxValue) s1) -- this should sort backwards
+sortFunc AvgValueSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
+  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.avgValue) s2)
+          (aggFunc agg $ map (\(Slice x) -> x.metrics.avgValue) s1) -- this should sort backwards
+sortFunc AvgGradSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
+  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.avgGradient) s2)
+          (aggFunc agg $ map (\(Slice x) -> x.metrics.avgGradient) s1) -- this should sort backwards
+sortFunc AvgAbsGradSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
+  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.avgAbsGradient) s2)
+          (aggFunc agg $ map (\(Slice x) -> x.metrics.avgAbsGradient) s1) -- this should sort backwards
 
 aggFunc :: SortAggregation -> Array Number -> Number
 aggFunc Avg xs = (sum xs) / (toNumber $ length xs)

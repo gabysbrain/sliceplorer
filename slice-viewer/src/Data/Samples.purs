@@ -13,8 +13,16 @@ type Output = Number
 type Row = Tuple Inputs Output
 newtype Sample = Sample (Tuple Number Number)
 data Slice = Slice
-  { variance :: Number -- TODO: make these into a key/value array
+  { metrics :: Metrics
   , slice   :: Array Sample
+  }
+type Metrics = 
+  { variance :: Number -- TODO: make these into a key/value store
+  , minValue :: Number
+  , maxValue :: Number
+  , avgValue :: Number
+  , avgGradient :: Number
+  , avgAbsGradient :: Number
   }
 data DimSamples = DimSamples 
   { dims       :: Int
@@ -38,8 +46,20 @@ instance sampleGroupIsForeign :: IsForeign SampleGroup where
 instance sliceIsForeign :: IsForeign Slice where
   read json = do
     v <- readProp "variance" json
+    mv <- readProp "min_value" json
+    xv <- readProp "max_value" json
+    av <- readProp "avg_value" json
+    ag <- readProp "avg_gradient" json
+    aag <- readProp "avg_pos_gradient" json
     s <- readProp "slice" json
-    pure $ Slice {variance: v, slice: s}
+    let m = { variance: v
+            , minValue: mv
+            , maxValue: xv
+            , avgValue: av
+            , avgGradient: ag
+            , avgAbsGradient: aag
+            }
+    pure $ Slice {metrics: m, slice: s}
 
 instance sampleIsForeign :: IsForeign Sample where
   read json = do
