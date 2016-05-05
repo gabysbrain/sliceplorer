@@ -50,7 +50,6 @@ def gradients(slice, d):
 
 def convert_slices(fname, dims):
   fname = 'slice_samples/%s_%s_slices.csv' % (fname, dims)
-  #fname = 'slice_samples/test.csv'
   # TODO: check for file existence
 
   s = pd.read_csv(fname, header=None)
