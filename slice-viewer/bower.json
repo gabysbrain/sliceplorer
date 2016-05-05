@@ -9,7 +9,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "purescript-pux": "^4.0.0",
-    "purescript-argonaut": "^0.12.0",
     "purescript-affjax": "^0.13.1",
     "purescript-aff": "^0.16.1",
     "purescript-pux-devtool": "^2.0.0",

@@ -9,9 +9,9 @@ import Data.Array (length, (..), head, slice)
 import Data.Int (fromString)
 import Data.Tuple (fst, snd)
 import Math (min)
+import Control.Monad.Eff.Exception (Error)
 
 import Control.Monad.Aff (attempt)
-import Control.Monad.Eff.Exception (Error)
 import Network.HTTP.Affjax (AJAX, get)
 
 import Pux (EffModel, noEffects)
@@ -19,7 +19,7 @@ import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value, href)
 
-import Data.Samples (SampleGroup(..), DimSamples(..), Samples(..), parse)
+import Data.Samples (SampleGroup(..), DimSamples(..), parseJson)
 import App.Pager as Pager
 import App.SampleView as SampleView
 
@@ -51,11 +51,12 @@ update :: Action -> State -> EffModel State Action (ajax :: AJAX)
 update (RequestSamples) state =
   { state: state {samples=Nothing}
   , effects: [ do
-      let url = "/data/" ++ state.function ++ "_" ++ (show state.d) ++ "_slices.csv"
+      let url = "http://localhost:5000/slice/" ++ state.function ++ "/" ++ (show state.d)
       --res <- attempt $ get "/data/test.csv"
       res <- attempt $ get url
-      --x = fromRight res
-      let samples = either Left (\r -> Right $ parse r.response) res
+      let samples = case res of
+                        Right r  -> parseJson r.response
+                        Left err -> Left err
       return $ ReceiveSamples samples
     ]
   }

@@ -6,7 +6,7 @@ import Data.String (joinWith)
 import Data.Array (zipWith, (..), length, concat)
 import Vis.Vega (vegaChart, lineSpec, multiLineSpec, toVegaData)
 
-import Data.Samples (DimSamples(..), Samples)
+import Data.Samples (DimSamples(..), Slice(..), Sample(..))
 
 import Pux.Html (Html, div, text)
 import Pux.Html.Attributes (className)
@@ -29,16 +29,19 @@ viewFocusPoint fp =
     [text $ "Point: " ++ joinWith ", " (map show fp)]
 
 --("x" ++ show (dim+1)) jsonSamples
-viewSingleSlice :: Int -> Samples -> Html Action
+viewSingleSlice :: Int -> Slice -> Html Action
 viewSingleSlice dim s = vegaChart [className "dim-slice"] (lineSpec dimName) jsonSamples
   where
-  jsonSamples = toVegaData $ map (\x -> {"x": fst x, "y": snd x}) s
+  jsonSamples = toVegaData $ convertSlice dim s
   dimName = "x" ++ show dim
 
 viewCompoundSlice :: DimSamples -> Html Action
 viewCompoundSlice (DimSamples {slices=ds}) = vegaChart [className "full-slice"] multiLineSpec jsonSamples
   where
-  jsonSamples = toVegaData $ concat $ zipWith (\d s -> map (\x -> {"d": d, "x": fst x, "y": snd x}) s) 
+  jsonSamples = toVegaData $ concat $ zipWith convertSlice
                                               (1..(length ds)) 
                                               ds
+
+convertSlice d (Slice {slice=s}) = 
+  map (\(Sample x) -> {"d": d, "x": fst x, "y": snd x}) s
 
