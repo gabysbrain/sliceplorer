@@ -6,7 +6,8 @@ import Data.String (joinWith)
 import Data.Array (zipWith, (..), length, concat)
 import Vis.Vega (vegaChart, lineSpec, multiLineSpec, toVegaData)
 
-import Data.Samples (DimSamples(..), Slice(..), Sample(..))
+import Data.Samples (DimSamples(..))
+import Data.Slices (Slice(..), Sample(..))
 
 import Pux.Html (Html, div, text)
 import Pux.Html.Attributes (className)

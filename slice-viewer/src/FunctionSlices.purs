@@ -19,8 +19,9 @@ import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value, href)
 
-import Data.Samples (SampleGroup(..), DimSamples(..), Slice(..)) 
-import Data.Samples (jsonSamples, sort, metricNames)
+import Data.Samples (SampleGroup(..), DimSamples(..))
+import Data.Samples (jsonSamples, sortBy, metricNames)
+import Data.Slices (Slice(..))
 import App.Pager as Pager
 import App.SampleView as SampleView
 
@@ -192,7 +193,7 @@ updateSortState sortKey sortAgg state =
                        }
 
 sampleSort :: SortKey -> SortAggregation -> SampleGroup -> SampleGroup
-sampleSort key agg = sort (sortFunc key agg)
+sampleSort key agg = sortBy (sortFunc key agg)
 
 sortFunc :: SortKey -> SortAggregation -> DimSamples -> DimSamples -> Ordering
 sortFunc SliceSort _ (DimSamples {focusPoint=f1}) (DimSamples {focusPoint=f2}) = 
