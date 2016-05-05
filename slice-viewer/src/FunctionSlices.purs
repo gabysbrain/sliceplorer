@@ -6,10 +6,11 @@ import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..), either)
 import Data.Either.Unsafe (fromRight)
 import Data.Array (length, (..), head, slice)
-import Data.Int (fromString)
+import Data.Int (fromString, toNumber)
 import Data.Tuple (fst, snd)
+import Data.Foldable (sum, maximum, minimum)
 import Math (min)
-import Control.Monad.Eff.Exception (Error)
+import Control.Monad.Eff.Exception (Error, error)
 
 import Control.Monad.Aff (attempt)
 import Network.HTTP.Affjax (AJAX, get)
@@ -19,13 +20,24 @@ import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value, href)
 
-import Data.Samples (SampleGroup(..), DimSamples(..), parseJson)
+import Data.Samples (SampleGroup(..), DimSamples(..), Slice(..), parseJson, sort)
 import App.Pager as Pager
 import App.SampleView as SampleView
+
+data SortKey
+  = SliceSort
+  | VarianceSort
+
+data SortAggregation
+  = Avg
+  | Max
+  | Min
 
 type State =
   { d :: Int
   , function :: String
+  , sortKey :: SortKey
+  , sortAgg :: SortAggregation
   , error :: Maybe Error
   , samples :: Maybe SampleGroup
   , pager :: Pager.State
@@ -36,12 +48,16 @@ data Action
   | ReceiveSamples (Either Error SampleGroup)
   | DimChange FormEvent
   | FunctionChange FormEvent
+  | SortKeyChange FormEvent
+  | SortAggChange FormEvent
   | PagerView Pager.Action
 
 init :: State
 init = 
   { d: 2
   , function: "spherical"
+  , sortKey: SliceSort
+  , sortAgg: Avg
   , error: Nothing
   , samples: Nothing
   , pager: Pager.init SampleView.view
@@ -62,14 +78,16 @@ update (RequestSamples) state =
   }
 update (ReceiveSamples (Left err)) state =
   noEffects $ state {error = Just err}
-update (ReceiveSamples (Right s@(SampleGroup xs))) state =
-  { state: state {samples = Just s
-                 , error = Nothing
-                 }
-  , effects: [do
-      return $ PagerView (Pager.ChangeChildren xs)
-    ]
-  }
+update (ReceiveSamples (Right s)) state =
+  let sortedSamples = sampleSort state.sortKey state.sortAgg s
+   in { state: state {samples = Just s
+                     , error = Nothing
+                     }
+      , effects: [do
+          let decode (SampleGroup xs) = xs
+          return $ PagerView (Pager.ChangeChildren (decode sortedSamples))
+        ]
+      }
 update (DimChange ev) state = 
   -- TODO: maybe some error checking?
   { state: state {d=fromJust $ fromString ev.target.value}
@@ -84,6 +102,20 @@ update (FunctionChange ev) state =
       return RequestSamples
     ]
   }
+update (SortKeyChange ev) state | ev.target.value == "Slice" =
+  updateSortState SliceSort state.sortAgg state
+update (SortKeyChange ev) state | ev.target.value == "Variance" =
+  updateSortState VarianceSort state.sortAgg state
+update (SortKeyChange ev) state =
+  noEffects $ state {error=Just (error (ev.target.value ++ " is not a valid sort key"))}
+update (SortAggChange ev) state | ev.target.value == "Average" =
+  updateSortState state.sortKey Avg state
+update (SortAggChange ev) state | ev.target.value == "Max" =
+  updateSortState state.sortKey Max state
+update (SortAggChange ev) state | ev.target.value == "Min" =
+  updateSortState state.sortKey Min state
+update (SortAggChange ev) state =
+  noEffects $ state {error=Just (error (ev.target.value ++ " is not a valid sort aggregation"))}
 update (PagerView action) state =
   noEffects $ state {pager=Pager.update action state.pager}
 
@@ -98,9 +130,15 @@ view state =
 viewControls :: State -> Html Action
 viewControls state = 
   div [] 
-    [ dimSelector state.d
-    , funcSelector state.function
-    , button [onClick (const RequestSamples)] [text "Fetch samples"]
+    [ div [className "data-controls"] 
+        [ dimSelector state.d
+        , funcSelector state.function
+        , button [onClick (const RequestSamples)] [text "Fetch samples"]
+        ]
+    , div [className "view-controls"]
+        [ metricSorter state.sortKey
+        , metricAgg state.sortAgg
+        ]
     ]
 
 dimSelector :: Int -> Html Action
@@ -113,6 +151,31 @@ funcSelector fname =
   select [onChange FunctionChange, value fname] $
     map (\f -> option [value f] [text f])
       ["ackley", "rosenbrock", "spherical", "schwefel", "zakharov"]
+
+metricSorter :: SortKey -> Html Action
+metricSorter sortKey = 
+  select [onChange SortKeyChange, value sv] $
+    map (\f -> option [value f] [text f])
+      ["Slice", "Variance"]
+  where
+    sv = case sortKey of
+              SliceSort -> "Slice"
+              VarianceSort -> "Variance"
+  {--radioGroup []--}
+    {--[ radio [value "Slice"] []--}
+    {--, radio [value "Variance" []--}
+    {--]--}
+
+metricAgg :: SortAggregation -> Html Action
+metricAgg sortAgg =
+  select [onChange SortAggChange, value sa] $
+    map (\f -> option [value f] [text f])
+      ["Average", "Max", "Min"]
+  where
+    sa = case sortAgg of
+              Avg -> "Average"
+              Max -> "Max"
+              Min -> "Min"
 
 viewError :: Maybe Error -> Html Action
 viewError Nothing  = text ""
@@ -127,4 +190,29 @@ viewSamples state@{samples=Just (SampleGroup s)} =
   div [className "samples"] 
     [ map PagerView $ Pager.view state.pager
     ]
+    
+updateSortState sortKey sortAgg state = 
+  case state.samples of
+       Nothing -> noEffects $ state { sortKey=sortKey, sortAgg=sortAgg }
+       Just samples -> { state: state { sortKey=sortKey, sortAgg=sortAgg }
+                       , effects: [ do
+                           return $ ReceiveSamples $ Right samples
+                         ]
+                       }
+
+sampleSort :: SortKey -> SortAggregation -> SampleGroup -> SampleGroup
+--sampleSort key agg Nothing = Nothing
+sampleSort key agg = sort (sortFunc key agg)
+
+sortFunc :: SortKey -> SortAggregation -> DimSamples -> DimSamples -> Ordering
+sortFunc SliceSort _ (DimSamples {focusPoint=f1}) (DimSamples {focusPoint=f2}) = 
+  compare f1 f2
+sortFunc VarianceSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
+  compare (aggFunc agg $ map (\(Slice x) -> x.variance) s2)
+          (aggFunc agg $ map (\(Slice x) -> x.variance) s1) -- this should sort backwards
+
+aggFunc :: SortAggregation -> Array Number -> Number
+aggFunc Avg xs = (sum xs) / (toNumber $ length xs)
+aggFunc Max xs = fromJust $ maximum xs
+aggFunc Min xs = fromJust $ minimum xs
 

@@ -2,8 +2,10 @@ module Data.Samples where
 
 import Prelude
 import Data.Tuple (Tuple(..))
+import Data.Array (sortBy)
 import Data.Either (Either(..), either)
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
+import Data.Foreign.Keys (keys)
 import Control.Monad.Eff.Exception (Error, error)
 
 type Inputs = Array Number
@@ -11,7 +13,7 @@ type Output = Number
 type Row = Tuple Inputs Output
 newtype Sample = Sample (Tuple Number Number)
 data Slice = Slice
-  { variance :: Number
+  { variance :: Number -- TODO: make these into a key/value array
   , slice   :: Array Sample
   }
 data DimSamples = DimSamples 
@@ -49,4 +51,7 @@ parseJson :: String -> Either Error SampleGroup
 parseJson json = case readJSON json of
                       Left err -> Left (error $ show err)
                       Right res -> Right res
+
+sort :: (DimSamples -> DimSamples -> Ordering) -> SampleGroup -> SampleGroup
+sort cmp (SampleGroup sg) = SampleGroup $ sortBy cmp sg
 
