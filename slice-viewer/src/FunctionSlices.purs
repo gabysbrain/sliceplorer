@@ -12,16 +12,15 @@ import Data.StrMap (lookup)
 import Data.Foldable (sum, maximum, minimum)
 import Math (min)
 import Control.Monad.Eff.Exception (Error, error)
-
-import Control.Monad.Aff (attempt)
-import Network.HTTP.Affjax (AJAX, get)
+import Network.HTTP.Affjax (AJAX)
 
 import Pux (EffModel, noEffects)
 import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value, href)
 
-import Data.Samples (SampleGroup(..), DimSamples(..), Slice(..), parseJson, sort, metricNames)
+import Data.Samples (SampleGroup(..), DimSamples(..), Slice(..)) 
+import Data.Samples (jsonSamples, sort, metricNames)
 import App.Pager as Pager
 import App.SampleView as SampleView
 
@@ -70,12 +69,7 @@ update :: Action -> State -> EffModel State Action (ajax :: AJAX)
 update (RequestSamples) state =
   { state: state {samples=Nothing}
   , effects: [ do
-      let url = "http://localhost:5000/slice/" ++ state.function ++ "/" ++ (show state.d)
-      --res <- attempt $ get "/data/test.csv"
-      res <- attempt $ get url
-      let samples = case res of
-                        Right r  -> parseJson r.response
-                        Left err -> Left err
+      samples <- jsonSamples state.function state.d
       return $ UpdateSamples samples
     ]
   }

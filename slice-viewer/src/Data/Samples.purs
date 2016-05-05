@@ -9,6 +9,8 @@ import Data.Either (Either(..), either)
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
 import Data.Foreign.Keys (keys)
 import Control.Monad.Eff.Exception (Error, error)
+import Control.Monad.Aff (Aff, attempt)
+import Network.HTTP.Affjax (AJAX, get)
 
 type Inputs = Array Number
 type Output = Number
@@ -61,6 +63,16 @@ instance sampleIsForeign :: IsForeign Sample where
     x <- readProp "x" json
     y <- readProp "y" json
     pure $ Sample $ Tuple x y
+
+jsonSamples :: forall eff. String -> Int -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
+jsonSamples fname dims = do
+  let url = "http://localhost:5000/slice/" ++ fname ++ "/" ++ (show dims)
+  --res <- attempt $ get "/data/test.csv"
+  res <- attempt $ get url
+  let samples = case res of
+        Right r  -> parseJson r.response
+        Left err -> Left err
+  pure $ samples
 
 parseJson :: String -> Either Error SampleGroup
 parseJson json = case readJSON json of
