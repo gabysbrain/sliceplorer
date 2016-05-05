@@ -23,8 +23,9 @@ class Slice(object):
     self.min_value = samples.iloc[:,-1].min()
     self.max_value = samples.iloc[:,-1].max()
     self.avg_value = samples.iloc[:,-1].mean()
-    self.avg_gradient = gradients(samples, d).mean()
-    self.avg_pos_gradient = gradients(samples, d).abs().mean()
+    g = gradients(samples, d)
+    self.avg_gradient = g.mean()
+    self.avg_pos_gradient = g.abs().mean()
 
     self.slice = list(samples.apply(lambda x: {'x': float(x.iloc[d]), 
                                                'y': float(x.iloc[-1])}, 
@@ -40,7 +41,7 @@ def slice_groups(samples):
 def dim_groups(slices):
   dims = len(slices.columns) - 1
   for i,d in zip(range(0, len(slices), SAMPLE_N), range(dims)):
-    yield Slice(d, slices[0:(i+SAMPLE_N)])
+    yield Slice(d, slices[i:(i+SAMPLE_N)])
 
 def gradients(slice, d):
   diffs = slice.diff()
@@ -49,6 +50,7 @@ def gradients(slice, d):
 
 def convert_slices(fname, dims):
   fname = 'slice_samples/%s_%s_slices.csv' % (fname, dims)
+  #fname = 'slice_samples/test.csv'
   # TODO: check for file existence
 
   s = pd.read_csv(fname, header=None)
