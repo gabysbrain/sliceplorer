@@ -8,6 +8,7 @@ import Data.Either.Unsafe (fromRight)
 import Data.Array (length, (..), head, slice)
 import Data.Int (fromString, toNumber)
 import Data.Tuple (fst, snd)
+import Data.StrMap (lookup)
 import Data.Foldable (sum, maximum, minimum)
 import Math (min)
 import Control.Monad.Eff.Exception (Error, error)
@@ -20,18 +21,13 @@ import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value, href)
 
-import Data.Samples (SampleGroup(..), DimSamples(..), Slice(..), parseJson, sort)
+import Data.Samples (SampleGroup(..), DimSamples(..), Slice(..), parseJson, sort, metricNames)
 import App.Pager as Pager
 import App.SampleView as SampleView
 
 data SortKey
   = SliceSort
-  | VarianceSort
-  | MinValueSort
-  | MaxValueSort
-  | AvgValueSort
-  | AvgGradSort
-  | AvgAbsGradSort
+  | MetricSort String
 
 data SortAggregation
   = Avg
@@ -43,6 +39,7 @@ type State =
   , function :: String
   , sortKey :: SortKey
   , sortAgg :: SortAggregation
+  , sliceMetrics :: Array String
   , error :: Maybe Error
   , samples :: Maybe SampleGroup
   , pager :: Pager.State
@@ -50,7 +47,7 @@ type State =
 
 data Action 
   = RequestSamples 
-  | ReceiveSamples (Either Error SampleGroup)
+  | UpdateSamples (Either Error SampleGroup)
   | DimChange FormEvent
   | FunctionChange FormEvent
   | SortKeyChange FormEvent
@@ -63,6 +60,7 @@ init =
   , function: "spherical"
   , sortKey: SliceSort
   , sortAgg: Avg
+  , sliceMetrics: []
   , error: Nothing
   , samples: Nothing
   , pager: Pager.init SampleView.view
@@ -78,18 +76,19 @@ update (RequestSamples) state =
       let samples = case res of
                         Right r  -> parseJson r.response
                         Left err -> Left err
-      return $ ReceiveSamples samples
+      return $ UpdateSamples samples
     ]
   }
-update (ReceiveSamples (Left err)) state =
+update (UpdateSamples (Left err)) state =
   noEffects $ state {error = Just err}
-update (ReceiveSamples (Right s)) state =
+update (UpdateSamples (Right s@(SampleGroup xs))) state =
   let sortedSamples = sampleSort state.sortKey state.sortAgg s
-   in { state: state {samples = Just s
+   in { state: state { samples = Just s
+                     , sliceMetrics = metricNames (fromJust $ head xs)
                      , error = Nothing
                      }
       , effects: [do
-          let decode (SampleGroup xs) = xs
+          let decode (SampleGroup xs') = xs'
           return $ PagerView (Pager.ChangeChildren (decode sortedSamples))
         ]
       }
@@ -109,20 +108,8 @@ update (FunctionChange ev) state =
   }
 update (SortKeyChange ev) state | ev.target.value == "Slice" =
   updateSortState SliceSort state.sortAgg state
-update (SortKeyChange ev) state | ev.target.value == "Variance" =
-  updateSortState VarianceSort state.sortAgg state
-update (SortKeyChange ev) state | ev.target.value == "Min Value" =
-  updateSortState MinValueSort state.sortAgg state
-update (SortKeyChange ev) state | ev.target.value == "Max Value" =
-  updateSortState MaxValueSort state.sortAgg state
-update (SortKeyChange ev) state | ev.target.value == "Avg Value" =
-  updateSortState AvgValueSort state.sortAgg state
-update (SortKeyChange ev) state | ev.target.value == "Avg Gradient" =
-  updateSortState AvgGradSort state.sortAgg state
-update (SortKeyChange ev) state | ev.target.value == "Avg Abs Gradient" =
-  updateSortState AvgAbsGradSort state.sortAgg state
 update (SortKeyChange ev) state =
-  noEffects $ state {error=Just (error (ev.target.value ++ " is not a valid sort key"))}
+  updateSortState (MetricSort ev.target.value) state.sortAgg state
 update (SortAggChange ev) state | ev.target.value == "Average" =
   updateSortState state.sortKey Avg state
 update (SortAggChange ev) state | ev.target.value == "Max" =
@@ -151,7 +138,7 @@ viewControls state =
         , button [onClick (const RequestSamples)] [text "Fetch samples"]
         ]
     , div [className "view-controls"]
-        [ metricSorter state.sortKey
+        [ metricSorter state
         , metricAgg state.sortAgg
         ]
     ]
@@ -167,24 +154,14 @@ funcSelector fname =
     map (\f -> option [value f] [text f])
       ["ackley", "rosenbrock", "spherical", "schwefel", "zakharov"]
 
-metricSorter :: SortKey -> Html Action
-metricSorter sortKey = 
+metricSorter :: State -> Html Action
+metricSorter state = 
   select [onChange SortKeyChange, value sv] $
-    map (\f -> option [value f] [text f])
-      ["Slice", "Variance", "Min Value", "Max Value", "Avg Value", "Avg Gradient", "Avg Abs Gradient"]
+    map (\f -> option [value f] [text f]) (["Slice"] ++ state.sliceMetrics)
   where
-    sv = case sortKey of
+    sv = case state.sortKey of
               SliceSort -> "Slice"
-              VarianceSort -> "Variance"
-              MinValueSort -> "Min Value"
-              MaxValueSort -> "Max Value"
-              AvgValueSort -> "Avg Value"
-              AvgGradSort -> "Avg Gradient"
-              AvgAbsGradSort -> "Avg Abs Gradient"
-  {--radioGroup []--}
-    {--[ radio [value "Slice"] []--}
-    {--, radio [value "Variance" []--}
-    {--]--}
+              MetricSort v -> v
 
 metricAgg :: SortAggregation -> Html Action
 metricAgg sortAgg =
@@ -216,35 +193,20 @@ updateSortState sortKey sortAgg state =
        Nothing -> noEffects $ state { sortKey=sortKey, sortAgg=sortAgg }
        Just samples -> { state: state { sortKey=sortKey, sortAgg=sortAgg }
                        , effects: [ do
-                           return $ ReceiveSamples $ Right samples
+                           return $ UpdateSamples $ Right samples
                          ]
                        }
 
 sampleSort :: SortKey -> SortAggregation -> SampleGroup -> SampleGroup
---sampleSort key agg Nothing = Nothing
 sampleSort key agg = sort (sortFunc key agg)
 
 sortFunc :: SortKey -> SortAggregation -> DimSamples -> DimSamples -> Ordering
 sortFunc SliceSort _ (DimSamples {focusPoint=f1}) (DimSamples {focusPoint=f2}) = 
   compare f1 f2
-sortFunc VarianceSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
-  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.variance) s2)
-          (aggFunc agg $ map (\(Slice x) -> x.metrics.variance) s1) -- this should sort backwards
-sortFunc MinValueSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
-  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.minValue) s1)
-          (aggFunc agg $ map (\(Slice x) -> x.metrics.minValue) s2)
-sortFunc MaxValueSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
-  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.maxValue) s2)
-          (aggFunc agg $ map (\(Slice x) -> x.metrics.maxValue) s1) -- this should sort backwards
-sortFunc AvgValueSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
-  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.avgValue) s2)
-          (aggFunc agg $ map (\(Slice x) -> x.metrics.avgValue) s1) -- this should sort backwards
-sortFunc AvgGradSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
-  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.avgGradient) s2)
-          (aggFunc agg $ map (\(Slice x) -> x.metrics.avgGradient) s1) -- this should sort backwards
-sortFunc AvgAbsGradSort agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
-  compare (aggFunc agg $ map (\(Slice x) -> x.metrics.avgAbsGradient) s2)
-          (aggFunc agg $ map (\(Slice x) -> x.metrics.avgAbsGradient) s1) -- this should sort backwards
+sortFunc (MetricSort k) agg (DimSamples {slices=s1}) (DimSamples {slices=s2}) =
+  compare (aggFunc agg $ sliceMetrics s2)
+          (aggFunc agg $ sliceMetrics s1) -- this should sort backwards
+  where sliceMetrics = map (\(Slice x) -> fromJust $ lookup k x.metrics)
 
 aggFunc :: SortAggregation -> Array Number -> Number
 aggFunc Avg xs = (sum xs) / (toNumber $ length xs)

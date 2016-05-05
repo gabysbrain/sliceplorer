@@ -2,7 +2,9 @@ module Data.Samples where
 
 import Prelude
 import Data.Tuple (Tuple(..))
-import Data.Array (sortBy)
+import Data.Array (sortBy, nub, concat)
+import Data.StrMap (StrMap)
+import Data.StrMap as SM
 import Data.Either (Either(..), either)
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
 import Data.Foreign.Keys (keys)
@@ -16,14 +18,7 @@ data Slice = Slice
   { metrics :: Metrics
   , slice   :: Array Sample
   }
-type Metrics = 
-  { variance :: Number -- TODO: make these into a key/value store
-  , minValue :: Number
-  , maxValue :: Number
-  , avgValue :: Number
-  , avgGradient :: Number
-  , avgAbsGradient :: Number
-  }
+type Metrics = StrMap Number
 data DimSamples = DimSamples 
   { dims       :: Int
   , focusPoint :: Array Number
@@ -52,14 +47,14 @@ instance sliceIsForeign :: IsForeign Slice where
     ag <- readProp "avg_gradient" json
     aag <- readProp "avg_pos_gradient" json
     s <- readProp "slice" json
-    let m = { variance: v
-            , minValue: mv
-            , maxValue: xv
-            , avgValue: av
-            , avgGradient: ag
-            , avgAbsGradient: aag
-            }
-    pure $ Slice {metrics: m, slice: s}
+    let m = [ Tuple "variance" v
+            , Tuple "min_value" mv
+            , Tuple "max_value" xv
+            , Tuple "avg_value" av
+            , Tuple "avg_gradient" ag
+            , Tuple "avg_pos_gradient" aag
+            ]
+    pure $ Slice {metrics: SM.fromFoldable m, slice: s}
 
 instance sampleIsForeign :: IsForeign Sample where
   read json = do
@@ -74,4 +69,8 @@ parseJson json = case readJSON json of
 
 sort :: (DimSamples -> DimSamples -> Ordering) -> SampleGroup -> SampleGroup
 sort cmp (SampleGroup sg) = SampleGroup $ sortBy cmp sg
+
+metricNames :: DimSamples -> Array String
+metricNames (DimSamples r) = 
+  nub $ concat $ map (\(Slice s) -> SM.keys s.metrics) r.slices
 
