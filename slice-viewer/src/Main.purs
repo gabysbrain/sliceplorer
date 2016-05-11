@@ -6,15 +6,11 @@ import App.Routes (match)
 import Control.Bind ((=<<))
 import App.Layout (Action(PageView), State, view, update)
 import Control.Monad.Eff (Eff)
-import DOM (DOM)
 import Pux (App, Config, CoreEffects, fromSimple, renderToDOM)
 import Pux.Router (sampleUrl)
 import Signal ((~>))
 import Signal.Channel (CHANNEL)
-import Network.HTTP.Affjax (AJAX)
-
---type AppEffects = (dom :: DOM, ajax :: AJAX)
-type AppEffects = (ajax :: AJAX)
+import App.Core (AppEffects)
 
 -- | App configuration
 {--config :: forall eff.--}

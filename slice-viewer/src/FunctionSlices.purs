@@ -19,11 +19,12 @@ import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, value, href)
 
-import Data.Samples (SampleGroup(..), DimSamples(..))
-import Data.Samples (jsonSamples, sortBy, metricNames)
+import Data.Samples (SampleGroup(..), DimSamples(..),
+                     jsonSamples, sortBy, metricNames)
 import Data.Slices (Slice(..))
 import App.Pager as Pager
 import App.SampleView as SampleView
+import App.Overview as Overview
 
 data SortKey
   = SliceSort
@@ -42,7 +43,8 @@ type State =
   , sliceMetrics :: Array String
   , error :: Maybe Error
   , samples :: Maybe SampleGroup
-  , pager :: Pager.State
+  --, pager :: Pager.State
+  --, overview :: Overview.State
   }
 
 data Action 
@@ -52,7 +54,8 @@ data Action
   | FunctionChange FormEvent
   | SortKeyChange FormEvent
   | SortAggChange FormEvent
-  | PagerView Pager.Action
+  --| PagerView Pager.Action
+  | OverviewView Overview.Action
 
 init :: State
 init = 
@@ -63,7 +66,8 @@ init =
   , sliceMetrics: []
   , error: Nothing
   , samples: Nothing
-  , pager: Pager.init SampleView.view
+  --, pager: Pager.init SampleView.view
+  --, overview: Overview.init
   }
 
 update :: Action -> State -> EffModel State Action (ajax :: AJAX)
@@ -84,7 +88,8 @@ update (UpdateSamples (Right s@(SampleGroup xs))) state =
                      }
       , effects: [do
           let decode (SampleGroup xs') = xs'
-          return $ PagerView (Pager.ChangeChildren (decode sortedSamples))
+          --return $ PagerView (Pager.ChangeChildren (decode sortedSamples))
+          return $ OverviewView Overview.Null
         ]
       }
 update (DimChange ev) state = 
@@ -113,8 +118,11 @@ update (SortAggChange ev) state | ev.target.value == "Min" =
   updateSortState state.sortKey Min state
 update (SortAggChange ev) state =
   noEffects $ state {error=Just (error (ev.target.value ++ " is not a valid sort aggregation"))}
-update (PagerView action) state =
-  noEffects $ state {pager=Pager.update action state.pager}
+{--update (PagerView action) state =--}
+  {--noEffects $ state {pager=Pager.update action state.pager}--}
+{--update (OverviewView action) state =--}
+  {--noEffects $ state {overview=Overview.update action state.overview}--}
+update (OverviewView action) state = noEffects state
 
 view :: State -> Html Action
 view state = 
@@ -175,13 +183,13 @@ viewError (Just err) = div [className "error"] [text $ show err]
 
 viewSamples :: State -> Html Action
 viewSamples {samples=Nothing} = p [] [text "Nothing loaded"]
-{--viewSamples (Just (SampleGroup s)) mnVal mxVal = --}
-  {--div [className "sample-group"] $ map viewSample (slice mnVal mxVal s)--}
-  --[ viewSample $ (fromJust <<< head) s ]
-viewSamples state@{samples=Just (SampleGroup s)} = 
-  div [className "samples"] 
-    [ map PagerView $ Pager.view state.pager
-    ]
+{--viewSamples state@{samples=Just (SampleGroup s)} = --}
+  {--div [className "samples"] --}
+    {--[ map PagerView $ Pager.view state.pager--}
+    {--]--}
+viewSamples {samples=Just sg} =
+  div [className "samples"]
+    [ map OverviewView $ Overview.view sg ]
     
 updateSortState sortKey sortAgg state = 
   case state.samples of

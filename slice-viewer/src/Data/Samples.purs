@@ -2,8 +2,9 @@ module Data.Samples where
 
 import Prelude
 import Data.Slices (Slice(..))
-import Data.Array (nub, concat)
+import Data.Array (nub, concat, head)
 import Data.Array as A
+import Data.Maybe (Maybe(Just, Nothing))
 import Data.Either (Either(..), either)
 import Data.StrMap as SM
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
@@ -11,6 +12,7 @@ import Control.Monad.Eff.Exception (Error, error)
 import Control.Monad.Aff (Aff, attempt)
 import Network.HTTP.Affjax (AJAX, get)
 
+-- the slices for a single focus point
 data DimSamples = DimSamples 
   { dims       :: Int
   , focusPoint :: Array Number
@@ -54,4 +56,11 @@ metricNames (DimSamples r) =
 
 sliceList :: SampleGroup -> Array Slice
 sliceList (SampleGroup sg) = concat $ map (\(DimSamples ds) -> ds.slices) sg
+
+dims :: SampleGroup -> Int
+dims (SampleGroup sg) = 
+  case head sg of
+       Nothing -> 0
+       Just (DimSamples x) -> x.dims
+
 

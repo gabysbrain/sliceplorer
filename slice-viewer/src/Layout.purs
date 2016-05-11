@@ -2,10 +2,11 @@ module App.Layout where
 
 import App.FunctionSlices as Slices
 import App.Routes (Route(Home, NotFound))
-import Network.HTTP.Affjax (AJAX)
 import Prelude (($), map)
 import Pux (EffModel, noEffects, mapState, mapEffects)
 import Pux.Html (Html, div, h1, p, text)
+import App.Core (AppEffects)
+import Network.HTTP.Affjax (AJAX)
 
 data Action
   = SliceView (Slices.Action)

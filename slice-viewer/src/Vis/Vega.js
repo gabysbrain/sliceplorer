@@ -8,6 +8,58 @@ var Pux = require('purescript-pux');
 var vg = require('vega');
 
 
+var allSlicesSpec = {
+  'width': 340,
+  'height': 170,
+  'data': [{'name': 'points'}],
+  'scales': [{
+    'name': 'x',
+    'type': 'linear',
+    'domain': {'data': 'points', 'field': 'x'},
+    'range': 'width'
+  }, {
+    'name': 'y',
+    'type': 'linear',
+    'domain': {'data': 'points', 'field': 'y'},
+    'range': 'height'
+  }],
+  'axes': [{
+    'type': 'x',
+    'scale': 'x',
+    'offset': 5,
+    'ticks': 5,
+    //'title': 'Distance',
+    'layer': 'back'
+  }, {
+    'type': 'y',
+    'scale': 'y',
+    'offset': 5,
+    'ticks': 5,
+    //'title': 'Value',
+    'layer': 'back'
+  }],
+  'marks': [{
+    'type': 'group',
+    'from': {
+      'data': 'points', 
+      'transform': [{'type': 'facet', 'groupby': ['index']}]
+    },
+    'marks': [{
+      'type': 'line',
+      'properties': {
+        'enter': {
+          'x': { 'scale': 'x', 'field': 'x' },
+          'y': { 'scale': 'y', 'field': 'y' },
+          'stroke': {'value': 'black'},
+          'strokeWidth': { 'value': 1 },
+          'strokeOpacity': { 'value': 0.1 },
+          'interpolate': { 'value': 'basis'}
+        }
+      }
+    }]
+  }]
+};
+
 var multiLineSpec = {
   'width': 170,
   'height': 170,
@@ -162,7 +214,7 @@ var VegaChart = React.createClass({
 
     // parse the vega spec and create the vis
     vg.parse.spec(spec, function(error, chart) {
-      var vis = chart({ el: self.refs.chartContainer, renderer: 'svg' });
+      var vis = chart({ el: self.refs.chartContainer, renderer: 'canvas' });
 
       // set the initial data
       vis.data('points').insert(data);
@@ -197,6 +249,7 @@ var VegaChart = React.createClass({
   }
 });
 
+exports.allSlicesSpec = allSlicesSpec;
 exports.lineSpec = function(xAxisName) {
   var s = Object.assign({}, lineSpecBase);
   s.axes[0].title = xAxisName;
