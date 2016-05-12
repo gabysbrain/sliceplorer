@@ -7,6 +7,57 @@ var PureRenderMixin = require('react-addons-pure-render-mixin');
 var Pux = require('purescript-pux');
 var vg = require('vega');
 
+var histogramSpec = {
+  'width': 170,
+  'height': 170,
+  'data': [{'name': 'points'}],
+  'scales': [{
+    'name': 'x',
+    'type': 'linear',
+    'domain': {'data': 'points', 'field': 'x'},
+    'range': 'width'
+  }, {
+    'name': 'y',
+    'type': 'linear',
+    'domain': {'data': 'points', 'field': 'y'},
+    'range': 'height'
+  }],
+  'axes': [{
+    'type': 'x',
+    'scale': 'x',
+    'offset': 5,
+    'ticks': 5,
+    //'title': 'Distance',
+    'layer': 'back'
+  }, {
+    'type': 'y',
+    'scale': 'y',
+    'offset': 5,
+    'ticks': 5,
+    //'title': 'Value',
+    'layer': 'back'
+  }],
+  'marks': [{
+    'type': 'group',
+    'from': {
+      'data': 'points', 
+      'transform': [{'type': 'facet', 'groupby': ['index']}]
+    },
+    'marks': [{
+      'type': 'line',
+      'properties': {
+        'enter': {
+          'x': { 'scale': 'x', 'field': 'x' },
+          'y': { 'scale': 'y', 'field': 'y' },
+          'stroke': {'value': 'black'},
+          'strokeWidth': { 'value': 1 },
+          'strokeOpacity': { 'value': 0.1 },
+          'interpolate': { 'value': 'basis'}
+        }
+      }
+    }]
+  }]
+};
 
 var allSlicesSpec = {
   'width': 340,
@@ -42,7 +93,7 @@ var allSlicesSpec = {
     'type': 'group',
     'from': {
       'data': 'points', 
-      'transform': [{'type': 'facet', 'groupby': ['index']}]
+      'transform': [{'type': 'facet', 'groupby': ['slice_id']}]
     },
     'marks': [{
       'type': 'line',

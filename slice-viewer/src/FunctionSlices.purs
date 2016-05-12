@@ -44,7 +44,7 @@ type State =
   , error :: Maybe Error
   , samples :: Maybe SampleGroup
   --, pager :: Pager.State
-  --, overview :: Overview.State
+  , overview :: Maybe Overview.State
   }
 
 data Action 
@@ -67,7 +67,7 @@ init =
   , error: Nothing
   , samples: Nothing
   --, pager: Pager.init SampleView.view
-  --, overview: Overview.init
+  , overview: Nothing
   }
 
 update :: Action -> State -> EffModel State Action (ajax :: AJAX)
@@ -81,17 +81,21 @@ update (RequestSamples) state =
 update (UpdateSamples (Left err)) state =
   noEffects $ state {error = Just err}
 update (UpdateSamples (Right s@(SampleGroup xs))) state =
-  let sortedSamples = sampleSort state.sortKey state.sortAgg s
-   in { state: state { samples = Just s
-                     , sliceMetrics = metricNames (fromJust $ head xs)
-                     , error = Nothing
-                     }
-      , effects: [do
-          let decode (SampleGroup xs') = xs'
-          --return $ PagerView (Pager.ChangeChildren (decode sortedSamples))
-          return $ OverviewView Overview.Null
-        ]
-      }
+  noEffects $ state { samples = Just s
+                    , sliceMetrics = metricNames (fromJust $ head xs)
+                    , overview = Just (Overview.init s)
+                    , error = Nothing
+                    }
+  {--let sortedSamples = sampleSort state.sortKey state.sortAgg s--}
+   {--in { state: state { samples = Just s--}
+                     {--, sliceMetrics = metricNames (fromJust $ head xs)--}
+                     {--, error = Nothing--}
+                     {--}--}
+      {--, effects: [do--}
+          {--let decode (SampleGroup xs') = xs'--}
+          {--return $ PagerView (Pager.ChangeChildren (decode sortedSamples))--}
+        {--]--}
+      {--}--}
 update (DimChange ev) state = 
   -- TODO: maybe some error checking?
   { state: state {d=fromJust $ fromString ev.target.value}
@@ -120,9 +124,10 @@ update (SortAggChange ev) state =
   noEffects $ state {error=Just (error (ev.target.value ++ " is not a valid sort aggregation"))}
 {--update (PagerView action) state =--}
   {--noEffects $ state {pager=Pager.update action state.pager}--}
-{--update (OverviewView action) state =--}
-  {--noEffects $ state {overview=Overview.update action state.overview}--}
-update (OverviewView action) state = noEffects state
+update (OverviewView action) state =
+  noEffects $ case state.overview of
+                   Nothing -> state
+                   Just o -> state {overview=Just (Overview.update action o)}
 
 view :: State -> Html Action
 view state = 
@@ -187,9 +192,9 @@ viewSamples {samples=Nothing} = p [] [text "Nothing loaded"]
   {--div [className "samples"] --}
     {--[ map PagerView $ Pager.view state.pager--}
     {--]--}
-viewSamples {samples=Just sg} =
+viewSamples {overview=Just o} =
   div [className "samples"]
-    [ map OverviewView $ Overview.view sg ]
+    [ map OverviewView $ Overview.view o ]
     
 updateSortState sortKey sortAgg state = 
   case state.samples of

@@ -44,3 +44,6 @@ instance sampleIsForeign :: IsForeign Sample where
 sortBy :: (Slice -> Slice -> Ordering) -> Array Slice -> Array Slice
 sortBy cmp = sortBy cmp
 
+metrics :: Slice -> Metrics
+metrics (Slice s) = s.metrics
+
