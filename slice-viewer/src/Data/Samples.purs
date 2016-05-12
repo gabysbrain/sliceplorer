@@ -2,9 +2,10 @@ module Data.Samples where
 
 import Prelude
 import Data.Slices (Slice(..), metrics)
-import Data.Array (nub, concat, head, snoc)
+import Data.Array (nub, concat, head, snoc, (..), (!!))
 import Data.Array as A
 import Data.Maybe (Maybe(Just, Nothing))
+import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..), either)
 import Data.StrMap as SM
 import Data.Foldable (foldl)
@@ -74,14 +75,15 @@ metricHistograms bins sg =
   flatM = flattenMetrics sg
 
 flattenMetrics :: SampleGroup -> Array (SM.StrMap (Array Number))
-flattenMetrics (SampleGroup sg) =
+flattenMetrics sg'@(SampleGroup sg) =
   map combineMaps tmp -- TODO: there's probably a prettier way to do all this
   where 
   tmp :: Array (Array (SM.StrMap Number))
-  tmp = sequence $ map procDs sg
+  --tmp = sequence $ map procDs sg
+  tmp = map (\d -> map (procDs d) sg) (0..(dims sg'-1))
 
-  procDs :: DimSamples -> Array (SM.StrMap Number)
-  procDs (DimSamples ds) = map metrics ds.slices
+  procDs :: Int -> DimSamples -> SM.StrMap Number
+  procDs d (DimSamples ds) = metrics (fromJust $ ds.slices !! d)
 
 
 combineMaps :: Array (SM.StrMap Number) -> SM.StrMap (Array Number)
