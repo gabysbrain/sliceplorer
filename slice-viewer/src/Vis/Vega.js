@@ -14,8 +14,10 @@ var histogramSpec = {
   'scales': [{
     'name': 'x',
     'type': 'linear',
-    'domain': {'data': 'points', 'field': 'bin_start'},
-    'range': 'width'
+    'domainMin': {'data': 'points', 'field': 'bin_start'},
+    'domainMax': {'data': 'points', 'field': 'bin_end'},
+    'range': 'width',
+    'zero': false
   }, {
     'name': 'y',
     'type': 'linear',
@@ -46,9 +48,9 @@ var histogramSpec = {
         'x2': {'scale': 'x', 'field': 'bin_end' },
         'y': { 'scale': 'y', 'field': 'count' },
         'y2': { 'scale': 'y', 'value': 0 },
-        'stroke': {'value': 'black'},
+        'stroke': {'value': 'darkgrey'},
         'strokeWidth': { 'value': 1 },
-        'fill': {'value': 'black'}
+        'fill': {'value': 'lightgrey'}
       }
     }
   }]
