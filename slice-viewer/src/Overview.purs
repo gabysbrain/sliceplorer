@@ -1,17 +1,20 @@
 module App.Overview where
 
 import Prelude hiding (div)
-import Data.Array (concatMap, take, zip, zipWith, concat, length, (!!), (..))
+import Data.Array (concatMap, snoc, take, zip, zipWith, concat, length, (!!), (..))
 import Data.Tuple (fst, snd)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
+import Data.StrMap as SM
 import Data.Int as I
 import Pux.Html (Html, div, text, input)
 import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Pux.Html.Events (onChange, FormEvent)
-import Vis.Vega (vegaChart, toVegaData, allSlicesSpec)
+import Vis.Vega (vegaChart, toVegaData, allSlicesSpec, histogramSpec)
+import Stats (Histogram)
+import Debug.Trace
 
-import Data.Samples (SampleGroup(..), DimSamples(..), dims)
+import Data.Samples (SampleGroup(..), DimSamples(..), dims, metricHistograms)
 import Data.Slices (Slice(..), Sample(..))
 
 type State = 
@@ -23,10 +26,11 @@ data Action
   = UpdateNumberFilter FormEvent
 
 init :: SampleGroup -> State
-init sg = 
+init sg =
   { samples: sg
   , samplesToShow: 10
   }
+  -- FIXME: put all the filters here and filter everything when state changes
 
 update :: Action -> State -> State
 update (UpdateNumberFilter ev) state =
@@ -38,7 +42,6 @@ view :: State -> Html Action
 view ({samples=SampleGroup []}) =
   div [] []
 view state@{samples=(SampleGroup sg), samplesToShow=n} =
-  --div [] $ map (flip viewDimGroup sg) (0..0)
   div [] 
     [ div [className "controls"] 
         [ input [ type_ "range", value (show n)
@@ -52,20 +55,24 @@ view state@{samples=(SampleGroup sg), samplesToShow=n} =
     ]
 
 viewDims :: State -> Html Action
-viewDims state@{samples=sg} =
-  div [] $ map (flip viewDimGroup state) (1..(dims sg))
+viewDims {samples=sg@(SampleGroup s), samplesToShow=n} =
+  div [] $ zipWith (\d h -> viewDimGroup d h redS) (1..(dims sg)) histos
+  where
+  redS = take n s
+  histos = metricHistograms 11 (SampleGroup redS)
 
-viewDimGroup :: Int -> State -> Html Action
-viewDimGroup dim state =
+viewDimGroup :: Int -> SM.StrMap Histogram -> Array DimSamples -> Html Action
+viewDimGroup dim mhs sg =
   div [className "dim-view"]
-    [ viewAllSlices dim state
-    --, statHisto dim sg
-    ]
+    --[ viewAllSlices dim sg
+     --, statHisto dim sg
+    --]
+    ([viewAllSlices dim sg] ++ (viewMetricHistograms mhs))
 
-viewAllSlices :: Int -> State -> Html Action
-viewAllSlices dim {samples=SampleGroup sg, samplesToShow=n} =
+viewAllSlices :: Int -> Array DimSamples -> Html Action
+viewAllSlices dim sg =
   vegaChart [] allSlicesSpec jsonSlices
-    where jsonSlices = toVegaData $ convertSampleGroup dim (take n sg)
+    where jsonSlices = toVegaData $ convertSampleGroup dim sg
 
 convertSampleGroup dim sg =
   concat $ zipWith convert (1..(length sg)) sg
@@ -76,5 +83,18 @@ convertSlice sliceId dim (Slice s) =
   map convertSample s.slice
   where 
   convertSample (Sample s') = {slice_id: sliceId, d: dim, x: fst s', y: snd s'}
+
+viewMetricHistograms :: SM.StrMap Histogram -> Array (Html Action)
+viewMetricHistograms hs = 
+  --SM.fold (\l k v -> l `snoc` (viewMetricHistogram k v)) [] hs
+  SM.foldMap (\k v -> [viewMetricHistogram k v]) hs
+
+viewMetricHistogram :: String -> Histogram -> Html Action
+viewMetricHistogram name h =
+  vegaChart [] histogramSpec (toVegaData $ spy $ convert h)
+  where
+  convert histo =
+    zipWith (\s c -> {bin_start: s, bin_end: s+histo.width, count: c})
+      histo.binStarts histo.counts
 
 

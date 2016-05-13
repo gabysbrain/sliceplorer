@@ -14,12 +14,12 @@ var histogramSpec = {
   'scales': [{
     'name': 'x',
     'type': 'linear',
-    'domain': {'data': 'points', 'field': 'x'},
+    'domain': {'data': 'points', 'field': 'bin_start'},
     'range': 'width'
   }, {
     'name': 'y',
     'type': 'linear',
-    'domain': {'data': 'points', 'field': 'y'},
+    'domain': {'data': 'points', 'field': 'count'},
     'range': 'height'
   }],
   'axes': [{
@@ -38,24 +38,19 @@ var histogramSpec = {
     'layer': 'back'
   }],
   'marks': [{
-    'type': 'group',
-    'from': {
-      'data': 'points', 
-      'transform': [{'type': 'facet', 'groupby': ['index']}]
-    },
-    'marks': [{
-      'type': 'line',
-      'properties': {
-        'enter': {
-          'x': { 'scale': 'x', 'field': 'x' },
-          'y': { 'scale': 'y', 'field': 'y' },
-          'stroke': {'value': 'black'},
-          'strokeWidth': { 'value': 1 },
-          'strokeOpacity': { 'value': 0.1 },
-          'interpolate': { 'value': 'basis'}
-        }
+    'type': 'rect',
+    'from': {'data': 'points'},
+    'properties': {
+      'enter': {
+        'x': { 'scale': 'x', 'field': 'bin_start' },
+        'x2': {'scale': 'x', 'field': 'bin_end' },
+        'y': { 'scale': 'y', 'field': 'count' },
+        'y2': { 'scale': 'y', 'value': 0 },
+        'stroke': {'value': 'black'},
+        'strokeWidth': { 'value': 1 },
+        'fill': {'value': 'black'}
       }
-    }]
+    }
   }]
 };
 
@@ -265,7 +260,7 @@ var VegaChart = React.createClass({
 
     // parse the vega spec and create the vis
     vg.parse.spec(spec, function(error, chart) {
-      var vis = chart({ el: self.refs.chartContainer, renderer: 'canvas' });
+      var vis = chart({ el: self.refs.chartContainer, renderer: 'svg' });
 
       // set the initial data
       vis.data('points').insert(data);
@@ -300,6 +295,7 @@ var VegaChart = React.createClass({
   }
 });
 
+exports.histogramSpec = histogramSpec;
 exports.allSlicesSpec = allSlicesSpec;
 exports.lineSpec = function(xAxisName) {
   var s = Object.assign({}, lineSpecBase);
