@@ -91,7 +91,7 @@ viewMetricHistograms hs =
 
 viewMetricHistogram :: String -> Histogram -> Html Action
 viewMetricHistogram name h =
-  vegaChart [] histogramSpec (toVegaData $ spy $ convert h)
+  vegaChart [] histogramSpec (toVegaData $ convert h)
   where
   convert histo =
     zipWith (\s c -> {bin_start: s, bin_end: s+histo.width, count: c})

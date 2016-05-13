@@ -28,27 +28,36 @@ type HistBin =
 
 histogram :: Int -> Array Number -> Histogram
 histogram numBins nums = 
-  { min: mn
-  , max: mx
-  , width: width
-  , numBins: numBins
-  , binStarts: map (\x -> x.start) bins
-  , binEnds: map (\x -> x.end) bins
-  , counts: map (\x -> x.count) bins
-  }
+  if width < 1e-9
+     then { min: mn
+          , max: mx
+          , width: mx-mn
+          , numBins: 1
+          , binStarts: [mn]
+          , binEnds: [mx]
+          , counts: [length nums]
+          } -- FIXME: find a better solution for small difference numbers
+     else let bins = h' mn width (sort nums) []
+           in { min: mn
+              , max: mx
+              , width: width
+              , numBins: numBins
+              , binStarts: map (\x -> x.start) bins
+              , binEnds: map (\x -> x.end) bins
+              , counts: map (\x -> x.count) bins
+              }
   where
   mx = fromJust $ maximum nums
   mn = fromJust $ minimum nums
   width = (mx-mn) / (toNumber numBins)
-  bins = h' mn width (sort nums) []
 
 -- nums must be sorted!!!
 h' :: Number -> Number -> Array Number -> Array HistBin -> Array HistBin
 h' start width nums bins =
-  case splotted.init of
-       [] -> bins
-       xs -> h' (start+width) width splotted.rest $ 
-                snoc bins {start: start, end: start+width, count: length xs}
+  case splotted of
+       {rest=[]} -> bins
+       {init=xs, rest=rst} -> h' (start+width) width rst $ 
+                                snoc bins {start: start, end: start+width, count: length xs}
   where
   splotted = span (\x -> x <= (start+width)) nums
 
