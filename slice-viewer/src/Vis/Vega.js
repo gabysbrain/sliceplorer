@@ -8,8 +8,8 @@ var Pux = require('purescript-pux');
 var vg = require('vega');
 
 var histogramSpec = {
-  'width': 170,
-  'height': 170,
+  'width': 100,
+  'height': 100,
   'data': [{'name': 'points'}],
   'scales': [{
     'name': 'x',
@@ -28,8 +28,9 @@ var histogramSpec = {
     'type': 'x',
     'scale': 'x',
     'offset': 5,
-    'ticks': 5,
+    //'ticks': 5,
     //'title': 'Distance',
+    //'format': 'e',
     'layer': 'back'
   }, {
     'type': 'y',

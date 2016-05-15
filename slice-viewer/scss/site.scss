@@ -1,23 +1,46 @@
 
 @import "foundation";
 
-.sample {
+.dim-view {
   @include grid-row;
-}
 
-.full-slice {
-  @include grid-column(3);
-}
+  border-bottom: 1px solid darkgrey;
 
-.dim-slice {
-  @include grid-column(2);
+  .dim-name {
+    @include grid-column(1);
 
-  &:last-child {
-    @include grid-column-end;
+    vertical-align: middle;
+    //transform: rotate(-90deg);
+    //display: flex;
+    //justify-content: center;
+    //align-items: center;
+    border-right: 1px solid lightgrey;
   }
+
+  .dim-charts {
+    @include grid-column(11);
+  }
+
 }
 
-.error {
-  @include callout($alert-color);
+.slices-view {
+  &:before {
+    @include grid-row($behavior: nest);
+  }
+
+  @include grid-column(12);
 }
 
+.metric-histograms {
+  @include grid-row($behavior: nest);
+  @include grid-layout(6, ".metric-histogram");
+}
+
+.chart-title {
+  text-align: center;
+
+  margin-bottom: 0.5em;
+}
+
+.metric-histogram {
+}
