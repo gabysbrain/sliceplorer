@@ -1,21 +1,14 @@
 module Vis.Vega where
 
 import Prelude
-import Data.Function (Fn2, runFn2)
 import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data Data :: *
---type XYVal = {x ::Number, y:: Number}
---type Data = Array *
-
---foreign import parse2 :: Fn2 DOMElement Data Unit
-
 foreign import data VegaSpec :: *
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
-foreign import histogramSpec :: VegaSpec
 foreign import allSlicesSpec :: VegaSpec
 foreign import lineSpec :: String -> VegaSpec
 foreign import multiLineSpec :: VegaSpec

@@ -10,7 +10,8 @@ import Data.Int as I
 import Pux.Html (Html, div, h3, text, input)
 import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Pux.Html.Events (onChange, FormEvent)
-import Vis.Vega (vegaChart, toVegaData, allSlicesSpec, histogramSpec)
+import Vis.Vega (vegaChart, toVegaData, allSlicesSpec)
+import Vis.Vega.Histogram (vegaHistogram)
 import Stats (Histogram)
 import Debug.Trace
 
@@ -96,7 +97,7 @@ viewMetricHistogram :: String -> Histogram -> Html Action
 viewMetricHistogram name h =
   div [className "metric-histogram"]
     [ h3 [className "chart-title"] [text name]
-    , vegaChart [] histogramSpec (toVegaData $ convert h)
+    , vegaHistogram [] (toVegaData $ convert h)
     ]
   where
   convert histo =

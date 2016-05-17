@@ -7,56 +7,6 @@ var PureRenderMixin = require('react-addons-pure-render-mixin');
 var Pux = require('purescript-pux');
 var vg = require('vega');
 
-var histogramSpec = {
-  'width': 100,
-  'height': 100,
-  'data': [{'name': 'points'}],
-  'scales': [{
-    'name': 'x',
-    'type': 'linear',
-    'domainMin': {'data': 'points', 'field': 'bin_start'},
-    'domainMax': {'data': 'points', 'field': 'bin_end'},
-    'range': 'width',
-    'zero': false
-  }, {
-    'name': 'y',
-    'type': 'linear',
-    'domain': {'data': 'points', 'field': 'count'},
-    'range': 'height'
-  }],
-  'axes': [{
-    'type': 'x',
-    'scale': 'x',
-    'offset': 5,
-    //'ticks': 5,
-    //'title': 'Distance',
-    //'format': 'e',
-    'layer': 'back'
-  }, {
-    'type': 'y',
-    'scale': 'y',
-    'offset': 5,
-    'ticks': 5,
-    //'title': 'Value',
-    'layer': 'back'
-  }],
-  'marks': [{
-    'type': 'rect',
-    'from': {'data': 'points'},
-    'properties': {
-      'enter': {
-        'x': { 'scale': 'x', 'field': 'bin_start' },
-        'x2': {'scale': 'x', 'field': 'bin_end' },
-        'y': { 'scale': 'y', 'field': 'count' },
-        'y2': { 'scale': 'y', 'value': 0 },
-        'stroke': {'value': 'darkgrey'},
-        'strokeWidth': { 'value': 1 },
-        'fill': {'value': 'lightgrey'}
-      }
-    }
-  }]
-};
-
 var allSlicesSpec = {
   'width': 340,
   'height': 170,
@@ -99,10 +49,17 @@ var allSlicesSpec = {
         'enter': {
           'x': { 'scale': 'x', 'field': 'x' },
           'y': { 'scale': 'y', 'field': 'y' },
+          'interpolate': { 'value': 'basis'}
+        },
+        'update': {
           'stroke': {'value': 'black'},
           'strokeWidth': { 'value': 1 },
-          'strokeOpacity': { 'value': 0.1 },
-          'interpolate': { 'value': 'basis'}
+          'strokeOpacity': { 'value': 0.1 }
+        },
+        'hover': {
+          'stroke': {'value': 'red'},
+          'strokeWidth': { 'value': 1 },
+          'strokeOpacity': {'value': 1}
         }
       }
     }]
@@ -298,7 +255,6 @@ var VegaChart = React.createClass({
   }
 });
 
-exports.histogramSpec = histogramSpec;
 exports.allSlicesSpec = allSlicesSpec;
 exports.lineSpec = function(xAxisName) {
   var s = Object.assign({}, lineSpecBase);
