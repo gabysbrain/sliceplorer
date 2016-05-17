@@ -10,9 +10,11 @@ import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Vis.Vega (vegaChart, toVegaData, allSlicesSpec)
 import Stats (Histogram, HistBin)
+import Util (mapEnum)
 
 import Data.Samples (SampleGroup(..), DimSamples(..), dims, metricHistograms)
 import Data.Slices (Slice(..), Sample(..))
+import Debug.Trace
 
 import Vis.Vega.Histogram as H
 
@@ -27,6 +29,7 @@ type State =
   { dim :: Int
   , histograms :: SM.StrMap Histogram
   , slices :: Array VegaSlice
+  , histogramStates :: SM.StrMap H.State
   }
 
 data Action
@@ -36,13 +39,21 @@ data Action
 init :: Int -> SampleGroup -> State
 init d sg =
   { dim: d
-  , histograms: metricHistograms 11 d sg
+  , histograms: histos
   , slices: convertSampleGroup d sg
+  , histogramStates: map H.init histos
   }
+  where 
+  histos = metricHistograms 11 d sg
+
+update :: Action -> State -> State
+update (HistoHighlight n a) state =
+  state {histogramStates=newHisto}
+  where 
+  newHisto = SM.update (\hs -> Just $ H.update a hs) n state.histogramStates
 
 view :: State -> Html Action
-        --Int -> SM.StrMap Histogram -> Array DimSamples -> Html a
-view {dim=dim, histograms=mhs, slices=sg} =
+view {dim=dim, histogramStates=mhs, slices=sg} =
   div [className "dim-view"]
     [ div [className "dim-name"] [text $ "dim " ++ (show dim)]
     , div [className "dim-charts"] 
@@ -56,20 +67,20 @@ viewAllSlices dim sg =
   vegaChart [className "slices-view"] allSlicesSpec jsonSlices
     where jsonSlices = toVegaData $ sg
 
-viewMetricHistograms :: SM.StrMap Histogram -> Html Action
+viewMetricHistograms :: SM.StrMap H.State -> Html Action
 viewMetricHistograms hs = 
   div [className "metric-histograms"] $
     SM.foldMap (\k v -> [viewMetricHistogram k v]) hs
 
-viewMetricHistogram :: String -> Histogram -> Html Action
+viewMetricHistogram :: String -> H.State -> Html Action
 viewMetricHistogram name h =
   div [className "metric-histogram"]
     [ h3 [className "chart-title"] [text name]
-    , map (HistoHighlight name) $ H.view (H.init h)
+    , map (HistoHighlight name) $ H.view h
     ]
 
 convertSampleGroup dim (SampleGroup sg) =
-  concat $ zipWith convert (1..(length sg)) sg
+  concat $ mapEnum convert sg
   where
   convert i (DimSamples x) = convertSlice i dim (fromJust $ x.slices !! dim)
   

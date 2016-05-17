@@ -1,7 +1,7 @@
 module App.Overview where
 
 import Prelude hiding (div)
-import Data.Array (concatMap, snoc, zip, zipWith, concat, length, (!!), (..))
+import Data.Array (concatMap, modifyAt, snoc, zip, zipWith, concat, length, (!!), (..))
 import Data.Tuple (fst, snd)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
@@ -12,6 +12,7 @@ import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Pux.Html.Events (onChange, FormEvent)
 import Vis.Vega (vegaChart, toVegaData, allSlicesSpec)
 import Debug.Trace
+import Util (mapEnum)
 
 import App.DimensionView as DV
 
@@ -21,6 +22,7 @@ import Data.Slices (Slice(..), Sample(..))
 type State = 
   { samples :: SampleGroup
   , samplesToShow :: Int
+  , dimViews :: Array DV.State
   }
 
 data Action 
@@ -31,14 +33,24 @@ init :: SampleGroup -> State
 init sg =
   { samples: sg
   , samplesToShow: 10
+  , dimViews: map (\d -> DV.init d sg') (0..((dims sg)-1))
   }
-  -- FIXME: put all the filters here and filter everything when state changes
+  where 
+  sg' = subset 10 sg
 
 update :: Action -> State -> State
 update (UpdateNumberFilter ev) state =
   case I.fromString ev.target.value of
        Nothing -> state
-       Just n' -> state {samplesToShow=n'}
+       Just n' -> 
+         let sg' = subset n' state.samples
+          in state { samplesToShow = n'
+                   , dimViews = map (\d -> DV.init d sg') (0..(dims sg' - 1))
+                   }
+update (DimViewAction dim a) state = 
+  case modifyAt dim (DV.update a) state.dimViews of
+       Nothing -> state
+       Just newDVs -> state {dimViews=newDVs}
 
 view :: State -> Html Action
 view ({samples=SampleGroup []}) =
@@ -57,9 +69,8 @@ view state@{samples=(SampleGroup sg), samplesToShow=n} =
     ]
 
 viewDims :: State -> Html Action
-viewDims {samples=sg, samplesToShow=n} =
-  div [] $ map initDV (0..((dims sg)-1))
+viewDims state =
+  div [] $ mapEnum initDV state.dimViews
   where
-  sg' = subset n sg
-  initDV d = map (DimViewAction d) $ DV.view (DV.init d sg')
+  initDV d s = map (DimViewAction d) $ DV.view s
 

@@ -11,7 +11,7 @@ function _spec() {
   return {
     'width': 100,
     'height': 100,
-    'data': [{'name': 'bars'}],
+    'data': [{'name': 'bars'}, {'name': 'highlightBar'}],
     'signals': [{
       'name': 'barhover', 'init': null,
       'streams': [
@@ -57,14 +57,25 @@ function _spec() {
           'x': { 'scale': 'x', 'field': 'bin_start' },
           'x2': {'scale': 'x', 'field': 'bin_end' },
           'y': { 'scale': 'y', 'field': 'count' },
-          'y2': { 'scale': 'y', 'value': 0 }
-        },
-        'update': {
+          'y2': { 'scale': 'y', 'value': 0 },
           'stroke': {'value': 'darkgrey'},
           'strokeWidth': { 'value': 1 },
           'fill': {'value': 'lightgrey'}
-        },
-        'hover': {
+        }
+      }
+    },{
+      'type': 'rect',
+      'name': 'barHighlight',
+      'interactive': false,
+      'from': {'data': 'highlightBar'},
+      'properties': {
+        'enter': {
+          'x': { 'scale': 'x', 'field': 'bin_start' },
+          'x2': {'scale': 'x', 'field': 'bin_end' },
+          'y': { 'scale': 'y', 'field': 'count' },
+          'y2': { 'scale': 'y', 'value': 0 },
+          'stroke': {'value': 'darkgrey'},
+          'strokeWidth': { 'value': 1 },
           'fill': {'value': 'red'}
         }
       }
@@ -81,22 +92,26 @@ var VegaHistogram = React.createClass({
     return {vis: null};
   },
 
-  propTypes: {
-    data: PropTypes.array.isRequired
-  },
+  //propTypes: {
+    //data: PropTypes.array.isRequired
+  //},
 
   // On initial load, generate the initial vis and attach signal listeners
   componentDidMount: function() {
     var data = this.props.data;
+    var highlightBar = this.props.highlightBar;
     var spec = _spec();
     //spec.axes[0].title = this.props.xAxisName;
     var self = this;
 
     // parse the vega spec and create the vis
     vg.parse.spec(spec, function(error, chart) {
-      var vis = chart({ el: self.refs.chartContainer, renderer: 'svg' });
+      var vis = chart({ el: self.refs.chartContainer, renderer: 'canvas' });
 
       // set the initial data
+      if(highlightBar) {
+        vis.data('highlightBar').insert([highlightBar]);
+      }
       vis.data('bars').insert(data);
 
       // render the vis
@@ -111,16 +126,24 @@ var VegaHistogram = React.createClass({
   componentDidUpdate: function() {
     var vis = this.state.vis;
     var data = this.props.data;
+    var highlightBar = this.props.highlightBar;
     var handleHover = this.props.onBarHover;
 
     if (vis) {
       if(handleHover) {
-        vis.onSignal('barhover', function (_, datum) {self._handleHover(datum)});
+        //vis.onSignal('barhover', function (_, datum) {self._handleHover(datum)});
+        vis.onSignal('barhover', function (_, datum) {
+          handleHover(datum)
+        });
       } else {
         vis.offSignal('barhover');
       }
 
       // update data in case it changed
+      vis.data('highlightBar').remove(function() {return true;});
+      if(highlightBar) {
+        vis.data('highlightBar').insert([highlightBar]);
+      }
       vis.data('bars').remove(function() {return true;}).insert(data);
 
       vis.update();
