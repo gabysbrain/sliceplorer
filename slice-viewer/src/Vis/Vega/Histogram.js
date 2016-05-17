@@ -13,7 +13,7 @@ function _spec() {
     'height': 100,
     'data': [{'name': 'bars'}],
     'signals': [{
-      'name': 'hover', 'init': null,
+      'name': 'barhover', 'init': null,
       'streams': [
         {'type': '@bar:mouseover', 'expr': 'datum'},
         {'type': '@bar:mouseout', 'expr': 'null'}
@@ -111,8 +111,15 @@ var VegaHistogram = React.createClass({
   componentDidUpdate: function() {
     var vis = this.state.vis;
     var data = this.props.data;
+    var handleHover = this.props.onBarHover;
 
     if (vis) {
+      if(handleHover) {
+        vis.onSignal('barhover', function (_, datum) {self._handleHover(datum)});
+      } else {
+        vis.offSignal('barhover');
+      }
+
       // update data in case it changed
       vis.data('bars').remove(function() {return true;}).insert(data);
 

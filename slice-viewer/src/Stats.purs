@@ -26,6 +26,10 @@ type HistBin =
   , count :: Int
   }
 
+{--instance showHistBin :: Show HistBin where--}
+  {--show {start=s, end=e, count=c} = --}
+    {--"{start: " ++ (show s) ++ (" end: " ++ (show e) ++ " count: " ++ (show c) ++ "}"--}
+
 histogram :: Int -> Array Number -> Histogram
 histogram numBins nums = 
   if width < 1e-9

@@ -13,8 +13,14 @@ foreign import allSlicesSpec :: VegaSpec
 foreign import lineSpec :: String -> VegaSpec
 foreign import multiLineSpec :: VegaSpec
 
+{--type HoverEvent a =--}
+  {--{ datum :: a }--}
+
 toVegaData :: forall a. Array a -> Data
 toVegaData = unsafeCoerce
+
+{--onHover :: forall a action. (HoverEvent a -> action) -> Attribute action--}
+{--onHover = runFn2 handler "onHover"--}
 
 dataAttr :: forall a. Data -> Attribute a
 dataAttr = attr "data"

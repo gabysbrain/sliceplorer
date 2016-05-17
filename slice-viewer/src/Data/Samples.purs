@@ -2,14 +2,13 @@ module Data.Samples where
 
 import Prelude
 import Data.Slices (Slice(..), metrics)
-import Data.Array (nub, concat, head, snoc, (..), (!!))
+import Data.Array (nub, take, concat, head, snoc, (..), (!!))
 import Data.Array as A
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..), either)
 import Data.StrMap as SM
 import Data.Foldable (foldl)
-import Data.Traversable (sequence)
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
 import Control.Monad.Eff.Exception (Error, error)
 import Control.Monad.Aff (Aff, attempt)
@@ -27,10 +26,10 @@ newtype SampleGroup = SampleGroup (Array DimSamples)
 
 instance dimSamplesIsForeign :: IsForeign DimSamples where
   read json = do
-    dims <- readProp "dims" json
-    fp   <- readProp "slice" json
-    s    <- readProp "slices" json
-    pure $ DimSamples {dims: dims, focusPoint: fp, slices: s}
+    d  <- readProp "dims" json
+    fp <- readProp "slice" json
+    s  <- readProp "slices" json
+    pure $ DimSamples {dims: d, focusPoint: fp, slices: s}
 
 instance sampleGroupIsForeign :: IsForeign SampleGroup where
   read json = do
@@ -38,8 +37,8 @@ instance sampleGroupIsForeign :: IsForeign SampleGroup where
     pure $ SampleGroup sg
 
 jsonSamples :: forall eff. String -> Int -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
-jsonSamples fname dims = do
-  let url = "http://localhost:5000/slice/" ++ fname ++ "/" ++ (show dims)
+jsonSamples fname d = do
+  let url = "http://localhost:5000/slice/" ++ fname ++ "/" ++ (show d)
   --res <- attempt $ get "/data/test.csv"
   res <- attempt $ get url
   let samples = case res of
@@ -62,29 +61,30 @@ metricNames (DimSamples r) =
 sliceList :: SampleGroup -> Array Slice
 sliceList (SampleGroup sg) = concat $ map (\(DimSamples ds) -> ds.slices) sg
 
+subset :: Int -> SampleGroup -> SampleGroup
+subset n (SampleGroup sg) = SampleGroup $ take n sg
+
 dims :: SampleGroup -> Int
 dims (SampleGroup sg) = 
   case head sg of
        Nothing -> 0
        Just (DimSamples x) -> x.dims
 
-metricHistograms :: Int -> SampleGroup -> Array (SM.StrMap Histogram)
-metricHistograms bins sg =
-  map (\m -> map (histogram bins) m) flatM
+metricHistograms :: Int -> Int -> SampleGroup -> SM.StrMap Histogram
+metricHistograms bins dim sg =
+  map (histogram bins) flatM
   where
-  flatM = flattenMetrics sg
+  flatM = flattenMetrics dim sg
 
-flattenMetrics :: SampleGroup -> Array (SM.StrMap (Array Number))
-flattenMetrics sg'@(SampleGroup sg) =
-  map combineMaps tmp -- TODO: there's probably a prettier way to do all this
+flattenMetrics :: Int -> SampleGroup -> SM.StrMap (Array Number)
+flattenMetrics dim sg'@(SampleGroup sg) =
+  combineMaps tmp -- TODO: there's probably a prettier way to do all this
   where 
-  tmp :: Array (Array (SM.StrMap Number))
-  --tmp = sequence $ map procDs sg
-  tmp = map (\d -> map (procDs d) sg) (0..(dims sg'-1))
+  tmp :: Array (SM.StrMap Number)
+  tmp = map (procDs dim) sg
 
   procDs :: Int -> DimSamples -> SM.StrMap Number
   procDs d (DimSamples ds) = metrics (fromJust $ ds.slices !! d)
-
 
 combineMaps :: Array (SM.StrMap Number) -> SM.StrMap (Array Number)
 combineMaps ms = 
