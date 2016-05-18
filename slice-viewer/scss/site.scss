@@ -1,6 +1,11 @@
 
 @import "foundation";
 
+.error {
+  @include callout-base;
+  @include callout-style($alert-color);
+}
+
 .dim-view {
   @include grid-row;
 
