@@ -45,7 +45,8 @@ update (UpdateNumberFilter ev) state =
        Just n' -> 
          let sg' = subset n' state.samples
           in state { samplesToShow = n'
-                   , dimViews = map (\d -> DV.init d sg') (0..(dims sg' - 1))
+                   , dimViews = map (\dv -> DV.update (DV.UpdateSamples sg') dv)
+                                    state.dimViews
                    }
 update (DimViewAction dim a) state = 
   case modifyAt dim (DV.update a) state.dimViews of

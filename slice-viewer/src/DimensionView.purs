@@ -33,7 +33,8 @@ type State =
   }
 
 data Action
-  = HistoHighlight String H.Action
+  = UpdateSamples SampleGroup
+  | HistoHighlight String H.Action
 
 --update (UpdateSamples sg)
 init :: Int -> SampleGroup -> State
@@ -47,6 +48,13 @@ init d sg =
   histos = metricHistograms 11 d sg
 
 update :: Action -> State -> State
+update (UpdateSamples sg) state = state 
+  { histograms = histos
+  , slices = convertSampleGroup state.dim sg
+  , histogramStates = map H.init histos
+  }
+  where 
+  histos = metricHistograms 11 state.dim sg
 update (HistoHighlight n a) state =
   state {histogramStates=newHisto}
   where 

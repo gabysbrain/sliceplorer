@@ -36,7 +36,7 @@ update (HoverBar ev) state = state {highlight=ev}
 onBarHover :: forall action. (BarHoverEvent -> action) -> Attribute action
 onBarHover h = runFn2 handler "onBarHover" saniHandler
   where
-  saniHandler e = h $ spy $ N.toMaybe e
+  saniHandler e = h $ N.toMaybe e
 
 view :: State -> Html Action
 view state = fromReact (attrs state) []
