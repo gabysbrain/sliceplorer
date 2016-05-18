@@ -14,6 +14,7 @@ import Vis.Vega (vegaChart, toVegaData, allSlicesSpec)
 import Debug.Trace
 import Util (mapEnum)
 
+import App.SliceSampleView as SSV
 import App.DimensionView as DV
 
 import Data.Samples (SampleGroup(..), DimSamples(..), dims, metricHistograms, subset)
@@ -22,17 +23,20 @@ import Data.Slices (Slice(..), Sample(..))
 type State = 
   { samples :: SampleGroup
   , samplesToShow :: Int
+  , sliceSampleView :: SSV.State
   , dimViews :: Array DV.State
   }
 
 data Action 
   = UpdateNumberFilter FormEvent
+  | SliceSampleViewAction SSV.Action
   | DimViewAction Int DV.Action
 
 init :: SampleGroup -> State
 init sg =
   { samples: sg
   , samplesToShow: 10
+  , sliceSampleView: SSV.init sg'
   , dimViews: map (\d -> DV.init d sg') (0..((dims sg)-1))
   }
   where 
@@ -45,9 +49,12 @@ update (UpdateNumberFilter ev) state =
        Just n' -> 
          let sg' = subset n' state.samples
           in state { samplesToShow = n'
+                   , sliceSampleView = SSV.update (SSV.UpdateSamples sg') state.sliceSampleView
                    , dimViews = map (\dv -> DV.update (DV.UpdateSamples sg') dv)
                                     state.dimViews
                    }
+update (SliceSampleViewAction a) state =
+  state {sliceSampleView=SSV.update a state.sliceSampleView}
 update (DimViewAction dim a) state = 
   case modifyAt dim (DV.update a) state.dimViews of
        Nothing -> state
@@ -66,6 +73,7 @@ view state@{samples=(SampleGroup sg), samplesToShow=n} =
                 []
         , input [type_ "text", value (show n), onChange UpdateNumberFilter] []
         ]
+    , map SliceSampleViewAction $ SSV.view state.sliceSampleView
     , viewDims state
     ]
 

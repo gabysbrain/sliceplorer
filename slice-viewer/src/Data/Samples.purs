@@ -98,4 +98,6 @@ merge :: Number -> Maybe (Array Number) -> Maybe (Array Number)
 merge x Nothing = Just [x]
 merge x (Just xs) = Just $ snoc xs x
 
+focusPoint :: DimSamples -> Array Number
+focusPoint (DimSamples ds) = ds.focusPoint
 
