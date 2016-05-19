@@ -16,6 +16,7 @@
     "purescript-foreign": "^0.7.2",
     "foundation-sites": "^6.2.1",
     "purescript-maps": "^0.5.7",
-    "purescript-nullable": "^0.2.1"
+    "purescript-nullable": "^0.2.1",
+    "purescript-debug": "^0.1.7"
   }
 }
