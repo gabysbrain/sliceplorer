@@ -40,17 +40,19 @@ data Action
 type State = 
   { dim :: Int
   , slices :: Array VegaSlice
+  , hoverSlice :: Maybe VegaSlice
   }
 
 init :: Int -> SampleGroup -> State 
 init d sg = 
   { dim: d
   , slices: convertSampleGroup d sg
+  , hoverSlice: Nothing
   }
 
 update (UpdateSamples sg) state = 
   state { slices=convertSampleGroup state.dim sg }
-update (HoverSlice ev) state = state
+update (HoverSlice ev) state = state {hoverSlice=ev}
 
 onSliceHover :: forall action. (SliceHoverEvent -> action) -> Attribute action
 onSliceHover s = runFn2 handler "onSliceHover" saniHandler
@@ -61,10 +63,10 @@ view :: State -> Html Action
 view state = fromReact (attrs state) []
 
 attrs :: State -> Array (Attribute Action)
-attrs state = [da, fa]
-  {--case state.highlight of--}
-       {--Just h -> [da, attr "highlightSlice" h]--}
-       {--Nothing -> [da]--}
+attrs state = 
+  case state.hoverSlice of
+       Just s -> [da, fa, attr "hoverSlice" s]
+       Nothing -> [da, fa]
   where
   da = dataAttr $ toVegaData $ state.slices
   fa = onSliceHover HoverSlice

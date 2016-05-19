@@ -11,7 +11,7 @@ function _spec() {
   return {
     'width': 340,
     'height': 170,
-    'data': [{'name': 'lines'}],
+    'data': [{'name': 'lines'}, {'name': 'highlight'}],
     'signals': [{
       'name': 'slicehover', 'init': null,
       'streams': [
@@ -59,9 +59,19 @@ function _spec() {
             'x': { 'scale': 'x', 'field': 'x' },
             'y': { 'scale': 'y', 'field': 'y' },
             'interpolate': { 'value': 'basis'},
-            'stroke': {'value': 'black'},
+            'stroke': [{
+              'test': "indata('highlight', datum.slice_id, 'slice_id')",
+              'value': 'red'
+            }, {
+              'value': 'black'
+            }],
             'strokeWidth': { 'value': 1 },
-            'strokeOpacity': { 'value': 0.1 }
+            'strokeOpacity': [{
+              'test': "indata('highlight', datum.slice_id, 'slice_id')",
+              'value': 1
+            }, { 
+              'value': 0.1
+            }]
           },
         }
       }]
@@ -85,7 +95,7 @@ var VegaSlices = React.createClass({
   // On initial load, generate the initial vis and attach signal listeners
   componentDidMount: function() {
     var data = this.props.data;
-    //var highlightBar = this.props.highlightBar;
+    var hoverSlice = this.props.hoverSlice;
     var handleHover = this.props.onSliceHover;
     var spec = _spec();
     //spec.axes[0].title = this.props.xAxisName;
@@ -96,9 +106,9 @@ var VegaSlices = React.createClass({
       var vis = chart({ el: self.refs.chartContainer, renderer: 'canvas' });
 
       // set the initial data
-      //if(highlightBar) {
-        //vis.data('highlightBar').insert([highlightBar]);
-      //}
+      if(hoverSlice) {
+        vis.data('highlight').insert([hoverSlice]);
+      }
       vis.data('lines').insert(data);
       
       // maybe enable hovering
@@ -118,14 +128,14 @@ var VegaSlices = React.createClass({
   componentDidUpdate: function() {
     var vis = this.state.vis;
     var data = this.props.data;
-    //var highlightBar = this.props.highlightBar;
+    var hoverSlice = this.props.hoverSlice;
 
     if (vis) {
       // update data in case it changed
-      //vis.data('highlightBar').remove(function() {return true;});
-      //if(highlightBar) {
-        //vis.data('highlightBar').insert([highlightBar]);
-      //}
+      vis.data('highlight').remove(function() {return true;});
+      if(hoverSlice) {
+        vis.data('highlight').insert([hoverSlice]);
+      }
       vis.data('lines').remove(function() {return true;}).insert(data);
 
       vis.update();
