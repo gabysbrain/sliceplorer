@@ -5,6 +5,7 @@ var debug = process.env.WEBPACK_ENV == 'dev';
 require('../scss/site.scss');
 
 if(module.hot) {
+  debug = false;
 	var app = Main[debug ? 'debug' : 'main'](window.puxLastState || initialState)();
 	app.state.subscribe(function (state) {
 	 window.puxLastState = state;

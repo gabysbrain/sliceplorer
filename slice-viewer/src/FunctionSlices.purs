@@ -17,7 +17,7 @@ import Network.HTTP.Affjax (AJAX)
 import Pux (EffModel, noEffects)
 import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
-import Pux.Html.Attributes (className, selected, value, href)
+import Pux.Html.Attributes (className, selected, disabled, value, href)
 
 import Data.Samples (SampleGroup(..), DimSamples(..),
                      jsonSamples, sortBy, metricNames)
@@ -68,6 +68,22 @@ update (UpdateSamples (Right s@(SampleGroup xs))) state =
                     , overview = Just (Overview.init s)
                     , error = Nothing
                     }
+update (DimChange ev) state = 
+  -- TODO: maybe some error checking?
+  { state: state {d=fromJust $ fromString ev.target.value}
+  , effects: [ do
+      return RequestSamples
+    ]
+  }
+update (FunctionChange ev) state =
+  -- TODO: maybe some error checking?
+  { state: state { function=ev.target.value
+                 , d=if is3dData ev.target.value then 3 else state.d
+                 }
+  , effects: [ do
+      return RequestSamples
+    ]
+  }
 update (OverviewView action) state =
   noEffects $ case state.overview of
                    Nothing -> state
@@ -85,22 +101,23 @@ viewControls :: State -> Html Action
 viewControls state = 
   div [] 
     [ div [className "data-controls"] 
-        [ dimSelector state.d
+        [ dimSelector state
         , funcSelector state.function
         , button [onClick (const RequestSamples)] [text "Fetch samples"]
         ]
     ]
 
-dimSelector :: Int -> Html Action
-dimSelector d =
-  select [onChange DimChange, value (show d)] $
+dimSelector :: State -> Html Action
+dimSelector {d=d, function=fn} =
+  select [onChange DimChange, value (show d), disabled (is3dData fn)] $
     map (\i -> option [value (show i)] [text $ show i]) (2..10)
 
 funcSelector :: String -> Html Action
 funcSelector fname =
   select [onChange FunctionChange, value fname] $
     map (\f -> option [value f] [text f])
-      ["ackley", "rosenbrock", "spherical", "schwefel", "zakharov"]
+      [ "ackley", "rosenbrock", "spherical", "schwefel", "zakharov"
+      , "fuel", "rho", "neghip"]
 
 viewError :: Maybe Error -> Html Action
 viewError Nothing  = text ""
@@ -112,3 +129,6 @@ viewSamples {overview=Just o} =
   div [className "samples"]
     [ map OverviewView $ Overview.view o ]
     
+is3dData :: String -> Boolean
+is3dData s = s == "fuel" || s == "rho" || s == "neghip"
+

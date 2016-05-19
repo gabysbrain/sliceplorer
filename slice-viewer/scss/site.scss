@@ -6,6 +6,10 @@
   @include callout-style($alert-color);
 }
 
+.focus-points {
+  @include grid-column-row;
+}
+
 .dim-view {
   @include grid-row;
 
