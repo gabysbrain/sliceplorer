@@ -60,23 +60,12 @@ function _spec() {
           'y2': { 'scale': 'y', 'value': 0 },
           'stroke': {'value': 'darkgrey'},
           'strokeWidth': { 'value': 1 },
-          'fill': {'value': 'lightgrey'}
-        }
-      }
-    },{
-      'type': 'rect',
-      'name': 'barHighlight',
-      'interactive': false,
-      'from': {'data': 'highlightBar'},
-      'properties': {
-        'enter': {
-          'x': { 'scale': 'x', 'field': 'bin_start' },
-          'x2': {'scale': 'x', 'field': 'bin_end' },
-          'y': { 'scale': 'y', 'field': 'count' },
-          'y2': { 'scale': 'y', 'value': 0 },
-          'stroke': {'value': 'darkgrey'},
-          'strokeWidth': { 'value': 1 },
-          'fill': {'value': 'red'}
+          'fill': [{
+            'test': "indata('highlightBar', datum.bin_start, 'bin_start')",
+            'value': 'red'
+          }, {
+            'value': 'lightgrey'
+          }]
         }
       }
     }]
