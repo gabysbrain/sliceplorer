@@ -9,7 +9,6 @@ foreign import data Data :: *
 foreign import data VegaSpec :: *
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
-foreign import allSlicesSpec :: VegaSpec
 foreign import lineSpec :: String -> VegaSpec
 foreign import multiLineSpec :: VegaSpec
 

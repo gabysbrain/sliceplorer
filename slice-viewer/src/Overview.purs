@@ -10,7 +10,6 @@ import Data.Int as I
 import Pux.Html (Html, div, h3, text, input)
 import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Pux.Html.Events (onChange, FormEvent)
-import Vis.Vega (vegaChart, toVegaData, allSlicesSpec)
 import Debug.Trace
 import Util (mapEnum)
 
