@@ -44,10 +44,8 @@ view state = fromReact (attrs state) []
 attrs :: State -> Array (Attribute Action)
 attrs state = 
   case state.highlight of
-       Just h -> [da, attr "highlightBar" h]
-       Nothing -> [da]
-       {--Just h -> [da, fa, attr "highlightBar" h]--}
-       {--Nothing -> [da, fa]--}
+       Just h -> [da, fa, attr "highlightBar" h]
+       Nothing -> [da, fa]
   where
   da = dataAttr $ toVegaData $ convert state.histogram
   fa = onBarHover HoverBar

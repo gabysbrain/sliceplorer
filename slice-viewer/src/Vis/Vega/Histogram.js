@@ -100,6 +100,7 @@ var VegaHistogram = React.createClass({
   componentDidMount: function() {
     var data = this.props.data;
     var highlightBar = this.props.highlightBar;
+    var handleHover = this.props.onBarHover;
     var spec = _spec();
     //spec.axes[0].title = this.props.xAxisName;
     var self = this;
@@ -113,6 +114,11 @@ var VegaHistogram = React.createClass({
         vis.data('highlightBar').insert([highlightBar]);
       }
       vis.data('bars').insert(data);
+      
+      // maybe enable hovering
+      if(handleHover) {
+        vis.onSignal('barhover', function (_, datum) {handleHover(datum);});
+      }
 
       // render the vis
       vis.update();
@@ -127,18 +133,8 @@ var VegaHistogram = React.createClass({
     var vis = this.state.vis;
     var data = this.props.data;
     var highlightBar = this.props.highlightBar;
-    var handleHover = this.props.onBarHover;
 
     if (vis) {
-      if(handleHover) {
-        //vis.onSignal('barhover', function (_, datum) {self._handleHover(datum)});
-        vis.onSignal('barhover', function (_, datum) {
-          handleHover(datum)
-        });
-      } else {
-        vis.offSignal('barhover');
-      }
-
       // update data in case it changed
       vis.data('highlightBar').remove(function() {return true;});
       if(highlightBar) {
