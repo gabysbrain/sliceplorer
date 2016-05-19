@@ -9,8 +9,8 @@ var vg = require('vega');
 
 function _spec() {
   return {
-    'width': 300,
-    'height': 300,
+    'width': 450,
+    'height': 450,
     'data': [{'name': 'points'}, {'name': 'fields'}],
     'scales': [{
       'name': 'gx',
