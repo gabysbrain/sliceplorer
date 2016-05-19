@@ -14,38 +14,31 @@ import Util (mapEnum)
 
 data Action
   = UpdateSamples SampleGroup
+  | SplomAction Splom.Action
 
 type State = 
-  { fieldNames :: Array String
-  , focusPoints :: Array Splom.VegaPoint
+  { splom :: Splom.State
   }
 
 init :: SampleGroup -> State
 init sg =
-  { fieldNames: fields sg
-  , focusPoints: splomData sg
+  { splom: Splom.init (fields sg) sg
   }
 
 update :: Action -> State -> State
 update (UpdateSamples sg) state = state
-  { fieldNames = fields sg
-  , focusPoints = splomData sg
+  { splom=Splom.update (Splom.UpdateSamples sg) state.splom
+  }
+update (SplomAction a) state = state
+  {splom=Splom.update a state.splom
   }
 
 view :: State -> Html Action
 view state =
   div [className "focus-points"]
-    [ Splom.view state.fieldNames state.focusPoints
+    [ map SplomAction $ Splom.view state.splom
     ]
 
 fields :: SampleGroup -> Array String
 fields sg = map (\i -> "x" ++ (show i)) (1..(dims sg))
-
-splomData :: SampleGroup -> Array Splom.VegaPoint
-splomData (SampleGroup sg) = map splomDatum sg
-
-splomDatum :: DimSamples -> Splom.VegaPoint
-splomDatum ds = SM.fromFoldable named
-  where
-  named = mapEnum (\i x -> Tuple ("x"++(show (i+1))) x) $ focusPoint ds
 

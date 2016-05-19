@@ -11,7 +11,14 @@ function _spec() {
   return {
     'width': 450,
     'height': 450,
-    'data': [{'name': 'points'}, {'name': 'fields'}],
+    'data': [{'name': 'points'}, {'name': 'fields'}, {'name': 'highlight'}],
+    'signals': [{
+      'name': 'pointhover', 'init': null,
+      'streams': [
+        {'type': '@point:mouseover', 'expr': 'datum'},
+        {'type': '@point:mouseout', 'expr': 'null'}
+      ]
+    }],
     'scales': [{
       'name': 'gx',
       'type': 'ordinal',
@@ -59,12 +66,18 @@ function _spec() {
       ],
       'marks': [{
         'type': 'symbol',
+        'name': 'point',
         'from': {'data': 'points'},
         'properties': {
           'enter': {
             'x': {'scale': 'x', 'field': {'datum': {'parent': 'a.data'}}},
             'y': {'scale': 'y', 'field': {'datum': {'parent': 'b.data'}}},
-            'fill': {'value': 'darkgrey'},
+            'fill': [{
+              'test': "indata('highlight', datum.id, 'id')",
+              'value': 'red'
+            }, {
+              'value': 'darkgrey'
+            }],
             'fillOpacity': {'value': 1},
             'size': {'value': 35}
           }
@@ -87,6 +100,8 @@ var VegaSplom = React.createClass({
   componentDidMount: function() {
     var data = this.props.data;
     var fields = this.props.fields;
+    var hoverPoint = this.props.hoverPoint;
+    var handleHover = this.props.onPointHover;
     var spec = _spec();
     var self = this;
 
@@ -97,6 +112,14 @@ var VegaSplom = React.createClass({
       // set the initial data
       vis.data('fields').insert(fields);
       vis.data('points').insert(data);
+      if(hoverPoint) {
+        vis.data('highlight').insert([hoverPoint]);
+      }
+
+      // maybe enable hovering
+      if(handleHover) {
+        vis.onSignal('pointhover', function (_, datum) {handleHover(datum);});
+      }
 
       // render the vis
       vis.update();
@@ -111,6 +134,7 @@ var VegaSplom = React.createClass({
     var vis = this.state.vis;
     var data = this.props.data;
     var fields = this.props.fields;
+    var hoverPoint = this.props.hoverPoint;
 
     if (vis) {
       // update data in case it changed
@@ -119,6 +143,10 @@ var VegaSplom = React.createClass({
       vis.data('points').remove(function() {return true;});
       //vis.data('fields').insert(fields);
       vis.data('points').insert(data);
+      vis.data('highlight').remove(function() {return true;});
+      if(hoverPoint) {
+        vis.data('highlight').insert([hoverPoint]);
+      }
 
       vis.update();
     }
