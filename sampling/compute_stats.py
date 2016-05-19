@@ -57,7 +57,7 @@ def convert_slices(fname, dims):
   fname = 'slice_samples/%s_%s_slices.csv' % (fname, dims)
   # TODO: check for file existence
 
-  s = pd.read_csv(fname, header=None, low_memory=False)
+  s = pd.read_csv(fname, header=None, dtype='float64')
 
   # set the column names
   col_names = ['x%s' % i for i in range(1, len(s.columns))] + ['y']
