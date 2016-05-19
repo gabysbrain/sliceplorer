@@ -1,19 +1,19 @@
 
 import pandas as pd
-from ortho_slices import SAMPLE_N
+import numpy as np
 
 class SliceGroup(object):
-  def __init__(self, xs):
+  def __init__(self, sample_n, xs):
     dims = len(xs.columns) - 1
 
     # compute the sample location
-    s1,s2 = xs.iloc[0,0:dims], xs.iloc[SAMPLE_N,0:dims]
+    s1,s2 = xs.iloc[0,0:dims], xs.iloc[sample_n,0:dims]
     s = s1.copy()
     s[0] = s2[0]
 
     self.slice = list(s)
     self.dims = dims
-    self.slices = list(dim_groups(xs))
+    self.slices = list(dim_groups(sample_n, xs))
 
 class Slice(object):
   def __init__(self, d, samples):
@@ -33,15 +33,20 @@ class Slice(object):
 
 def slice_groups(samples):
   dims = len(samples.columns) - 1
-  step_size = dims * SAMPLE_N
+
+  start_idxs = np.where(samples.iloc[:,0]==samples.iloc[0,0])
+  sample_count = start_idxs[0][1]
+  print(sample_count)
+
+  step_size = dims * sample_count
 
   for i in range(0, len(samples), step_size):
-    yield SliceGroup(samples[i:(i+step_size)])
+    yield SliceGroup(sample_count, samples[i:(i+step_size)])
 
-def dim_groups(slices):
+def dim_groups(sample_n, slices):
   dims = len(slices.columns) - 1
-  for i,d in zip(range(0, len(slices), SAMPLE_N), range(dims)):
-    yield Slice(d, slices[i:(i+SAMPLE_N)])
+  for i,d in zip(range(0, len(slices), sample_n), range(dims)):
+    yield Slice(d, slices[i:(i+sample_n)])
 
 def gradients(slice, d):
   diffs = slice.diff()
@@ -52,7 +57,7 @@ def convert_slices(fname, dims):
   fname = 'slice_samples/%s_%s_slices.csv' % (fname, dims)
   # TODO: check for file existence
 
-  s = pd.read_csv(fname, header=None)
+  s = pd.read_csv(fname, header=None, low_memory=False)
 
   # set the column names
   col_names = ['x%s' % i for i in range(1, len(s.columns))] + ['y']
@@ -61,7 +66,7 @@ def convert_slices(fname, dims):
   return slice_groups(s)
 
 def run():
-  s = convert_slices('ackley', 2)
+  s = convert_slices('fuel', 3)
 
   print([x for x in s][0:2])
 
