@@ -36,6 +36,12 @@ instance sampleGroupIsForeign :: IsForeign SampleGroup where
     sg <- read json
     pure $ SampleGroup sg
 
+type MetricRangeFilter =
+  { metric :: String
+  , minVal :: Number
+  , maxVal :: Number
+  }
+
 jsonSamples :: forall eff. String -> Int -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
 jsonSamples fname d = do
   let url = "http://localhost:5000/slice/" ++ fname ++ "/" ++ (show d)

@@ -2,7 +2,7 @@ module App.DimensionView where
 
 import Prelude hiding (div)
 import Data.StrMap as SM
-import Data.Array (concatMap, snoc, take, zip, zipWith, concat, length, (!!), (..))
+import Data.Array (concatMap, snoc, take, zip, zipWith, concat, length, head, (!!), (..))
 import Data.Tuple (fst, snd)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
@@ -27,6 +27,7 @@ type State =
 
 data Action
   = UpdateSamples SampleGroup
+  | FocusPointFilter (Maybe FocusPoint)
   | SliceViewAction SV.Action
   | HistoAction String H.Action
 
@@ -49,6 +50,9 @@ update (UpdateSamples sg) state =
         }
   where 
   histos = metricHistograms 11 state.dim sg
+update (FocusPointFilter fp) state = state
+  { sliceView = SV.update (SV.HoverSlice $ map (highlightedSlice state) fp) state.sliceView 
+  }
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}
 update (HistoAction n a) state =
@@ -82,4 +86,10 @@ viewMetricHistogram name h =
     [ h3 [className "chart-title"] [text name]
     , map (HistoAction name) $ H.view h
     ]
+
+highlightedSlice :: State -> FocusPoint -> SV.VegaSlicePoint
+highlightedSlice state (FocusPoint fp) =
+  fromJust $ head $ SV.convertSlice (SV.sliceId state.sliceView slice) state.dim slice
+  where
+  slice = fromJust $ fp.slices !! state.dim
 

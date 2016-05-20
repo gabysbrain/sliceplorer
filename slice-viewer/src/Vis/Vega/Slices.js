@@ -113,7 +113,10 @@ var VegaSlices = React.createClass({
       
       // maybe enable hovering
       if(handleHover) {
-        vis.onSignal('slicehover', function (_, datum) {handleHover(datum);});
+        vis.onSignal('slicehover', function (_, datum) {
+          // This only has a single point in it
+          handleHover(datum);
+        });
       }
 
       // render the vis

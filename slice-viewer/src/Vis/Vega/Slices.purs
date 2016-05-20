@@ -4,7 +4,7 @@ import Prelude
 import Data.Function (runFn2)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
-import Data.Array (zipWith, concat, (!!))
+import Data.Array (zipWith, concat, elemIndex, (!!))
 import Data.Tuple (fst, snd)
 import Data.Nullable as N
 import Stats (Histogram, HistBin)
@@ -20,18 +20,18 @@ import Data.Slices (Sample(..), Slice(..))
 import Control.Monad.Eff.Console (log)
 import Control.Monad.Eff.Unsafe (unsafePerformEff)
 
-import Vis.Vega (Data, dataAttr, toVegaData)
+import Vis.Vega (dataAttr, toVegaData)
 
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
-type VegaSlice = 
+type VegaSlicePoint = 
   { slice_id :: Int
   , d :: Int
   , x :: Number
   , y :: Number
   }
 
-type SliceHoverEvent = Maybe VegaSlice
+type SliceHoverEvent = Maybe VegaSlicePoint
 
 data Action
   = UpdateSamples SampleGroup
@@ -39,19 +39,22 @@ data Action
 
 type State = 
   { dim :: Int
-  , slices :: Array VegaSlice
-  , hoverSlice :: Maybe VegaSlice
+  , origSlices :: Array Slice
+  , slices :: Array VegaSlicePoint
+  , hoverSlice :: Maybe VegaSlicePoint
   }
 
 init :: Int -> SampleGroup -> State 
 init d sg = 
   { dim: d
+  , origSlices: getSlices d sg
   , slices: convertSampleGroup d sg
   , hoverSlice: Nothing
   }
 
 update (UpdateSamples sg) state = 
-  state { slices=convertSampleGroup state.dim sg }
+  state { origSlices = getSlices state.dim sg
+        , slices = convertSampleGroup state.dim sg }
 update (HoverSlice ev) state = state {hoverSlice=ev}
 
 onSliceHover :: forall action. (SliceHoverEvent -> action) -> Attribute action
@@ -71,15 +74,22 @@ attrs state =
   da = dataAttr $ toVegaData $ state.slices
   fa = onSliceHover HoverSlice
 
-convertSampleGroup :: Int -> SampleGroup -> Array VegaSlice
+getSlices :: Int -> SampleGroup -> Array Slice
+getSlices dim (SampleGroup sg) =
+  map (\(FocusPoint p) -> fromJust $ p.slices !! dim) sg
+
+convertSampleGroup :: Int -> SampleGroup -> Array VegaSlicePoint
 convertSampleGroup dim (SampleGroup sg) =
   concat $ mapEnum convert sg
   where
   convert i (FocusPoint x) = convertSlice i dim (fromJust $ x.slices !! dim)
   
+convertSlice :: Int -> Int -> Slice -> Array VegaSlicePoint
 convertSlice sliceId dim (Slice s) =
   map convertSample s.slice
   where 
   convertSample (Sample s') = {slice_id: sliceId, d: dim, x: fst s', y: snd s'}
 
+sliceId :: State -> Slice -> Int
+sliceId state s = fromJust $ elemIndex s state.origSlices
 

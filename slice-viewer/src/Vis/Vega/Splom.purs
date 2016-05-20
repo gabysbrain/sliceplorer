@@ -2,10 +2,12 @@ module Vis.Vega.Splom where
 
 import Prelude hiding (div)
 import Data.Function (runFn2)
-import Data.StrMap as SM
+import Data.StrMap as SM 
 import Data.Maybe (Maybe(..))
+import Data.Maybe.Unsafe (fromJust)
 import Data.Tuple (Tuple(..))
-import Data.Int (toNumber)
+import Data.Int (toNumber, floor)
+import Data.Array ((!!))
 import Data.Nullable as N
 import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
@@ -13,7 +15,8 @@ import Pux.Html.Events (handler)
 import Debug.Trace
 import Util (mapEnum)
 
-import Data.Samples (SampleGroup(..), FocusPoint(..), focusPoint)
+import Data.Samples (SampleGroup(..), FocusPoint(..))
+import Data.Samples as S
 
 import Vis.Vega (Data, dataAttr, toVegaData)
 
@@ -40,6 +43,7 @@ init fs sg =
   , hoverPoint: Nothing
   }
 
+update :: Action -> State -> State
 update (UpdateSamples sg) state = state {focusPoints=splomData sg}
 update (HoverPoint p) state = state {hoverPoint=p}
 
@@ -68,6 +72,10 @@ splomData (SampleGroup sg) = --map splomDatum sg
 splomDatum :: FocusPoint -> VegaPoint
 splomDatum ds = SM.fromFoldable named
   where
-  named = mapEnum (\i x -> Tuple ("x"++(show (i+1))) x) $ focusPoint ds
+  named = mapEnum (\i x -> Tuple ("x"++(show (i+1))) x) $ S.focusPoint ds
 
+focusPoint :: SampleGroup -> VegaPoint -> FocusPoint
+focusPoint (SampleGroup sg) vp = fromJust $ sg !! fpId
+  where 
+  fpId = floor $ fromJust $ SM.lookup "id" vp
 

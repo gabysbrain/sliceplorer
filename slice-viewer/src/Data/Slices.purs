@@ -5,7 +5,6 @@ import Data.Tuple (Tuple(..))
 import Data.StrMap (StrMap)
 import Data.StrMap as SM
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
-import Data.Foreign.Keys (keys)
 
 type Inputs = Array Number
 type Output = Number
@@ -16,6 +15,12 @@ data Slice = Slice
   , slice :: Array Sample
   }
 type Metrics = StrMap Number
+
+instance sliceEq :: Eq Slice where
+  eq (Slice s1) (Slice s2) = s1.metrics == s2.metrics && s1.slice == s2.slice
+
+instance sampleEq :: Eq Sample where
+  eq (Sample s1) (Sample s2) = s1 == s2
 
 instance sliceIsForeign :: IsForeign Slice where
   read json = do
