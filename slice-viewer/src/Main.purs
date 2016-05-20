@@ -1,15 +1,15 @@
 module Main where
 
-import Prelude (bind, return, ($), (==))
-import Data.Maybe (Maybe(..), fromMaybe)
-import App.Routes (match)
+import Prelude (bind, return)
+--import App.Routes (match)
 import Control.Bind ((=<<))
-import App.Layout (Action(PageView), State, view, update)
+import App.Layout (Action, State, view, update)
 import Control.Monad.Eff (Eff)
-import Pux (App, Config, CoreEffects, fromSimple, renderToDOM)
-import Pux.Router (sampleUrl)
-import Signal ((~>))
-import Signal.Channel (CHANNEL)
+--import Pux (App, Config, CoreEffects, renderToDOM)
+import Pux (App, CoreEffects, renderToDOM)
+--import Pux.Router (sampleUrl)
+--import Signal ((~>))
+--import Signal.Channel (CHANNEL)
 import App.Core (AppEffects)
 
 -- | App configuration

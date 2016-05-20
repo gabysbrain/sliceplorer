@@ -1,31 +1,32 @@
 module App.Layout where
 
 import App.FunctionSlices as Slices
-import App.Routes (Route(Home, NotFound))
+--import App.Routes (Route(Home, NotFound))
 import Prelude (($), map)
-import Pux (EffModel, noEffects, mapState, mapEffects)
-import Pux.Html (Html, div, h1, p, text)
+import Pux (EffModel, mapState, mapEffects)
+import Pux.Html (Html, div, h1, text)
 import App.Core (AppEffects)
-import Network.HTTP.Affjax (AJAX)
 
 data Action
   = SliceView (Slices.Action)
-  | PageView Route
+  -- | PageView Route
 
 type State =
-  { route :: Route
-  , slices :: Slices.State
+  { slices :: Slices.State
   }
+  {--{ route :: Route--}
+  {--, slices :: Slices.State--}
+  {--}--}
 
 init :: State
 init =
-  { route: NotFound
-  , slices: Slices.init
+  { slices: Slices.init
   }
+  {--{ route: NotFound--}
 
-update :: Action -> State -> EffModel State Action (ajax :: AJAX)
-update (PageView route) state = 
-  noEffects $ state { route = route }
+update :: Action -> State -> EffModel State Action AppEffects
+{--update (PageView route) state = --}
+  {--noEffects $ state { route = route }--}
 update (SliceView action) state = 
    mapEffects SliceView (mapState (\s -> state {slices=s}) (Slices.update action state.slices))
 
