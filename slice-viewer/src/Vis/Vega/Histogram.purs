@@ -9,12 +9,8 @@ import Stats (Histogram, HistBin)
 import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
-import Debug.Trace
 
-import Control.Monad.Eff.Console (log)
-import Control.Monad.Eff.Unsafe (unsafePerformEff)
-
-import Vis.Vega (Data, dataAttr, toVegaData)
+import Vis.Vega (dataAttr, toVegaData)
 
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
@@ -22,16 +18,20 @@ type BarHoverEvent = Maybe HistBin
 
 data Action
   = HoverBar BarHoverEvent
+  | ShowTicks (Array Number)
 
 type State = 
   { histogram :: Histogram
-  , highlight :: Maybe HistBin
+  , highlightBar :: Maybe HistBin
+  , highlightTicks :: Array Number
   }
 
 init :: Histogram -> State 
-init h = {histogram: h, highlight: Nothing}
+init h = {histogram: h, highlightBar: Nothing, highlightTicks: []}
 
-update (HoverBar ev) state = state {highlight=ev}
+update :: Action -> State -> State
+update (HoverBar ev) state = state {highlightBar=ev}
+update (ShowTicks ts) state = state {highlightTicks=ts}
 
 onBarHover :: forall action. (BarHoverEvent -> action) -> Attribute action
 onBarHover h = runFn2 handler "onBarHover" saniHandler
@@ -43,12 +43,13 @@ view state = fromReact (attrs state) []
 
 attrs :: State -> Array (Attribute Action)
 attrs state = 
-  case state.highlight of
-       Just h -> [da, fa, attr "highlightBar" h]
-       Nothing -> [da, fa]
+  case state.highlightBar of
+       Just h -> [da, fa, ta, attr "highlightBar" h]
+       Nothing -> [da, fa, ta]
   where
   da = dataAttr $ toVegaData $ convert state.histogram
   fa = onBarHover HoverBar
+  ta = attr "highlightTicks" $ toVegaData $ state.highlightTicks
   convert histo =
     zipWith (\s c -> {bin_start: s, bin_end: s+histo.width, count: c})
       histo.binStarts histo.counts

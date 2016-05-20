@@ -11,7 +11,11 @@ function _spec() {
   return {
     'width': 100,
     'height': 100,
-    'data': [{'name': 'bars'}, {'name': 'highlightBar'}],
+    'data': [
+      {'name': 'bars'}, 
+      {'name': 'highlightBar'}, 
+      {'name': 'highlightTicks'}
+    ],
     'signals': [{
       'name': 'barhover', 'init': null,
       'streams': [
@@ -68,6 +72,19 @@ function _spec() {
           }]
         }
       }
+    }, {
+      'type': 'rule',
+      'from': {'data': 'highlightTicks'},
+      'properties': {
+        'enter': {
+          'x': {'scale': 'x', 'field': 'data'},
+          //'x': {'value': 50},
+          'y': {'value': 0},
+          'y2': {'value': 100},
+          'stroke': {'value': 'red'},
+          'strokeWidth': {'value': 1}
+        }
+      }
     }]
   }
 };
@@ -89,6 +106,7 @@ var VegaHistogram = React.createClass({
   componentDidMount: function() {
     var data = this.props.data;
     var highlightBar = this.props.highlightBar;
+    var highlightTicks = this.props.highlightTicks;
     var handleHover = this.props.onBarHover;
     var spec = _spec();
     //spec.axes[0].title = this.props.xAxisName;
@@ -101,6 +119,9 @@ var VegaHistogram = React.createClass({
       // set the initial data
       if(highlightBar) {
         vis.data('highlightBar').insert([highlightBar]);
+      }
+      if(highlightTicks) {
+        vis.data('highlightTicks').insert(highlightTicks);
       }
       vis.data('bars').insert(data);
       
@@ -122,12 +143,17 @@ var VegaHistogram = React.createClass({
     var vis = this.state.vis;
     var data = this.props.data;
     var highlightBar = this.props.highlightBar;
+    var highlightTicks = this.props.highlightTicks;
 
     if (vis) {
       // update data in case it changed
       vis.data('highlightBar').remove(function() {return true;});
+      vis.data('highlightTicks').remove(function() {return true;});
       if(highlightBar) {
         vis.data('highlightBar').insert([highlightBar]);
+      }
+      if(highlightTicks) {
+        vis.data('highlightTicks').insert(highlightTicks);
       }
       vis.data('bars').remove(function() {return true;}).insert(data);
 

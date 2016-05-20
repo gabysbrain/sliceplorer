@@ -24,7 +24,7 @@ data FocusPoint = FocusPoint
   }
 newtype SampleGroup = SampleGroup (Array FocusPoint)
 
-instance dimSamplesIsForeign :: IsForeign FocusPoint where
+instance focusPointIsForeign :: IsForeign FocusPoint where
   read json = do
     d  <- readProp "dims" json
     fp <- readProp "slice" json

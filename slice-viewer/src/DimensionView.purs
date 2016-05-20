@@ -9,10 +9,10 @@ import Data.Maybe.Unsafe (fromJust)
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Stats (Histogram, HistBin)
-import Util (mapEnum)
+import Util (mapEnum, mapCombine)
 
 import Data.Samples (SampleGroup(..), FocusPoint(..), dims, metricHistograms)
-import Data.Slices (Slice(..), Sample(..))
+import Data.Slices (Slice(..), Sample(..), Metrics(..), metrics)
 import Debug.Trace
 
 import Vis.Vega.Histogram as H
@@ -52,6 +52,12 @@ update (UpdateSamples sg) state =
   histos = metricHistograms 11 state.dim sg
 update (FocusPointFilter fp) state = state
   { sliceView = SV.update (SV.HoverSlice $ map (highlightedSlice state) fp) state.sliceView 
+  , histogramStates = 
+      case fp of
+           Just fp' -> mapCombine (\s x -> H.update (H.ShowTicks [x]) s) 
+                                  state.histogramStates 
+                                  (sliceMetrics state fp')
+           Nothing -> map (\s -> H.update (H.ShowTicks []) s) state.histogramStates
   }
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}
@@ -90,6 +96,12 @@ viewMetricHistogram name h =
 highlightedSlice :: State -> FocusPoint -> SV.VegaSlicePoint
 highlightedSlice state (FocusPoint fp) =
   fromJust $ head $ SV.convertSlice (SV.sliceId state.sliceView slice) state.dim slice
+  where
+  slice = fromJust $ fp.slices !! state.dim
+
+sliceMetrics :: State -> FocusPoint -> Metrics
+sliceMetrics state (FocusPoint fp) =
+  metrics slice
   where
   slice = fromJust $ fp.slices !! state.dim
 
