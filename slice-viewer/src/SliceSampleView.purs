@@ -1,9 +1,12 @@
 module App.SliceSampleView where
 
 import Prelude hiding (div)
-import Data.Array ((..))
+import Data.Array (elemIndex, (..))
 import Data.Tuple (Tuple(..))
 import Data.StrMap as SM
+import Data.Maybe
+import Data.Maybe.Unsafe (fromJust)
+import Data.Int (toNumber)
 import Pux.Html (Html, div)
 import Pux.Html.Attributes (className)
 
@@ -14,21 +17,32 @@ import Util (mapEnum)
 
 data Action
   = UpdateSamples SampleGroup
+  | FocusPointFilter (Maybe FocusPoint)
   | SplomAction Splom.Action
 
 type State = 
-  { splom :: Splom.State
+  { samples :: SampleGroup
+  , splom :: Splom.State
   }
 
 init :: SampleGroup -> State
 init sg =
-  { splom: Splom.init (fields sg) sg
+  { samples: sg
+  , splom: Splom.init (fields sg) sg
   }
 
 update :: Action -> State -> State
 update (UpdateSamples sg) state = state
-  { splom=Splom.update (Splom.UpdateSamples sg) state.splom
+  { samples=sg
+  , splom=Splom.update (Splom.UpdateSamples sg) state.splom
   }
+update (FocusPointFilter fp) state = state
+  { splom = Splom.update (Splom.HoverPoint hp) state.splom
+  }
+  where
+  fpId fp' (SampleGroup sg) = toNumber $ fromJust $ elemIndex fp' sg
+  hp = map (\fp' -> SM.insert "id" (fpId fp' state.samples) (Splom.splomDatum fp')) 
+           fp
 update (SplomAction a) state = state
   {splom=Splom.update a state.splom
   }

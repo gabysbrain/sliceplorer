@@ -36,6 +36,10 @@ instance sampleGroupIsForeign :: IsForeign SampleGroup where
     sg <- read json
     pure $ SampleGroup sg
 
+instance focusPointEq :: Eq FocusPoint where
+  eq (FocusPoint fp1) (FocusPoint fp2) =
+    fp1.dims == fp2.dims && fp1.focusPoint == fp2.focusPoint && fp1.slices == fp2.slices
+
 type MetricRangeFilter =
   { metric :: String
   , minVal :: Number
@@ -103,6 +107,9 @@ mergeMaps out m =
 merge :: Number -> Maybe (Array Number) -> Maybe (Array Number)
 merge x Nothing = Just [x]
 merge x (Just xs) = Just $ snoc xs x
+
+getFocusPoint :: Int -> SampleGroup -> Maybe FocusPoint
+getFocusPoint i (SampleGroup sg) = sg !! i
 
 focusPoint :: FocusPoint -> Array Number
 focusPoint (FocusPoint ds) = ds.focusPoint

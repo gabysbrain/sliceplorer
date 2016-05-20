@@ -15,9 +15,11 @@ import Util (mapEnum)
 
 import App.SliceSampleView as SSV
 import Vis.Vega.Splom as Splom
+import Vis.Vega.Slices as SV
 import App.DimensionView as DV
 
-import Data.Samples (SampleGroup(..), FocusPoint(..), MetricRangeFilter, dims, metricHistograms, subset)
+import Data.Samples (SampleGroup(..), FocusPoint(..), MetricRangeFilter, 
+                     dims, metricHistograms, subset, getFocusPoint)
 import Data.Slices (Slice(..), Sample(..))
 
 type State = 
@@ -59,18 +61,26 @@ update (UpdateNumberFilter ev) state =
                    }
 -- FIXME: see if there's a better way than this deep inspection
 update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
-  state { focusPointFilter = fpf
-        , dimViews = map (DV.update (DV.FocusPointFilter fpf)) state.dimViews
-        , sliceSampleView = SSV.update a state.sliceSampleView
-        }
+  updateFocusPoint fpf state
   where 
   fpf = map (Splom.focusPoint state.samples) vp
 update (SliceSampleViewAction a) state =
   state {sliceSampleView=SSV.update a state.sliceSampleView}
+update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
+  updateFocusPoint fpf state
+  where
+  fpf = map (\s -> fromJust $ getFocusPoint s.slice_id state.samples) hs
 update (DimViewAction dim a) state = 
   case modifyAt dim (DV.update a) state.dimViews of
        Nothing -> state
        Just newDVs -> state {dimViews=newDVs}
+
+updateFocusPoint :: Maybe FocusPoint -> State -> State
+updateFocusPoint fp state =
+  state { focusPointFilter = fp
+        , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
+        , dimViews = map (DV.update (DV.FocusPointFilter fp)) state.dimViews
+        }
 
 view :: State -> Html Action
 view ({samples=SampleGroup []}) =
