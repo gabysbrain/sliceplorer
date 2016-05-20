@@ -57,7 +57,7 @@ update (HoverSlice ev) state = state {hoverSlice=ev}
 onSliceHover :: forall action. (SliceHoverEvent -> action) -> Attribute action
 onSliceHover s = runFn2 handler "onSliceHover" saniHandler
   where
-  saniHandler e = s $ spy $ N.toMaybe e
+  saniHandler e = s $ N.toMaybe e
 
 view :: State -> Html Action
 view state = fromReact (attrs state) []
