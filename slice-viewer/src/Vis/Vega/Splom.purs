@@ -13,7 +13,7 @@ import Pux.Html.Events (handler)
 import Debug.Trace
 import Util (mapEnum)
 
-import Data.Samples (SampleGroup(..), DimSamples(..), focusPoint)
+import Data.Samples (SampleGroup(..), FocusPoint(..), focusPoint)
 
 import Vis.Vega (Data, dataAttr, toVegaData)
 
@@ -65,7 +65,7 @@ splomData :: SampleGroup -> Array VegaPoint
 splomData (SampleGroup sg) = --map splomDatum sg
   mapEnum (\i x -> SM.insert "id" (toNumber i) $ splomDatum x) sg
 
-splomDatum :: DimSamples -> VegaPoint
+splomDatum :: FocusPoint -> VegaPoint
 splomDatum ds = SM.fromFoldable named
   where
   named = mapEnum (\i x -> Tuple ("x"++(show (i+1))) x) $ focusPoint ds

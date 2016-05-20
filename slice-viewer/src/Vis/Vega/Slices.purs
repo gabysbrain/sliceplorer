@@ -14,7 +14,7 @@ import Pux.Html.Events (handler)
 import Util (mapEnum)
 import Debug.Trace
 
-import Data.Samples (SampleGroup(..), DimSamples(..))
+import Data.Samples (SampleGroup(..), FocusPoint(..))
 import Data.Slices (Sample(..), Slice(..))
 
 import Control.Monad.Eff.Console (log)
@@ -75,7 +75,7 @@ convertSampleGroup :: Int -> SampleGroup -> Array VegaSlice
 convertSampleGroup dim (SampleGroup sg) =
   concat $ mapEnum convert sg
   where
-  convert i (DimSamples x) = convertSlice i dim (fromJust $ x.slices !! dim)
+  convert i (FocusPoint x) = convertSlice i dim (fromJust $ x.slices !! dim)
   
 convertSlice sliceId dim (Slice s) =
   map convertSample s.slice

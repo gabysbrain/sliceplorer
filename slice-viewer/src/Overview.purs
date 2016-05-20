@@ -16,7 +16,7 @@ import Util (mapEnum)
 import App.SliceSampleView as SSV
 import App.DimensionView as DV
 
-import Data.Samples (SampleGroup(..), DimSamples(..), dims, metricHistograms, subset)
+import Data.Samples (SampleGroup(..), FocusPoint(..), dims, metricHistograms, subset)
 import Data.Slices (Slice(..), Sample(..))
 
 type State = 

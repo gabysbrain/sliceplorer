@@ -11,7 +11,7 @@ import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Stats (Histogram, HistBin)
 import Util (mapEnum)
 
-import Data.Samples (SampleGroup(..), DimSamples(..), dims, metricHistograms)
+import Data.Samples (SampleGroup(..), FocusPoint(..), dims, metricHistograms)
 import Data.Slices (Slice(..), Sample(..))
 import Debug.Trace
 

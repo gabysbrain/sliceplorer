@@ -7,7 +7,7 @@ import Data.StrMap as SM
 import Pux.Html (Html, div)
 import Pux.Html.Attributes (className)
 
-import Data.Samples (SampleGroup(..), DimSamples, dims, focusPoint)
+import Data.Samples (SampleGroup(..), FocusPoint, dims, focusPoint)
 import Vis.Vega.Splom as Splom
 
 import Util (mapEnum)

@@ -17,19 +17,19 @@ import Network.HTTP.Affjax (AJAX, get)
 import Stats (Histogram, histogram)
 
 -- the slices for a single focus point
-data DimSamples = DimSamples 
+data FocusPoint = FocusPoint 
   { dims       :: Int
   , focusPoint :: Array Number
   , slices     :: Array Slice
   }
-newtype SampleGroup = SampleGroup (Array DimSamples)
+newtype SampleGroup = SampleGroup (Array FocusPoint)
 
-instance dimSamplesIsForeign :: IsForeign DimSamples where
+instance dimSamplesIsForeign :: IsForeign FocusPoint where
   read json = do
     d  <- readProp "dims" json
     fp <- readProp "slice" json
     s  <- readProp "slices" json
-    pure $ DimSamples {dims: d, focusPoint: fp, slices: s}
+    pure $ FocusPoint {dims: d, focusPoint: fp, slices: s}
 
 instance sampleGroupIsForeign :: IsForeign SampleGroup where
   read json = do
@@ -51,15 +51,15 @@ parseJson json = case readJSON json of
                       Left err -> Left (error $ show err)
                       Right res -> Right res
 
-sortBy :: (DimSamples -> DimSamples -> Ordering) -> SampleGroup -> SampleGroup
+sortBy :: (FocusPoint -> FocusPoint -> Ordering) -> SampleGroup -> SampleGroup
 sortBy cmp (SampleGroup sg) = SampleGroup $ A.sortBy cmp sg
 
-metricNames :: DimSamples -> Array String
-metricNames (DimSamples r) = 
+metricNames :: FocusPoint -> Array String
+metricNames (FocusPoint r) = 
   nub $ concat $ map (\(Slice s) -> SM.keys s.metrics) r.slices
 
 sliceList :: SampleGroup -> Array Slice
-sliceList (SampleGroup sg) = concat $ map (\(DimSamples ds) -> ds.slices) sg
+sliceList (SampleGroup sg) = concat $ map (\(FocusPoint ds) -> ds.slices) sg
 
 subset :: Int -> SampleGroup -> SampleGroup
 subset n (SampleGroup sg) = SampleGroup $ take n sg
@@ -68,7 +68,7 @@ dims :: SampleGroup -> Int
 dims (SampleGroup sg) = 
   case head sg of
        Nothing -> 0
-       Just (DimSamples x) -> x.dims
+       Just (FocusPoint x) -> x.dims
 
 metricHistograms :: Int -> Int -> SampleGroup -> SM.StrMap Histogram
 metricHistograms bins dim sg =
@@ -83,8 +83,8 @@ flattenMetrics dim sg'@(SampleGroup sg) =
   tmp :: Array (SM.StrMap Number)
   tmp = map (procDs dim) sg
 
-  procDs :: Int -> DimSamples -> SM.StrMap Number
-  procDs d (DimSamples ds) = metrics (fromJust $ ds.slices !! d)
+  procDs :: Int -> FocusPoint -> SM.StrMap Number
+  procDs d (FocusPoint ds) = metrics (fromJust $ ds.slices !! d)
 
 combineMaps :: Array (SM.StrMap Number) -> SM.StrMap (Array Number)
 combineMaps ms = 
@@ -98,6 +98,6 @@ merge :: Number -> Maybe (Array Number) -> Maybe (Array Number)
 merge x Nothing = Just [x]
 merge x (Just xs) = Just $ snoc xs x
 
-focusPoint :: DimSamples -> Array Number
-focusPoint (DimSamples ds) = ds.focusPoint
+focusPoint :: FocusPoint -> Array Number
+focusPoint (FocusPoint ds) = ds.focusPoint
 

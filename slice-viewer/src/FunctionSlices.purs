@@ -19,7 +19,7 @@ import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, selected, disabled, value, href)
 
-import Data.Samples (SampleGroup(..), DimSamples(..),
+import Data.Samples (SampleGroup(..), FocusPoint(..),
                      jsonSamples, sortBy, metricNames)
 import Data.Slices (Slice(..))
 import App.Pager as Pager
