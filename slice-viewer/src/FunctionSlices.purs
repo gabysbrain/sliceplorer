@@ -1,29 +1,20 @@
 module App.FunctionSlices where
 
-import Prelude 
+import Prelude hiding (div)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Maybe.Unsafe (fromJust)
-import Data.Either (Either(..), either)
-import Data.Either.Unsafe (fromRight)
-import Data.Array (length, (..), head, slice)
-import Data.Int (fromString, toNumber)
-import Data.Tuple (fst, snd)
-import Data.StrMap (lookup)
-import Data.Foldable (sum, maximum, minimum)
-import Math (min)
-import Control.Monad.Eff.Exception (Error, error)
+import Data.Either (Either(..))
+import Data.Array ((..), head)
+import Data.Int (fromString)
+import Control.Monad.Eff.Exception (Error)
 import Network.HTTP.Affjax (AJAX)
 
 import Pux (EffModel, noEffects)
-import Pux.Html (Html, a, div, span, button, input, text, p, select, option)
+import Pux.Html (Html, div, button, text, p, select, option)
 import Pux.Html.Events (onChange, onClick, FormEvent)
-import Pux.Html.Attributes (className, selected, disabled, value, href)
+import Pux.Html.Attributes (className, disabled, value)
 
-import Data.Samples (SampleGroup(..), FocusPoint(..),
-                     jsonSamples, sortBy, metricNames)
-import Data.Slices (Slice(..))
-import App.Pager as Pager
-import App.SampleView as SampleView
+import Data.Samples (SampleGroup(..), jsonSamples, metricNames)
 import App.Overview as Overview
 
 type State =
