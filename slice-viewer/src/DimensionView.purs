@@ -2,18 +2,16 @@ module App.DimensionView where
 
 import Prelude hiding (div)
 import Data.StrMap as SM
-import Data.Array (concatMap, snoc, take, zip, zipWith, concat, length, head, (!!), (..))
-import Data.Tuple (fst, snd)
+import Data.Array (head, (!!))
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
 import Pux.Html (Html, div, text, h3)
-import Pux.Html.Attributes (className, type_, min, max, step, value)
-import Stats (Histogram, HistBin)
-import Util (mapEnum, mapCombine)
+import Pux.Html.Attributes (className)
+import Stats (Histogram)
+import Util (mapCombine)
 
-import Data.Samples (SampleGroup(..), FocusPoint(..), dims, metricHistograms)
-import Data.Slices (Slice(..), Sample(..), Metrics(..), metrics)
-import Debug.Trace
+import Data.Samples (SampleGroup, FocusPoint(..), metricHistograms)
+import Data.Slices (Metrics, metrics)
 
 import Vis.Vega.Histogram as H
 import Vis.Vega.Slices as SV
