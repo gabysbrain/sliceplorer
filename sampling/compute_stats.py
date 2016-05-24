@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 class SliceGroup(object):
-  def __init__(self, sample_n, xs):
+  def __init__(self, group_id, sample_n, xs):
     dims = len(xs.columns) - 1
 
     # compute the sample location
@@ -11,6 +11,7 @@ class SliceGroup(object):
     s = s1.copy()
     s[0] = s2[0]
 
+    self.group_id = group_id
     self.slice = list(s)
     self.dims = dims
     self.slices = list(dim_groups(sample_n, xs))
@@ -41,7 +42,7 @@ def slice_groups(samples):
   step_size = dims * sample_count
 
   for i in range(0, len(samples), step_size):
-    yield SliceGroup(sample_count, samples[i:(i+step_size)])
+    yield SliceGroup(i, sample_count, samples[i:(i+step_size)])
 
 def dim_groups(sample_n, slices):
   dims = len(slices.columns) - 1
