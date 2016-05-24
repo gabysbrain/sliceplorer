@@ -18,7 +18,8 @@ import Stats (Histogram, histogram)
 
 -- the slices for a single focus point
 data FocusPoint = FocusPoint 
-  { dims       :: Int
+  { id         :: Int
+  , dims       :: Int
   , focusPoint :: Array Number
   , slices     :: Array Slice
   }
@@ -26,10 +27,11 @@ newtype SampleGroup = SampleGroup (Array FocusPoint)
 
 instance focusPointIsForeign :: IsForeign FocusPoint where
   read json = do
+    i  <- readProp "group_id" json
     d  <- readProp "dims" json
     fp <- readProp "slice" json
     s  <- readProp "slices" json
-    pure $ FocusPoint {dims: d, focusPoint: fp, slices: s}
+    pure $ FocusPoint {id: i, dims: d, focusPoint: fp, slices: s}
 
 instance sampleGroupIsForeign :: IsForeign SampleGroup where
   read json = do
@@ -37,8 +39,8 @@ instance sampleGroupIsForeign :: IsForeign SampleGroup where
     pure $ SampleGroup sg
 
 instance focusPointEq :: Eq FocusPoint where
-  eq (FocusPoint fp1) (FocusPoint fp2) =
-    fp1.dims == fp2.dims && fp1.focusPoint == fp2.focusPoint && fp1.slices == fp2.slices
+  eq (FocusPoint fp1) (FocusPoint fp2) = fp1.id == fp2.id
+    --fp1.dims == fp2.dims && fp1.focusPoint == fp2.focusPoint && fp1.slices == fp2.slices
 
 type MetricRangeFilter =
   { metric :: String
