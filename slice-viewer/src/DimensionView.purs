@@ -35,21 +35,23 @@ data Action
 
 --update (UpdateSamples sg)
 init :: Int -> DF.DataFrame Slice.SliceSample -> State
-init d sg =
+init d df =
   { dim: d
-  , sliceView: SV.init d sg
+  , sliceView: SV.init d df'
   , histogramStates: map H.init histos
   }
   where 
-  histos = metricHistograms 11 sg
+  df' = DF.rowFilter (\(Slice.SliceSample s) -> s.d==d) df
+  histos = metricHistograms 11 df'
 
 update :: Action -> State -> State
-update (UpdateSamples sg) state =
-  state { sliceView = SV.update (SV.UpdateSamples sg) state.sliceView
+update (UpdateSamples df) state =
+  state { sliceView = SV.update (SV.UpdateSamples df') state.sliceView
         , histogramStates = map H.init histos
         }
   where 
-  histos = metricHistograms 11 sg
+  df' = DF.rowFilter (\(Slice.SliceSample s) -> s.d == state.dim) df
+  histos = metricHistograms 11 df'
 update (FocusPointFilter fp) state = state
   { sliceView = SV.update (SV.HoverSlice sliceIds) state.sliceView
   , histogramStates = if SM.isEmpty metricHighlights
