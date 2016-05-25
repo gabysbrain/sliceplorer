@@ -37,7 +37,7 @@ def slice_groups(samples):
 
   start_idxs = np.where(samples.iloc[:,0]==samples.iloc[0,0])
   sample_count = start_idxs[0][1]
-  print(sample_count)
+  #print(sample_count)
 
   step_size = dims * sample_count
 
