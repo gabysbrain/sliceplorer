@@ -5,7 +5,8 @@ from scipy.cluster import vq
 def cluster_slices(focus_points):
   focus_points = list(focus_points) # the generator will break things
   dims = focus_points[0].dims
-  obs = np.zeros((len(focus_points)*dims, 21))
+  nsamples = focus_points[0].num_slice_samples
+  obs = np.zeros((len(focus_points)*dims, nsamples))
   for i,fp in enumerate(focus_points):
     for d, s in enumerate(fp.slices):
       for j,x in enumerate(s.slice):

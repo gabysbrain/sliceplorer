@@ -16,6 +16,10 @@ class SliceGroup(object):
     self.dims = dims
     self.slices = list(dim_groups(sample_n, xs))
 
+  @property
+  def num_slice_samples(self):
+    return len(self.slices[0].slice)
+
 class Slice(object):
   def __init__(self, d, samples):
     self.d = d
