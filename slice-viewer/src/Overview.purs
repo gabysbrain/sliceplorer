@@ -6,6 +6,7 @@ import Data.Tuple (fst, snd)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
 import Data.StrMap as SM
+import Data.Foldable (elem)
 import Data.Int as I
 import Pux.Html (Html, div, h3, text, input)
 import Pux.Html.Attributes (className, type_, min, max, step, value)
@@ -18,15 +19,18 @@ import Vis.Vega.Splom as Splom
 import Vis.Vega.Slices as SV
 import App.DimensionView as DV
 
-import Data.Samples (SampleGroup(..), FocusPoint(..), MetricRangeFilter, 
+import Data.Samples (SampleGroup(..), FocusPoint, MetricRangeFilter, 
                      dims, metricHistograms, subset, getFocusPoint)
 import Data.Slices (Slice(..), Sample(..))
+import DataFrame as DF
+import Data.SliceSample as Slice
 
 type State = 
-  { samples :: SampleGroup
+  { samples :: DF.DataFrame Slice.SliceSample
+  , dims :: Int
   , samplesToShow :: Int
-  , focusPointFilter :: Maybe FocusPoint
-  , metricRangeFilter :: Maybe MetricRangeFilter
+  , focusPointFilter :: DF.DataFrame Slice.SliceSample
+  --, metricRangeFilter :: Maybe MetricRangeFilter
   , sliceSampleView :: SSV.State
   , dimViews :: Array DV.State
   }
@@ -38,22 +42,30 @@ data Action
 
 init :: SampleGroup -> State
 init sg =
-  { samples: sg
+  { samples: df'
+  , dims: dims sg
   , samplesToShow: 10
-  , focusPointFilter: Nothing
-  , metricRangeFilter: Nothing
-  , sliceSampleView: SSV.init sg'
-  , dimViews: map (\d -> DV.init d sg') (0..((dims sg)-1))
+  , focusPointFilter: DF.filterAll df'
+  --, metricRangeFilter: Nothing
+  , sliceSampleView: SSV.init (dims sg) df'
+  , dimViews: map (\{group: d, data: s} -> DV.init (I.round d) s) $ DF.run (DF.groupBy groupByDim df')
   }
   where 
-  sg' = subset 10 sg
+  df = DF.init $ Slice.create sg
+  df' = DF.takeFilter (10*(dims sg)) df
+
+groupByDim :: Slice.SliceSample -> Number
+groupByDim (Slice.SliceSample s) = I.toNumber s.d
+
+filterFocusIds :: Array Int -> Slice.SliceSample -> Boolean
+filterFocusIds ids (Slice.SliceSample s) = elem s.focusPointId ids
 
 update :: Action -> State -> State
 update (UpdateNumberFilter ev) state =
   case I.fromString ev.target.value of
        Nothing -> state
        Just n' -> 
-         let sg' = subset n' state.samples
+         let sg' = DF.takeFilter n' $ DF.filterNone state.samples
           in state { samplesToShow = n'
                    , sliceSampleView = SSV.update (SSV.UpdateSamples sg') state.sliceSampleView
                    , dimViews = map (\dv -> DV.update (DV.UpdateSamples sg') dv)
@@ -61,35 +73,31 @@ update (UpdateNumberFilter ev) state =
                    }
 -- FIXME: see if there's a better way than this deep inspection
 update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
-  updateFocusPoint fpf state
-  where 
-  fpf = map (Splom.focusPoint state.samples) vp
+  updateFocusPoint vp state
 update (SliceSampleViewAction a) state =
   state {sliceSampleView=SSV.update a state.sliceSampleView}
 update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
-  updateFocusPoint fpf state
-  where
-  fpf = map (\s -> fromJust $ getFocusPoint s.slice_id state.samples) hs
+  updateFocusPoint hs state
 update (DimViewAction dim a) state = 
   case modifyAt dim (DV.update a) state.dimViews of
        Nothing -> state
        Just newDVs -> state {dimViews=newDVs}
 
-updateFocusPoint :: Maybe FocusPoint -> State -> State
-updateFocusPoint fp state =
-  state { focusPointFilter = fp
-        , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
-        , dimViews = map (DV.update (DV.FocusPointFilter fp)) state.dimViews
-        }
+updateFocusPoint :: Array Int -> State -> State
+updateFocusPoint fp state = state 
+  { focusPointFilter = fp'
+  , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
+  , dimViews = map (DV.update (DV.FocusPointFilter fp')) state.dimViews
+  }
+  where
+  fp' = DF.rowFilter (filterFocusIds fp) state.samples
 
 view :: State -> Html Action
-view ({samples=SampleGroup []}) =
-  div [] []
-view state@{samples=(SampleGroup sg), samplesToShow=n} =
+view state@{samples=sg, samplesToShow=n} =
   div [] 
     [ div [className "controls"] 
-        [ input [ type_ "range", value (show n)
-                , max (show (length sg)), min "0", step "10"
+        [ input [ type_ "range", value (show state.samplesToShow)
+                , max (show (length (DF.runOrig state.samples))), min "0", step "10"
                 , onChange UpdateNumberFilter
                 ]
                 []

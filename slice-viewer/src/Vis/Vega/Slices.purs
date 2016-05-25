@@ -4,7 +4,8 @@ import Prelude
 import Data.Function (runFn2)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
-import Data.Array (zipWith, concat, elemIndex, (!!))
+import Data.Array (zipWith, concat, concatMap, snoc, elemIndex, (!!))
+import Data.Foldable (foldl, foldMap)
 import Data.Tuple (fst, snd)
 import Data.Nullable as N
 import Stats (Histogram, HistBin)
@@ -14,11 +15,9 @@ import Pux.Html.Events (handler)
 import Util (mapEnum)
 import Debug.Trace
 
-import Data.Samples (SampleGroup(..), FocusPoint(..))
-import Data.Slices (Sample(..), Slice(..))
-
-import Control.Monad.Eff.Console (log)
-import Control.Monad.Eff.Unsafe (unsafePerformEff)
+import DataFrame as DF
+import Data.SliceSample as Slice
+import Data.Slices (Sample(..))
 
 import Vis.Vega (dataAttr, toVegaData)
 
@@ -30,66 +29,52 @@ type VegaSlicePoint =
   , x :: Number
   , y :: Number
   }
+type VegaHoverPoint = { slice_id :: Int }
 
-type SliceHoverEvent = Maybe VegaSlicePoint
+type SliceHoverEvent = Array Int -- slice ids
 
 data Action
-  = UpdateSamples SampleGroup
-  | HoverSlice SliceHoverEvent
+  = UpdateSamples (DF.DataFrame Slice.SliceSample)
+  | HoverSlice (Array Int) -- slice ids
 
 type State = 
   { dim :: Int
-  , origSlices :: Array Slice
   , slices :: Array VegaSlicePoint
-  , hoverSlice :: Maybe VegaSlicePoint
+  , hoverSlice :: Array Int -- slice ids
   }
 
-init :: Int -> SampleGroup -> State 
+init :: Int -> DF.DataFrame Slice.SliceSample -> State 
 init d sg = 
   { dim: d
-  , origSlices: getSlices d sg
-  , slices: convertSampleGroup d sg
-  , hoverSlice: Nothing
+  , slices: convertSamples sg
+  , hoverSlice: []
   }
 
-update (UpdateSamples sg) state = 
-  state { origSlices = getSlices state.dim sg
-        , slices = convertSampleGroup state.dim sg }
+update :: Action -> State -> State
+update (UpdateSamples sg) state = state { slices = convertSamples sg }
 update (HoverSlice ev) state = state {hoverSlice=ev}
 
 onSliceHover :: forall action. (SliceHoverEvent -> action) -> Attribute action
 onSliceHover s = runFn2 handler "onSliceHover" saniHandler
   where
-  saniHandler e = s $ N.toMaybe e
+  saniHandler e = s $ foldl (\a x -> a `snoc` x.slice_id) [] (N.toMaybe e)
 
 view :: State -> Html Action
 view state = fromReact (attrs state) []
 
 attrs :: State -> Array (Attribute Action)
-attrs state = 
-  case state.hoverSlice of
-       Just s -> [da, fa, attr "hoverSlice" s]
-       Nothing -> [da, fa]
+attrs state = [da, fa, ha]
   where
-  da = dataAttr $ toVegaData $ state.slices
+  da = dataAttr $ toVegaData state.slices
   fa = onSliceHover HoverSlice
+  ha = attr "hoverSlice" $ toVegaData $ map (\x -> {slice_id: x}) state.hoverSlice
 
-getSlices :: Int -> SampleGroup -> Array Slice
-getSlices dim (SampleGroup sg) =
-  map (\(FocusPoint p) -> fromJust $ p.slices !! dim) sg
-
-convertSampleGroup :: Int -> SampleGroup -> Array VegaSlicePoint
-convertSampleGroup dim (SampleGroup sg) =
-  concat $ mapEnum convert sg
-  where
-  convert i (FocusPoint x) = convertSlice i dim (fromJust $ x.slices !! dim)
+convertSamples :: DF.DataFrame Slice.SliceSample -> Array VegaSlicePoint
+convertSamples df = concatMap convertSlice $ DF.run df
   
-convertSlice :: Int -> Int -> Slice -> Array VegaSlicePoint
-convertSlice sliceId dim (Slice s) =
+convertSlice :: Slice.SliceSample -> Array VegaSlicePoint
+convertSlice (Slice.SliceSample s) =
   map convertSample s.slice
   where 
-  convertSample (Sample s') = {slice_id: sliceId, d: dim, x: fst s', y: snd s'}
-
-sliceId :: State -> Slice -> Int
-sliceId state s = fromJust $ elemIndex s state.origSlices
+  convertSample (Sample s') = {slice_id: s.focusPointId, d: s.d, x: fst s', y: snd s'}
 

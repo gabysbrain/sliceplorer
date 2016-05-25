@@ -107,7 +107,7 @@ var VegaSlices = React.createClass({
 
       // set the initial data
       if(hoverSlice) {
-        vis.data('highlight').insert([hoverSlice]);
+        vis.data('highlight').insert(hoverSlice);
       }
       vis.data('lines').insert(data);
       
@@ -137,7 +137,7 @@ var VegaSlices = React.createClass({
       // update data in case it changed
       vis.data('highlight').remove(function() {return true;});
       if(hoverSlice) {
-        vis.data('highlight').insert([hoverSlice]);
+        vis.data('highlight').insert(hoverSlice);
       }
       vis.data('lines').remove(function() {return true;}).insert(data);
 

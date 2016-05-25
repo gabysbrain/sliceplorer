@@ -100,7 +100,7 @@ var VegaSplom = React.createClass({
   componentDidMount: function() {
     var data = this.props.data;
     var fields = this.props.fields;
-    var hoverPoint = this.props.hoverPoint;
+    var hoverPoints = this.props.hoverPoint;
     var handleHover = this.props.onPointHover;
     var spec = _spec();
     var self = this;
@@ -112,8 +112,8 @@ var VegaSplom = React.createClass({
       // set the initial data
       vis.data('fields').insert(fields);
       vis.data('points').insert(data);
-      if(hoverPoint) {
-        vis.data('highlight').insert([hoverPoint]);
+      if(hoverPoints) {
+        vis.data('highlight').insert(hoverPoints);
       }
 
       // maybe enable hovering
@@ -134,7 +134,7 @@ var VegaSplom = React.createClass({
     var vis = this.state.vis;
     var data = this.props.data;
     var fields = this.props.fields;
-    var hoverPoint = this.props.hoverPoint;
+    var hoverPoints = this.props.hoverPoint;
 
     if (vis) {
       // update data in case it changed
@@ -144,8 +144,8 @@ var VegaSplom = React.createClass({
       //vis.data('fields').insert(fields);
       vis.data('points').insert(data);
       vis.data('highlight').remove(function() {return true;});
-      if(hoverPoint) {
-        vis.data('highlight').insert([hoverPoint]);
+      if(hoverPoints) {
+        vis.data('highlight').insert(hoverPoints);
       }
 
       vis.update();

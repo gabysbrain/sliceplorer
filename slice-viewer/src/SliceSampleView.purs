@@ -10,42 +10,38 @@ import Data.Int (toNumber)
 import Pux.Html (Html, div)
 import Pux.Html.Attributes (className)
 
-import Data.Samples (SampleGroup(..), FocusPoint, dims, focusPoint)
+import Data.SliceSample as Slice
+import DataFrame as DF
+
 import Vis.Vega.Splom as Splom
 
 import Util (mapEnum)
 
 data Action
-  = UpdateSamples SampleGroup
-  | FocusPointFilter (Maybe FocusPoint)
+  = UpdateSamples (DF.DataFrame Slice.SliceSample)
+  | FocusPointFilter (Array Int) -- focus point ids
   | SplomAction Splom.Action
 
 type State = 
-  { samples :: SampleGroup
+  { samples :: DF.DataFrame Slice.SliceSample
   , splom :: Splom.State
   }
 
-init :: SampleGroup -> State
-init sg =
-  { samples: sg
-  , splom: Splom.init (fields sg) sg
+init :: Int -> DF.DataFrame Slice.SliceSample -> State
+init dims df =
+  { samples: df
+  , splom: Splom.init (fields dims) df
   }
 
 update :: Action -> State -> State
-update (UpdateSamples sg) state = state
-  { samples=sg
-  , splom=Splom.update (Splom.UpdateSamples sg) state.splom
+update (UpdateSamples df) state = state
+  { samples=df
+  , splom=Splom.update (Splom.UpdateSamples df) state.splom
   }
-update (FocusPointFilter fp) state = state
-  { splom = Splom.update (Splom.HoverPoint hp) state.splom
-  }
-  where
-  fpId fp' (SampleGroup sg) = toNumber $ fromJust $ elemIndex fp' sg
-  hp = map (\fp' -> SM.insert "id" (fpId fp' state.samples) (Splom.splomDatum fp')) 
-           fp
+update (FocusPointFilter fps) state = state
+  { splom = Splom.update (Splom.HoverPoint fps) state.splom }
 update (SplomAction a) state = state
-  {splom=Splom.update a state.splom
-  }
+  { splom=Splom.update a state.splom }
 
 view :: State -> Html Action
 view state =
@@ -53,6 +49,6 @@ view state =
     [ map SplomAction $ Splom.view state.splom
     ]
 
-fields :: SampleGroup -> Array String
-fields sg = map (\i -> "x" ++ (show i)) (1..(dims sg))
+fields :: Int -> Array String
+fields dims = map (\i -> "x" ++ (show i)) (1..dims)
 

@@ -4,6 +4,7 @@ import Prelude
 import Data.Slices (Slice(..), metrics)
 import Data.Array (nub, take, concat, head, snoc, (..), (!!))
 import Data.Array as A
+import Data.Foldable (Foldable, foldr, foldl, foldMap)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..), either)
@@ -16,30 +17,32 @@ import Network.HTTP.Affjax (AJAX, get)
 
 import Stats (Histogram, histogram)
 
+type FocusPoint = Array Number
+
 -- the slices for a single focus point
-data FocusPoint = FocusPoint 
+data FocusPointInfo = FocusPointInfo 
   { id         :: Int
   , dims       :: Int
-  , focusPoint :: Array Number
+  , focusPoint :: FocusPoint
   , slices     :: Array Slice
   }
-newtype SampleGroup = SampleGroup (Array FocusPoint)
+newtype SampleGroup = SampleGroup (Array FocusPointInfo)
 
-instance focusPointIsForeign :: IsForeign FocusPoint where
+instance focusPointIsForeign :: IsForeign FocusPointInfo where
   read json = do
     i  <- readProp "group_id" json
     d  <- readProp "dims" json
     fp <- readProp "slice" json
     s  <- readProp "slices" json
-    pure $ FocusPoint {id: i, dims: d, focusPoint: fp, slices: s}
+    pure $ FocusPointInfo {id: i, dims: d, focusPoint: fp, slices: s}
 
 instance sampleGroupIsForeign :: IsForeign SampleGroup where
   read json = do
     sg <- read json
     pure $ SampleGroup sg
 
-instance focusPointEq :: Eq FocusPoint where
-  eq (FocusPoint fp1) (FocusPoint fp2) = fp1.id == fp2.id
+instance focusPointEq :: Eq FocusPointInfo where
+  eq (FocusPointInfo fp1) (FocusPointInfo fp2) = fp1.id == fp2.id
     --fp1.dims == fp2.dims && fp1.focusPoint == fp2.focusPoint && fp1.slices == fp2.slices
 
 type MetricRangeFilter =
@@ -63,15 +66,15 @@ parseJson json = case readJSON json of
                       Left err -> Left (error $ show err)
                       Right res -> Right res
 
-sortBy :: (FocusPoint -> FocusPoint -> Ordering) -> SampleGroup -> SampleGroup
+sortBy :: (FocusPointInfo -> FocusPointInfo -> Ordering) -> SampleGroup -> SampleGroup
 sortBy cmp (SampleGroup sg) = SampleGroup $ A.sortBy cmp sg
 
-metricNames :: FocusPoint -> Array String
-metricNames (FocusPoint r) = 
+metricNames :: FocusPointInfo -> Array String
+metricNames (FocusPointInfo r) = 
   nub $ concat $ map (\(Slice s) -> SM.keys s.metrics) r.slices
 
 sliceList :: SampleGroup -> Array Slice
-sliceList (SampleGroup sg) = concat $ map (\(FocusPoint ds) -> ds.slices) sg
+sliceList (SampleGroup sg) = concat $ map (\(FocusPointInfo ds) -> ds.slices) sg
 
 subset :: Int -> SampleGroup -> SampleGroup
 subset n (SampleGroup sg) = SampleGroup $ take n sg
@@ -80,7 +83,7 @@ dims :: SampleGroup -> Int
 dims (SampleGroup sg) = 
   case head sg of
        Nothing -> 0
-       Just (FocusPoint x) -> x.dims
+       Just (FocusPointInfo x) -> x.dims
 
 metricHistograms :: Int -> Int -> SampleGroup -> SM.StrMap Histogram
 metricHistograms bins dim sg =
@@ -95,8 +98,8 @@ flattenMetrics dim sg'@(SampleGroup sg) =
   tmp :: Array (SM.StrMap Number)
   tmp = map (procDs dim) sg
 
-  procDs :: Int -> FocusPoint -> SM.StrMap Number
-  procDs d (FocusPoint ds) = metrics (fromJust $ ds.slices !! d)
+  procDs :: Int -> FocusPointInfo -> SM.StrMap Number
+  procDs d (FocusPointInfo ds) = metrics (fromJust $ ds.slices !! d)
 
 combineMaps :: Array (SM.StrMap Number) -> SM.StrMap (Array Number)
 combineMaps ms = 
@@ -110,9 +113,9 @@ merge :: Number -> Maybe (Array Number) -> Maybe (Array Number)
 merge x Nothing = Just [x]
 merge x (Just xs) = Just $ snoc xs x
 
-getFocusPoint :: Int -> SampleGroup -> Maybe FocusPoint
+getFocusPoint :: Int -> SampleGroup -> Maybe FocusPointInfo
 getFocusPoint i (SampleGroup sg) = sg !! i
 
-focusPoint :: FocusPoint -> Array Number
-focusPoint (FocusPoint ds) = ds.focusPoint
+focusPoint :: FocusPointInfo -> Array Number
+focusPoint (FocusPointInfo ds) = ds.focusPoint
 

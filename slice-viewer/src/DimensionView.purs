@@ -9,9 +9,14 @@ import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className)
 import Stats (Histogram)
 import Util (mapCombine)
+import Stats (histogram)
+import Debug.Trace
 
-import Data.Samples (SampleGroup, FocusPoint(..), metricHistograms)
+import Data.Samples (combineMaps)
 import Data.Slices (Metrics, metrics)
+
+import DataFrame as DF
+import Data.SliceSample as Slice
 
 import Vis.Vega.Histogram as H
 import Vis.Vega.Slices as SV
@@ -24,13 +29,13 @@ type State =
   }
 
 data Action
-  = UpdateSamples SampleGroup
-  | FocusPointFilter (Maybe FocusPoint)
+  = UpdateSamples (DF.DataFrame Slice.SliceSample)
+  | FocusPointFilter (DF.DataFrame Slice.SliceSample)
   | SliceViewAction SV.Action
   | HistoAction String H.Action
 
 --update (UpdateSamples sg)
-init :: Int -> SampleGroup -> State
+init :: Int -> DF.DataFrame Slice.SliceSample -> State
 init d sg =
   { dim: d
   , histograms: histos
@@ -38,7 +43,7 @@ init d sg =
   , histogramStates: map H.init histos
   }
   where 
-  histos = metricHistograms 11 d sg
+  histos = metricHistograms 11 sg
 
 update :: Action -> State -> State
 update (UpdateSamples sg) state =
@@ -47,16 +52,19 @@ update (UpdateSamples sg) state =
         , histogramStates = map H.init histos
         }
   where 
-  histos = metricHistograms 11 state.dim sg
+  histos = metricHistograms 11 sg
 update (FocusPointFilter fp) state = state
-  { sliceView = SV.update (SV.HoverSlice $ map (highlightedSlice state) fp) state.sliceView 
-  , histogramStates = 
-      case fp of
-           Just fp' -> mapCombine (\s x -> H.update (H.ShowTicks [x]) s) 
-                                  state.histogramStates 
-                                  (sliceMetrics state fp')
-           Nothing -> map (\s -> H.update (H.ShowTicks []) s) state.histogramStates
+  { sliceView = SV.update (SV.HoverSlice sliceIds) state.sliceView
+  , histogramStates = if SM.isEmpty metricHighlights
+                         then map (\s -> H.update (H.ShowTicks []) s) state.histogramStates
+                         else mapCombine (\s x -> H.update (H.ShowTicks x) s) 
+                                         state.histogramStates 
+                                         metricHighlights
   }
+  where 
+  fps = DF.run $ DF.rowFilter (\(Slice.SliceSample s) -> s.d==state.dim) fp
+  sliceIds = map (\(Slice.SliceSample fp) -> fp.focusPointId) fps
+  metricHighlights = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}
 update (HistoAction n a) state =
@@ -91,15 +99,22 @@ viewMetricHistogram name h =
     , map (HistoAction name) $ H.view h
     ]
 
-highlightedSlice :: State -> FocusPoint -> SV.VegaSlicePoint
-highlightedSlice state (FocusPoint fp) =
-  fromJust $ head $ SV.convertSlice (SV.sliceId state.sliceView slice) state.dim slice
-  where
-  slice = fromJust $ fp.slices !! state.dim
+metricHistograms :: Int -> DF.DataFrame Slice.SliceSample -> SM.StrMap Histogram
+metricHistograms bins df =
+  map (histogram bins) values
+  where 
+  fps = DF.run df
+  values = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 
-sliceMetrics :: State -> FocusPoint -> Metrics
-sliceMetrics state (FocusPoint fp) =
-  metrics slice
-  where
-  slice = fromJust $ fp.slices !! state.dim
+{--highlightedSlice :: State -> FocusPoint -> SV.VegaSlicePoint--}
+{--highlightedSlice state (FocusPoint fp) =--}
+  {--fromJust $ head $ SV.convertSlice (SV.sliceId state.sliceView slice) state.dim slice--}
+  {--where--}
+  {--slice = fromJust $ fp.slices !! state.dim--}
+
+{--sliceMetrics :: State -> FocusPoint -> Metrics--}
+{--sliceMetrics state (FocusPoint fp) =--}
+  {--metrics slice--}
+  {--where--}
+  {--slice = fromJust $ fp.slices !! state.dim--}
 

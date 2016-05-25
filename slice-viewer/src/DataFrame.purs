@@ -2,19 +2,23 @@ module DataFrame (
     DataFrame
   , init
   , run
+  , runOrig
   , filterNone
+  , filterAll
   , takeFilter
   , rowFilter
+  , groupBy
   ) 
 where
 
 import Prelude
-import Data.Array (snoc, filter, take)
+import Data.Array (snoc, filter, take, sortBy)
 import Data.Lazy (Lazy, defer, force)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (class Foldable, foldl)
+import Data.Map as M
 
-type GroupRow a b = {group :: b, data :: DataFrame a}
+type GroupRow a = {group :: Number, data :: DataFrame a}
 
 data Operation a
   = NoneFilter
@@ -22,17 +26,17 @@ data Operation a
   | RowFilter (a -> Boolean)
   | Sort (a -> a -> Ordering)
 
-data DataFrame a b
+data DataFrame a
   = TopLevel (Array a) 
   | LowerLevel 
       { parent :: DataFrame a
       , operation :: Operation a
       , results :: Lazy (Array a)
       }
-  | GroupLevel
-      { parent :: DataFrame a
-      , results :: Lazy (Array (GroupRow a b))
-      }
+  {--| GroupLevel--}
+      {--{ parent :: DataFrame a--}
+      {--, results :: Lazy (Array (GroupRow a))--}
+      {--}--}
 
 init :: forall a tr. (Foldable tr) => tr a -> DataFrame a
 init xs = TopLevel $ foldl snoc [] xs
@@ -45,6 +49,7 @@ runOp :: forall a. Operation a -> Array a -> Array a
 runOp NoneFilter xs = []
 runOp (TakeFilter n) xs = take n xs
 runOp (RowFilter f) xs = filter f xs
+runOp (Sort f) xs = sortBy f xs
 
 runOrig :: forall a. DataFrame a -> Array a
 runOrig (TopLevel xs) = xs
@@ -86,18 +91,20 @@ rowSort f p = LowerLevel
   }
   where op = Sort f
 
-groupBy :: (Ord b) => forall a b. (a -> b) -> DataFrame a 
-                                           -> DataFrame (GroupRow a b)
-groupBy f p = GroupLevel
-  { parent: p
-  , results: defer (\_ -> groups f $ run p)
-  }
+-- TODO: make groups work for all Ords
+groupBy :: forall a. (a -> Number) -> DataFrame a -> DataFrame (GroupRow a)
+groupBy f p = init $ groups f (run p) 
+-- FIXME: this is wrong, it needs to be incorporated into the rest of the hierarchy
 
-groups :: (Ord b) => forall a b. (a -> b) -> Array a -> Array (GroupRow a b)
-groups xs = foldl (\x (Tuple k v) -> x `snoc` {group: k, data: v}) [] groupMap
+groups :: forall a. (a -> Number) -> Array a -> Array (GroupRow a)
+groups f xs = foldl (\x t -> x `snoc` (convert' t)) [] $ M.toList groupMap
   where
+  groupMap :: M.Map Number (Array a)
   groupMap = M.fromFoldableWith (++) $ groupIds f xs
 
-groupIds :: (Ord b) => forall a b. (a -> b) -> Array a -> Array (GroupRow a b)
+convert' :: forall a. Tuple Number (Array a) -> GroupRow a
+convert' (Tuple gid vs) = {group: gid, data: init vs} -- FIXME: shouldn't use init here!
+
+groupIds :: forall a. (a -> Number) -> Array a -> Array (Tuple Number (Array a))
 groupIds f = map (\x -> Tuple (f x) [x])
 

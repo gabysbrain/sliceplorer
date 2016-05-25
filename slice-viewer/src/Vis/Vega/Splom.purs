@@ -6,8 +6,9 @@ import Data.StrMap as SM
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
 import Data.Tuple (Tuple(..))
+import Data.Foldable (foldl)
 import Data.Int (toNumber, floor)
-import Data.Array ((!!))
+import Data.Array ((!!), snoc)
 import Data.Nullable as N
 import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
@@ -15,8 +16,9 @@ import Pux.Html.Events (handler)
 import Debug.Trace
 import Util (mapEnum)
 
-import Data.Samples (SampleGroup(..), FocusPoint(..))
-import Data.Samples as S
+import DataFrame as DF
+import Data.SliceSample as Slice
+import Data.Samples (FocusPoint(..))
 
 import Vis.Vega (Data, dataAttr, toVegaData)
 
@@ -24,58 +26,56 @@ foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> H
 
 type VegaPoint = SM.StrMap Number
 
-type PointHoverEvent = Maybe VegaPoint
+type PointHoverEvent = Array Int
+type HoverRec = {id :: Int}
 
 type State = 
   { focusPoints :: Array VegaPoint
   , fields :: Array String
-  , hoverPoint :: Maybe VegaPoint
+  , hoverPoints :: Array Int -- focus point ids
   }
 
 data Action 
-  = UpdateSamples SampleGroup
+  = UpdateSamples (DF.DataFrame Slice.SliceSample)
   | HoverPoint PointHoverEvent
 
-init :: Array String -> SampleGroup -> State
+init :: Array String -> DF.DataFrame Slice.SliceSample -> State
 init fs sg = 
   { focusPoints: splomData sg
   , fields: fs
-  , hoverPoint: Nothing
+  , hoverPoints: []
   }
 
 update :: Action -> State -> State
 update (UpdateSamples sg) state = state {focusPoints=splomData sg}
-update (HoverPoint p) state = state {hoverPoint=p}
+update (HoverPoint p) state = state {hoverPoints=p}
 
 onPointHover :: forall action. (PointHoverEvent -> action) -> Attribute action
 onPointHover s = runFn2 handler "onPointHover" saniHandler
   where
-  saniHandler e = s $ N.toMaybe e
+  saniHandler e = s $ foldl (\a x -> a `snoc` x.id) [] (N.toMaybe e)
 
 view :: State -> Html Action
 view state = fromReact (attrs state) []
 
 attrs :: State -> Array (Attribute Action)
-attrs state = 
-  case state.hoverPoint of
-       Just s -> [da, fa, ha, attr "hoverPoint" s]
-       Nothing -> [da, fa, ha]
+attrs state = [da, fa, ha, hpa]
   where
-  da = dataAttr $ toVegaData $ state.focusPoints
+  da = dataAttr $ toVegaData state.focusPoints
   ha = onPointHover HoverPoint
   fa = attr "fields" $ toVegaData state.fields
+  hpa = attr "hoverPoint" $ toVegaData $ map (\x -> {id: x}) state.hoverPoints
 
-splomData :: SampleGroup -> Array VegaPoint
-splomData (SampleGroup sg) = --map splomDatum sg
-  mapEnum (\i x -> SM.insert "id" (toNumber i) $ splomDatum x) sg
+splomData :: DF.DataFrame Slice.SliceSample -> Array VegaPoint
+splomData df = map (\(Slice.SliceSample s) -> splomDatum s.focusPointId s.focusPoint) $ DF.run df
 
-splomDatum :: FocusPoint -> VegaPoint
-splomDatum ds = SM.fromFoldable named
+splomDatum :: Int -> FocusPoint -> VegaPoint
+splomDatum id fp = SM.fromFoldable $ named `snoc` (Tuple "id" (toNumber id))
   where
-  named = mapEnum (\i x -> Tuple ("x"++(show (i+1))) x) $ S.focusPoint ds
+  named = mapEnum (\i x -> Tuple ("x"++(show (i+1))) x) $ fp
 
-focusPoint :: SampleGroup -> VegaPoint -> FocusPoint
-focusPoint (SampleGroup sg) vp = fromJust $ sg !! fpId
-  where 
-  fpId = floor $ fromJust $ SM.lookup "id" vp
+{--focusPoint :: SampleGroup -> VegaPoint -> FocusPoint--}
+{--focusPoint (SampleGroup sg) vp = fromJust $ sg !! fpId--}
+  {--where --}
+  {--fpId = floor $ fromJust $ SM.lookup "id" vp--}
 
