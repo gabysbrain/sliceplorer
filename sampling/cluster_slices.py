@@ -16,12 +16,12 @@ def cluster_slices(focus_points):
   cluster_ids,_ = vq.vq(wobs, centroids)
   return cluster_ids
 
-def assign_clusters(focus_points):
+def identify_clusters(focus_points):
   focus_points = list(focus_points) # the generator will break things
   dims = focus_points[0].dims
   cluster_ids = cluster_slices(focus_points)
   for i,fp in enumerate(focus_points):
     for d, s in enumerate(fp.slices):
-      s.cluster_id = cluster_ids[i*dims+d]
+      s.cluster_id = int(cluster_ids[i*dims+d])
   return focus_points
 
