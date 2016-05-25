@@ -65,7 +65,7 @@ function _spec() {
           'stroke': {'value': 'darkgrey'},
           'strokeWidth': { 'value': 1 },
           'fill': [{
-            'test': "indata('highlightBar', datum.bin_start, 'bin_start')",
+            'test': "indata('highlightBar', datum.bin_start, 'start')",
             'value': 'red'
           }, {
             'value': 'lightgrey'

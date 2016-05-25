@@ -13,10 +13,12 @@ import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Pux.Html.Events (onChange, FormEvent)
 import Debug.Trace
 import Util (mapEnum)
+import Stats (HistBin)
 
 import App.SliceSampleView as SSV
 import Vis.Vega.Splom as Splom
 import Vis.Vega.Slices as SV
+import Vis.Vega.Histogram as HV
 import App.DimensionView as DV
 
 import Data.Samples (SampleGroup(..), FocusPoint, MetricRangeFilter, 
@@ -60,6 +62,12 @@ groupByDim (Slice.SliceSample s) = I.toNumber s.d
 filterFocusIds :: Array Int -> Slice.SliceSample -> Boolean
 filterFocusIds ids (Slice.SliceSample s) = elem s.focusPointId ids
 
+filterRange :: Int -> String -> HistBin -> Slice.SliceSample -> Boolean
+filterRange dim metric hb (Slice.SliceSample s) =
+  case SM.lookup metric s.metrics of
+       Just v -> dim == s.d && v >= hb.start && v <= hb.end
+       Nothing -> false
+
 update :: Action -> State -> State
 update (UpdateNumberFilter ev) state =
   case I.fromString ev.target.value of
@@ -73,24 +81,34 @@ update (UpdateNumberFilter ev) state =
                    }
 -- FIXME: see if there's a better way than this deep inspection
 update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
-  updateFocusPoint vp state
+  updateFocusPoint (DF.rowFilter (filterFocusIds vp) state.samples) state
 update (SliceSampleViewAction a) state =
   state {sliceSampleView=SSV.update a state.sliceSampleView}
 update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
-  updateFocusPoint hs state
+  updateFocusPoint (DF.rowFilter (filterFocusIds hs) state.samples) state
+update (DimViewAction dim a@(DV.HistoAction metric (HV.HoverBar rng))) state =
+  updateDimView dim a $ updateFocusPoint df state -- maintain bar highlight
+  where
+  df = case rng of
+            Just r -> DF.rowFilter (filterRange dim metric r) state.samples
+            Nothing -> DF.filterAll state.samples
 update (DimViewAction dim a) state = 
+  updateDimView dim a state
+
+updateDimView :: Int -> DV.Action -> State -> State
+updateDimView dim a state =
   case modifyAt dim (DV.update a) state.dimViews of
        Nothing -> state
        Just newDVs -> state {dimViews=newDVs}
 
-updateFocusPoint :: Array Int -> State -> State
+updateFocusPoint :: DF.DataFrame Slice.SliceSample -> State -> State
 updateFocusPoint fp state = state 
-  { focusPointFilter = fp'
-  , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
-  , dimViews = map (DV.update (DV.FocusPointFilter fp')) state.dimViews
+  { focusPointFilter = fp
+  , sliceSampleView = SSV.update (SSV.FocusPointFilter fpIds) state.sliceSampleView
+  , dimViews = map (DV.update (DV.FocusPointFilter fp)) state.dimViews
   }
   where
-  fp' = DF.rowFilter (filterFocusIds fp) state.samples
+  fpIds = map (\(Slice.SliceSample s) -> s.focusPointId) $ DF.run fp
 
 view :: State -> Html Action
 view state@{samples=sg, samplesToShow=n} =

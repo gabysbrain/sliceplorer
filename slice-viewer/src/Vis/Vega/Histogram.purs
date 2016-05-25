@@ -30,13 +30,19 @@ init :: Histogram -> State
 init h = {histogram: h, highlightBar: Nothing, highlightTicks: []}
 
 update :: Action -> State -> State
-update (HoverBar ev) state = state {highlightBar=ev}
-update (ShowTicks ts) state = state {highlightTicks=ts}
+update (HoverBar ev) state = state 
+  { highlightBar = ev
+  , highlightTicks = []
+  }
+update (ShowTicks ts) state = state 
+  { highlightBar = Nothing
+  , highlightTicks = ts
+  }
 
 onBarHover :: forall action. (BarHoverEvent -> action) -> Attribute action
 onBarHover h = runFn2 handler "onBarHover" saniHandler
   where
-  saniHandler e = h $ N.toMaybe e
+    saniHandler e = h $ map (\x -> {start: x.bin_start, end: x.bin_end, count: x.count}) $ N.toMaybe e
 
 view :: State -> Html Action
 view state = fromReact (attrs state) []
