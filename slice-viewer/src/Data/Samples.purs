@@ -2,14 +2,13 @@ module Data.Samples where
 
 import Prelude
 import Data.Slices (Slice(..), metrics)
-import Data.Array (nub, take, concat, head, snoc, (..), (!!))
+import Data.Array (nub, take, concat, head, snoc, (!!))
 import Data.Array as A
-import Data.Foldable (Foldable, foldr, foldl, foldMap)
+import Data.Foldable (foldl)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Maybe.Unsafe (fromJust)
-import Data.Either (Either(..), either)
+import Data.Either (Either(..))
 import Data.StrMap as SM
-import Data.Foldable (foldl)
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
 import Control.Monad.Eff.Exception (Error, error)
 import Control.Monad.Aff (Aff, attempt)

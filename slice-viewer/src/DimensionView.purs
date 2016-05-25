@@ -2,18 +2,13 @@ module App.DimensionView where
 
 import Prelude hiding (div)
 import Data.StrMap as SM
-import Data.Array (head, (!!))
 import Data.Maybe (Maybe(..))
-import Data.Maybe.Unsafe (fromJust)
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className)
-import Stats (Histogram)
+import Stats (Histogram, histogram)
 import Util (mapCombine)
-import Stats (histogram)
-import Debug.Trace
 
 import Data.Samples (combineMaps)
-import Data.Slices (Metrics, metrics)
 
 import DataFrame as DF
 import Data.SliceSample as Slice

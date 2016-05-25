@@ -4,7 +4,7 @@ import Prelude
 import Data.Tuple (Tuple(..))
 import Data.StrMap (StrMap)
 import Data.StrMap as SM
-import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
+import Data.Foreign.Class (class IsForeign, readProp)
 
 type Inputs = Array Number
 type Output = Number

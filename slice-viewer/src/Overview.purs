@@ -48,9 +48,9 @@ init sg =
   , dims: dims sg
   , samplesToShow: 10
   , focusPointFilter: DF.filterAll df'
-  --, metricRangeFilter: Nothing
   , sliceSampleView: SSV.init (dims sg) df'
-  , dimViews: map (\{group: d, data: s} -> DV.init (I.round d) s) $ DF.run (DF.groupBy groupByDim df')
+  , dimViews: map (\{group: d, data: s} -> DV.init (I.round d) s) 
+                  (DF.run $ DF.groupBy groupByDim df')
   }
   where 
   df = DF.init $ Slice.create sg
