@@ -23,7 +23,6 @@ import Vis.Vega.Slices as SV
 
 type State =
   { dim :: Int
-  , histograms :: SM.StrMap Histogram
   , sliceView :: SV.State
   , histogramStates :: SM.StrMap H.State
   }
@@ -38,7 +37,6 @@ data Action
 init :: Int -> DF.DataFrame Slice.SliceSample -> State
 init d sg =
   { dim: d
-  , histograms: histos
   , sliceView: SV.init d sg
   , histogramStates: map H.init histos
   }
@@ -47,8 +45,7 @@ init d sg =
 
 update :: Action -> State -> State
 update (UpdateSamples sg) state =
-  state { histograms = histos
-        , sliceView = SV.update (SV.UpdateSamples sg) state.sliceView
+  state { sliceView = SV.update (SV.UpdateSamples sg) state.sliceView
         , histogramStates = map H.init histos
         }
   where 
