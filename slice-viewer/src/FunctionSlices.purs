@@ -10,9 +10,9 @@ import Control.Monad.Eff.Exception (Error)
 import Network.HTTP.Affjax (AJAX)
 
 import Pux (EffModel, noEffects)
-import Pux.Html (Html, div, button, text, p, select, option)
+import Pux.Html (Html, div, button, text, p, select, option, input)
 import Pux.Html.Events (onChange, onClick, FormEvent)
-import Pux.Html.Attributes (className, disabled, value)
+import Pux.Html.Attributes (className, disabled, value, type_, min, max, step)
 
 import Data.Samples (SampleGroup(..), jsonSamples, metricNames)
 import App.Overview as Overview
@@ -20,6 +20,7 @@ import App.Overview as Overview
 type State =
   { d :: Int
   , function :: String
+  , sampleLimit :: Int
   , sliceMetrics :: Array String
   , error :: Maybe Error
   , samples :: Maybe SampleGroup
@@ -31,12 +32,14 @@ data Action
   | UpdateSamples (Either Error SampleGroup)
   | DimChange FormEvent
   | FunctionChange FormEvent
+  | UpdateSampleLimit FormEvent
   | OverviewView Overview.Action
 
 init :: State
 init = 
   { d: 2
   , function: "spherical"
+  , sampleLimit: 50
   , sliceMetrics: []
   , error: Nothing
   , samples: Nothing
@@ -47,7 +50,7 @@ update :: Action -> State -> EffModel State Action (ajax :: AJAX)
 update (RequestSamples) state =
   { state: state {samples=Nothing}
   , effects: [ do
-      samples <- jsonSamples state.function state.d
+      samples <- jsonSamples state.function state.d state.sampleLimit
       return $ UpdateSamples samples
     ]
   }
@@ -75,6 +78,14 @@ update (FunctionChange ev) state =
       return RequestSamples
     ]
   }
+update (UpdateSampleLimit ev) state =
+  case fromString ev.target.value of
+       Nothing -> noEffects state
+       Just n' -> { state: state {sampleLimit=n'}
+                  , effects: [ do
+                      return RequestSamples
+                    ]
+                  }
 update (OverviewView action) state =
   noEffects $ case state.overview of
                    Nothing -> state
@@ -95,6 +106,15 @@ viewControls state =
         [ dimSelector state
         , funcSelector state.function
         , button [onClick (const RequestSamples)] [text "Fetch samples"]
+        ]
+    , div [className "sample-controls"]
+        [ input [ type_ "range", value (show state.sampleLimit)
+                , max "1000", min "0", step "50"
+                , onChange UpdateSampleLimit
+                ]
+                []
+        , input [ type_ "text", value (show state.sampleLimit)
+                , onChange UpdateSampleLimit] []
         ]
     ]
 

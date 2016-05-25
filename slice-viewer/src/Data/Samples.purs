@@ -50,9 +50,9 @@ type MetricRangeFilter =
   , maxVal :: Number
   }
 
-jsonSamples :: forall eff. String -> Int -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
-jsonSamples fname d = do
-  let url = "http://localhost:5000/slice/" ++ fname ++ "/" ++ (show d)
+jsonSamples :: forall eff. String -> Int -> Int -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
+jsonSamples fname d n = do
+  let url = "http://localhost:5000/slice/" ++ fname ++ "/" ++ (show d) ++ "/" ++ (show n)
   --res <- attempt $ get "/data/test.csv"
   res <- attempt $ get url
   let samples = case res of

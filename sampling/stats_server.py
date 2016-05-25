@@ -14,10 +14,10 @@ class MyEncoder(json.JSONEncoder):
     except AttributeError:
       return str(o)
 
-@app.route('/slice/<function>/<int:dims>', methods = ['GET'])
-def slice_req(function, dims):
+@app.route('/slice/<function>/<int:dims>/<int:limit>', methods = ['GET'])
+def slice_req(function, dims, limit):
   s = convert_slices(function, dims)
-  s = list(itertools.islice(s, 50))
+  s = list(itertools.islice(s, limit))
   cs = identify_clusters(s)
   resp = Response(response=json.dumps(cs, cls=MyEncoder),
       status=200, mimetype="application/json")
