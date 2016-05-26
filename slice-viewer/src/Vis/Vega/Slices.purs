@@ -34,8 +34,7 @@ type VegaHoverPoint = { slice_id :: Int }
 type SliceHoverEvent = Array Int -- slice ids
 
 data Action
-  = UpdateSamples AppData
-  | HoverSlice (Array Int) -- slice ids
+  = HoverSlice (Array Int) -- slice ids
 
 type State = 
   { dim :: Int
@@ -51,7 +50,6 @@ init d sg =
   }
 
 update :: Action -> State -> State
-update (UpdateSamples sg) state = state { slices = convertSamples sg }
 update (HoverSlice ev) state = state {hoverSlice=ev}
 
 onSliceHover :: forall action. (SliceHoverEvent -> action) -> Attribute action

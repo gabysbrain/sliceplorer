@@ -37,8 +37,7 @@ type State =
   }
 
 data Action 
-  = UpdateSamples AppData
-  | HoverPoint PointHoverEvent
+  = HoverPoint PointHoverEvent
 
 init :: Array String -> AppData -> State
 init fs sg = 
@@ -48,7 +47,6 @@ init fs sg =
   }
 
 update :: Action -> State -> State
-update (UpdateSamples sg) state = state {focusPoints=splomData sg}
 update (HoverPoint p) state = state {hoverPoints=p}
 
 onPointHover :: forall action. (PointHoverEvent -> action) -> Attribute action

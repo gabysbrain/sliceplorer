@@ -42,7 +42,7 @@ init d df =
 
 update :: Action -> State -> State
 update (UpdateSamples df) state =
-  state { sliceView = SV.update (SV.UpdateSamples df') state.sliceView
+  state { sliceView = SV.init state.dim df'
         , histogramStates = map H.init histos
         }
   where 

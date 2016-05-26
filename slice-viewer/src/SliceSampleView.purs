@@ -25,19 +25,21 @@ data Action
 
 type State = 
   { samples :: AppData
+  , dims :: Int
   , splom :: Splom.State
   }
 
 init :: Int -> AppData -> State
 init dims df =
   { samples: df
+  , dims: dims
   , splom: Splom.init (fields dims) df
   }
 
 update :: Action -> State -> State
 update (UpdateSamples df) state = state
   { samples=df
-  , splom=Splom.update (Splom.UpdateSamples df) state.splom
+  , splom=Splom.init (fields state.dims) df
   }
 update (FocusPointFilter fps) state = state
   { splom = Splom.update (Splom.HoverPoint fps) state.splom }
