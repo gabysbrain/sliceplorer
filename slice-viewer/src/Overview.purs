@@ -13,6 +13,7 @@ import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Pux.Html.Events (onChange, FormEvent)
 import Util (mapEnum)
 import Stats (HistBin)
+import App.Core (AppData)
 
 import App.SliceSampleView as SSV
 import Vis.Vega.Splom as Splom
@@ -25,9 +26,9 @@ import DataFrame as DF
 import Data.SliceSample as Slice
 
 type State = 
-  { samples :: DF.DataFrame Slice.SliceSample
+  { samples :: AppData
   , dims :: Int
-  , focusPointFilter :: DF.DataFrame Slice.SliceSample
+  , focusPointFilter :: AppData
   --, metricRangeFilter :: Maybe MetricRangeFilter
   , sliceSampleView :: SSV.State
   , dimViews :: Array DV.State
@@ -84,7 +85,7 @@ updateDimView dim a state =
        Nothing -> state
        Just newDVs -> state {dimViews=newDVs}
 
-updateFocusPoint :: DF.DataFrame Slice.SliceSample -> State -> State
+updateFocusPoint :: AppData -> State -> State
 updateFocusPoint fp state = state 
   { focusPointFilter = fp
   , sliceSampleView = SSV.update (SSV.FocusPointFilter fpIds) state.sliceSampleView

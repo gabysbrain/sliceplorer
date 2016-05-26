@@ -15,6 +15,7 @@ import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
 import Debug.Trace
 import Util (mapEnum)
+import App.Core (AppData)
 
 import DataFrame as DF
 import Data.SliceSample as Slice
@@ -36,10 +37,10 @@ type State =
   }
 
 data Action 
-  = UpdateSamples (DF.DataFrame Slice.SliceSample)
+  = UpdateSamples AppData
   | HoverPoint PointHoverEvent
 
-init :: Array String -> DF.DataFrame Slice.SliceSample -> State
+init :: Array String -> AppData -> State
 init fs sg = 
   { focusPoints: splomData sg
   , fields: fs
@@ -66,7 +67,7 @@ attrs state = [da, fa, ha, hpa]
   fa = attr "fields" $ toVegaData state.fields
   hpa = attr "hoverPoint" $ toVegaData $ map (\x -> {id: x}) state.hoverPoints
 
-splomData :: DF.DataFrame Slice.SliceSample -> Array VegaPoint
+splomData :: AppData -> Array VegaPoint
 splomData df = map (\(Slice.SliceSample s) -> splomDatum s.focusPointId s.focusPoint) $ DF.run df
 
 splomDatum :: Int -> FocusPoint -> VegaPoint

@@ -13,7 +13,7 @@ import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
 import Util (mapEnum)
-import Debug.Trace
+import App.Core (AppData)
 
 import DataFrame as DF
 import Data.SliceSample as Slice
@@ -34,7 +34,7 @@ type VegaHoverPoint = { slice_id :: Int }
 type SliceHoverEvent = Array Int -- slice ids
 
 data Action
-  = UpdateSamples (DF.DataFrame Slice.SliceSample)
+  = UpdateSamples AppData
   | HoverSlice (Array Int) -- slice ids
 
 type State = 
@@ -43,7 +43,7 @@ type State =
   , hoverSlice :: Array Int -- slice ids
   }
 
-init :: Int -> DF.DataFrame Slice.SliceSample -> State 
+init :: Int -> AppData -> State 
 init d sg = 
   { dim: d
   , slices: convertSamples sg
@@ -69,7 +69,7 @@ attrs state = [da, fa, ha]
   fa = onSliceHover HoverSlice
   ha = attr "hoverSlice" $ toVegaData $ map (\x -> {slice_id: x}) state.hoverSlice
 
-convertSamples :: DF.DataFrame Slice.SliceSample -> Array VegaSlicePoint
+convertSamples :: AppData -> Array VegaSlicePoint
 convertSamples df = concatMap convertSlice $ DF.run df
   
 convertSlice :: Slice.SliceSample -> Array VegaSlicePoint

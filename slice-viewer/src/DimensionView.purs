@@ -7,6 +7,7 @@ import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className)
 import Stats (Histogram, histogram)
 import Util (mapCombine)
+import App.Core (AppData)
 
 import Data.Samples (combineMaps)
 
@@ -23,13 +24,13 @@ type State =
   }
 
 data Action
-  = UpdateSamples (DF.DataFrame Slice.SliceSample)
-  | FocusPointFilter (DF.DataFrame Slice.SliceSample)
+  = UpdateSamples AppData
+  | FocusPointFilter AppData
   | SliceViewAction SV.Action
   | HistoAction String H.Action
 
 --update (UpdateSamples sg)
-init :: Int -> DF.DataFrame Slice.SliceSample -> State
+init :: Int -> AppData -> State
 init d df =
   { dim: d
   , sliceView: SV.init d df'
@@ -93,7 +94,7 @@ viewMetricHistogram name h =
     , map (HistoAction name) $ H.view h
     ]
 
-metricHistograms :: Int -> DF.DataFrame Slice.SliceSample -> SM.StrMap Histogram
+metricHistograms :: Int -> AppData -> SM.StrMap Histogram
 metricHistograms bins df =
   map (histogram bins) values
   where 

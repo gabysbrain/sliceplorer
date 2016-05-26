@@ -9,6 +9,7 @@ import Data.Maybe.Unsafe (fromJust)
 import Data.Int (toNumber)
 import Pux.Html (Html, div)
 import Pux.Html.Attributes (className)
+import App.Core (AppData)
 
 import Data.SliceSample as Slice
 import DataFrame as DF
@@ -18,16 +19,16 @@ import Vis.Vega.Splom as Splom
 import Util (mapEnum)
 
 data Action
-  = UpdateSamples (DF.DataFrame Slice.SliceSample)
+  = UpdateSamples AppData
   | FocusPointFilter (Array Int) -- focus point ids
   | SplomAction Splom.Action
 
 type State = 
-  { samples :: DF.DataFrame Slice.SliceSample
+  { samples :: AppData
   , splom :: Splom.State
   }
 
-init :: Int -> DF.DataFrame Slice.SliceSample -> State
+init :: Int -> AppData -> State
 init dims df =
   { samples: df
   , splom: Splom.init (fields dims) df
