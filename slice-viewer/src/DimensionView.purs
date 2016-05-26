@@ -3,6 +3,7 @@ module App.DimensionView where
 import Prelude hiding (div)
 import Data.StrMap as SM
 import Data.Maybe (Maybe(..))
+import Data.Array (concatMap)
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className)
 import Stats (Histogram, histogram)
@@ -49,7 +50,7 @@ update (UpdateSamples df) state =
   df' = DF.rowFilter (\(Slice.SliceSample s) -> s.d == state.dim) df
   histos = metricHistograms 11 df'
 update (FocusPointFilter fp) state = state
-  { sliceView = SV.update (SV.HoverSlice sliceIds) state.sliceView
+  { sliceView = SV.update (SV.HoverSlice hoverSlices) state.sliceView
   , histogramStates = if SM.isEmpty metricHighlights
                          then map (\s -> H.update (H.ShowTicks []) s) state.histogramStates
                          else mapCombine (\s x -> H.update (H.ShowTicks x) s) 
@@ -58,7 +59,8 @@ update (FocusPointFilter fp) state = state
   }
   where 
   fps = DF.run $ DF.rowFilter (\(Slice.SliceSample s) -> s.d==state.dim) fp
-  sliceIds = map (\(Slice.SliceSample fp) -> fp.focusPointId) fps
+  hoverSlices = concatMap SV.convertSlice fps
+  --sliceIds = map (\(Slice.SliceSample fp) -> fp.focusPointId) fps
   metricHighlights = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}

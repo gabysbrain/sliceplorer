@@ -14,6 +14,7 @@ import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
 import Util (mapEnum)
 import App.Core (AppData)
+import Debug.Trace
 
 import DataFrame as DF
 import Data.SliceSample as Slice
@@ -29,17 +30,17 @@ type VegaSlicePoint =
   , x :: Number
   , y :: Number
   }
-type VegaHoverPoint = { slice_id :: Int }
+type VegaHoverPoint = VegaSlicePoint
 
-type SliceHoverEvent = Array Int -- slice ids
+type SliceHoverEvent = Array VegaSlicePoint
 
 data Action
-  = HoverSlice (Array Int) -- slice ids
+  = HoverSlice (Array VegaSlicePoint)
 
 type State = 
   { dim :: Int
   , slices :: Array VegaSlicePoint
-  , hoverSlice :: Array Int -- slice ids
+  , hoverSlice :: Array VegaSlicePoint
   }
 
 init :: Int -> AppData -> State 
@@ -55,7 +56,7 @@ update (HoverSlice ev) state = state {hoverSlice=ev}
 onSliceHover :: forall action. (SliceHoverEvent -> action) -> Attribute action
 onSliceHover s = runFn2 handler "onSliceHover" saniHandler
   where
-  saniHandler e = s $ foldl (\a x -> a `snoc` x.slice_id) [] (N.toMaybe e)
+  saniHandler e = s $ foldl (\a x -> a `snoc` x) [] (N.toMaybe e)
 
 view :: State -> Html Action
 view state = fromReact (attrs state) []
@@ -65,7 +66,7 @@ attrs state = [da, fa, ha]
   where
   da = dataAttr $ toVegaData state.slices
   fa = onSliceHover HoverSlice
-  ha = attr "hoverSlice" $ toVegaData $ map (\x -> {slice_id: x}) state.hoverSlice
+  ha = attr "hoverSlice" $ toVegaData state.hoverSlice
 
 convertSamples :: AppData -> Array VegaSlicePoint
 convertSamples df = concatMap convertSlice $ DF.run df

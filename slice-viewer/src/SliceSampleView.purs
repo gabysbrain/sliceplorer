@@ -20,7 +20,7 @@ import Util (mapEnum)
 
 data Action
   = UpdateSamples AppData
-  | FocusPointFilter (Array Int) -- focus point ids
+  | FocusPointFilter AppData
   | SplomAction Splom.Action
 
 type State = 
@@ -42,7 +42,9 @@ update (UpdateSamples df) state = state
   , splom=Splom.init (fields state.dims) df
   }
 update (FocusPointFilter fps) state = state
-  { splom = Splom.update (Splom.HoverPoint fps) state.splom }
+  { splom = Splom.update (Splom.HoverPoint fps') state.splom }
+  where
+  fps' = Splom.splomData fps
 update (SplomAction a) state = state
   { splom=Splom.update a state.splom }
 

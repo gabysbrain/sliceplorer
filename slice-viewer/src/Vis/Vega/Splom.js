@@ -73,15 +73,21 @@ function _spec() {
             'x': {'scale': 'x', 'field': {'datum': {'parent': 'a.data'}}},
             'y': {'scale': 'y', 'field': {'datum': {'parent': 'b.data'}}},
             'fillOpacity': {'value': 1},
-            'size': {'value': 35}
-          },
-          'update': {
-            'fill': [{
-              'test': "indata('highlight', datum.id, 'id')",
-              'value': 'red'
-            }, {
-              'value': 'darkgrey'
-            }]
+            'size': { 'value': 35 },
+            'fill': { 'value': 'darkgrey' }
+          }
+        }
+      }, {
+        'type': 'symbol',
+        'interactive': false,
+        'from': {'data': 'highlight'},
+        'properties': {
+          'enter': {
+            'x': {'scale': 'x', 'field': {'datum': {'parent': 'a.data'}}},
+            'y': {'scale': 'y', 'field': {'datum': {'parent': 'b.data'}}},
+            'fillOpacity': {'value': 1},
+            'size': {'value': 35},
+            'fill': { 'value': 'red' }
           }
         }
       }]
