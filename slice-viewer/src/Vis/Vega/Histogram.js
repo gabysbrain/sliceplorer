@@ -64,12 +64,30 @@ function _spec() {
           'y2': { 'scale': 'y', 'value': 0 },
           'stroke': {'value': 'darkgrey'},
           'strokeWidth': { 'value': 1 },
-          'fill': [{
-            'test': "indata('highlightBar', datum.bin_start, 'start')",
-            'value': 'red'
-          }, {
-            'value': 'lightgrey'
-          }]
+          'fill': {'value': 'lightgrey'}
+        },
+        //'update': {
+          //'fill': [{
+            //'test': "indata('highlightBar', datum.bin_start, 'start')",
+            //'value': 'red'
+          //}, {
+            //'value': 'lightgrey'
+          //}]
+        //}
+      }
+    }, {
+      'type': 'rect',
+      'from': {'data': 'highlightBar'},
+      'interactive': false,
+      'properties': {
+        'enter': {
+          'x': { 'scale': 'x', 'field': 'start' },
+          'x2': {'scale': 'x', 'field': 'end' },
+          'y': { 'scale': 'y', 'field': 'count' },
+          'y2': { 'scale': 'y', 'value': 0 },
+          'stroke': {'value': 'darkred'},
+          'strokeWidth': { 'value': 1 },
+          'fill': {'value': 'red'}
         }
       }
     }, {
@@ -155,7 +173,7 @@ var VegaHistogram = React.createClass({
       if(highlightTicks) {
         vis.data('highlightTicks').insert(highlightTicks);
       }
-      vis.data('bars').remove(function() {return true;}).insert(data);
+      //vis.data('bars').remove(function() {return true;}).insert(data);
 
       vis.update();
     }

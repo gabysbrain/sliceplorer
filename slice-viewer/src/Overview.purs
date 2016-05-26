@@ -96,11 +96,15 @@ update (ChangeGroupMethod ev) state =
                    (DF.run $ groupSamples gm state.samples)
 -- FIXME: see if there's a better way than this deep inspection
 update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
-  updateFocusPoint (DF.rowFilter (filterFocusIds vp) state.samples) state
+  updateFocusPoint (DF.rowFilter (filterFocusIds vp') state.samples) state
+  where 
+  vp' = map (\x -> I.round $ fromJust $ SM.lookup "id" x) vp
 update (SliceSampleViewAction a) state =
   state {sliceSampleView=SSV.update a state.sliceSampleView}
 update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
-  updateFocusPoint (DF.rowFilter (filterFocusIds hs) state.samples) state
+  updateFocusPoint (DF.rowFilter (filterFocusIds hs') state.samples) state
+  where 
+  hs' = map (\x -> x.slice_id) hs
 update (DimViewAction dim a@(DV.HistoAction metric (HV.HoverBar rng))) state =
   updateDimView dim a $ updateFocusPoint df state -- maintain bar highlight
   where
@@ -119,11 +123,9 @@ updateDimView dim a state =
 updateFocusPoint :: AppData -> State -> State
 updateFocusPoint fp state = state 
   { focusPointFilter = fp
-  , sliceSampleView = SSV.update (SSV.FocusPointFilter fpIds) state.sliceSampleView
+  , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
   , dimViews = map (DV.update (DV.FocusPointFilter fp)) state.dimViews
   }
-  where
-  fpIds = map (\(Slice.SliceSample s) -> s.focusPointId) $ DF.run fp
 
 view :: State -> Html Action
 view state =

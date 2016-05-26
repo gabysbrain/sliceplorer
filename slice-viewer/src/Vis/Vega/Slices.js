@@ -59,20 +59,30 @@ function _spec() {
             'x': { 'scale': 'x', 'field': 'x' },
             'y': { 'scale': 'y', 'field': 'y' },
             'interpolate': { 'value': 'basis'},
-            'stroke': [{
-              'test': "indata('highlight', datum.slice_id, 'slice_id')",
-              'value': 'red'
-            }, {
-              'value': 'black'
-            }],
             'strokeWidth': { 'value': 1 },
-            'strokeOpacity': [{
-              'test': "indata('highlight', datum.slice_id, 'slice_id')",
-              'value': 1
-            }, { 
-              'value': 0.1
-            }]
-          },
+            'stroke': { 'value': 'black' },
+            'strokeOpacity': { 'value': 0.1 }
+          }
+        }
+      }]
+    }, {
+      'type': 'group',
+      'from': {
+        'data': 'highlight', 
+        'transform': [{'type': 'facet', 'groupby': ['slice_id']}]
+      },
+      'marks': [{
+        'type': 'line',
+        'interactive': false,
+        'properties': {
+          'enter': {
+            'x': { 'scale': 'x', 'field': 'x' },
+            'y': { 'scale': 'y', 'field': 'y' },
+            'interpolate': { 'value': 'basis'},
+            'strokeWidth': { 'value': 1 },
+            'stroke': { 'value': 'red' },
+            'strokeOpacity': { 'value': 1 }
+          }
         }
       }]
     }]
@@ -139,7 +149,7 @@ var VegaSlices = React.createClass({
       if(hoverSlice) {
         vis.data('highlight').insert(hoverSlice);
       }
-      vis.data('lines').remove(function() {return true;}).insert(data);
+      //vis.data('lines').remove(function() {return true;}).insert(data);
 
       vis.update();
     }

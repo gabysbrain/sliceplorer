@@ -72,14 +72,22 @@ function _spec() {
           'enter': {
             'x': {'scale': 'x', 'field': {'datum': {'parent': 'a.data'}}},
             'y': {'scale': 'y', 'field': {'datum': {'parent': 'b.data'}}},
-            'fill': [{
-              'test': "indata('highlight', datum.id, 'id')",
-              'value': 'red'
-            }, {
-              'value': 'darkgrey'
-            }],
             'fillOpacity': {'value': 1},
-            'size': {'value': 35}
+            'size': { 'value': 35 },
+            'fill': { 'value': 'darkgrey' }
+          }
+        }
+      }, {
+        'type': 'symbol',
+        'interactive': false,
+        'from': {'data': 'highlight'},
+        'properties': {
+          'enter': {
+            'x': {'scale': 'x', 'field': {'datum': {'parent': 'a.data'}}},
+            'y': {'scale': 'y', 'field': {'datum': {'parent': 'b.data'}}},
+            'fillOpacity': {'value': 1},
+            'size': {'value': 35},
+            'fill': { 'value': 'red' }
           }
         }
       }]
@@ -140,9 +148,8 @@ var VegaSplom = React.createClass({
       // update data in case it changed
       // FIXME: for some reason removing fields breaks things
       //vis.data('fields').remove(function() {return true;});
-      vis.data('points').remove(function() {return true;});
       //vis.data('fields').insert(fields);
-      vis.data('points').insert(data);
+      //vis.data('points').remove(function() {return true;}).insert(data);
       vis.data('highlight').remove(function() {return true;});
       if(hoverPoints) {
         vis.data('highlight').insert(hoverPoints);

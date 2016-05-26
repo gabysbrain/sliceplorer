@@ -27,18 +27,16 @@ foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> H
 
 type VegaPoint = SM.StrMap Number
 
-type PointHoverEvent = Array Int
-type HoverRec = {id :: Int}
+type PointHoverEvent = Array VegaPoint
 
 type State = 
   { focusPoints :: Array VegaPoint
   , fields :: Array String
-  , hoverPoints :: Array Int -- focus point ids
+  , hoverPoints :: Array VegaPoint
   }
 
 data Action 
-  = UpdateSamples AppData
-  | HoverPoint PointHoverEvent
+  = HoverPoint PointHoverEvent
 
 init :: Array String -> AppData -> State
 init fs sg = 
@@ -48,13 +46,12 @@ init fs sg =
   }
 
 update :: Action -> State -> State
-update (UpdateSamples sg) state = state {focusPoints=splomData sg}
 update (HoverPoint p) state = state {hoverPoints=p}
 
 onPointHover :: forall action. (PointHoverEvent -> action) -> Attribute action
 onPointHover s = runFn2 handler "onPointHover" saniHandler
   where
-  saniHandler e = s $ foldl (\a x -> a `snoc` x.id) [] (N.toMaybe e)
+  saniHandler e = s $ foldl (\a x -> a `snoc` x) [] (N.toMaybe e)
 
 view :: State -> Html Action
 view state = fromReact (attrs state) []
@@ -65,7 +62,7 @@ attrs state = [da, fa, ha, hpa]
   da = dataAttr $ toVegaData state.focusPoints
   ha = onPointHover HoverPoint
   fa = attr "fields" $ toVegaData state.fields
-  hpa = attr "hoverPoint" $ toVegaData $ map (\x -> {id: x}) state.hoverPoints
+  hpa = attr "hoverPoint" $ toVegaData state.hoverPoints
 
 splomData :: AppData -> Array VegaPoint
 splomData df = map (\(Slice.SliceSample s) -> splomDatum s.focusPointId s.focusPoint) $ DF.run df
