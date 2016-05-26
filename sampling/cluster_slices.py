@@ -12,7 +12,7 @@ def cluster_slices(focus_points):
       for j,x in enumerate(s.slice):
         obs[(i*dims)+d, j] = x['y']
   wobs = vq.whiten(obs) # make everything uniform
-  centroids,_ = vq.kmeans(wobs, 7)
+  centroids,_ = vq.kmeans(wobs, 6)
   cluster_ids,_ = vq.vq(wobs, centroids)
   return cluster_ids
 
