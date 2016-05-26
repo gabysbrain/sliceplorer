@@ -11,7 +11,8 @@ type Output = Number
 type Row = Tuple Inputs Output
 newtype Sample = Sample (Tuple Number Number)
 data Slice = Slice
-  { metrics :: Metrics
+  { clusterId :: Int
+  , metrics :: Metrics
   , slice :: Array Sample
   }
 type Metrics = StrMap Number
@@ -24,6 +25,8 @@ instance sampleEq :: Eq Sample where
 
 instance sliceIsForeign :: IsForeign Slice where
   read json = do
+    -- TODO: figure out how to read the metrics automatically
+    cid <- readProp "cluster_id" json
     v <- readProp "variance" json
     mv <- readProp "min_value" json
     xv <- readProp "max_value" json
@@ -38,7 +41,7 @@ instance sliceIsForeign :: IsForeign Slice where
             , Tuple "avg_gradient" ag
             , Tuple "avg_pos_gradient" aag
             ]
-    pure $ Slice {metrics: SM.fromFoldable m, slice: s}
+    pure $ Slice {clusterId: cid, metrics: SM.fromFoldable m, slice: s}
 
 instance sampleIsForeign :: IsForeign Sample where
   read json = do

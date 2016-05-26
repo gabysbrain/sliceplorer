@@ -8,6 +8,7 @@ import Util (mapEnum)
 
 data SliceSample = SliceSample
   { focusPointId :: Int
+  , clusterId    :: Int
   , d            :: Int
   , focusPoint   :: FocusPoint
   , metrics      :: Metrics
@@ -25,6 +26,7 @@ createFromFocusPoint i (FocusPointInfo fp) =
 createFromSlice :: Int -> Int -> Array Number -> Slice -> SliceSample
 createFromSlice i dim fp (Slice s) = SliceSample 
   { focusPointId: i
+  , clusterId: s.clusterId
   , d: dim
   , focusPoint: fp
   , metrics: s.metrics
