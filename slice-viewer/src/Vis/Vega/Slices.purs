@@ -38,15 +38,13 @@ data Action
   | HoverSlice (Array Int) -- slice ids
 
 type State = 
-  { dim :: Int
-  , slices :: Array VegaSlicePoint
+  { slices :: Array VegaSlicePoint
   , hoverSlice :: Array Int -- slice ids
   }
 
-init :: Int -> AppData -> State 
-init d sg = 
-  { dim: d
-  , slices: convertSamples sg
+init :: AppData -> State 
+init sg = 
+  { slices: convertSamples sg
   , hoverSlice: []
   }
 

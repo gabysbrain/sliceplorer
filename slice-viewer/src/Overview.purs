@@ -8,7 +8,7 @@ import Data.Maybe.Unsafe (fromJust)
 import Data.StrMap as SM
 import Data.Foldable (elem)
 import Data.Int as I
-import Pux.Html (Html, div, h3, text, input)
+import Pux.Html (Html, div, h3, text, input, select, option)
 import Pux.Html.Attributes (className, type_, min, max, step, value)
 import Pux.Html.Events (onChange, FormEvent)
 import Util (mapEnum)
@@ -28,6 +28,7 @@ import Data.SliceSample as Slice
 type State = 
   { samples :: AppData
   , dims :: Int
+  , groupMethod :: GroupMethod
   , focusPointFilter :: AppData
   --, metricRangeFilter :: Maybe MetricRangeFilter
   , sliceSampleView :: SSV.State
@@ -35,23 +36,35 @@ type State =
   }
 
 data Action 
-  = SliceSampleViewAction SSV.Action
+  = ChangeGroupMethod FormEvent
+  | SliceSampleViewAction SSV.Action
   | DimViewAction Int DV.Action
+
+data GroupMethod = GroupByDim | GroupByCluster
+
+instance showGroupMethod :: Show GroupMethod where
+  show GroupByDim     = "Dims"
+  show GroupByCluster = "Clusters"
 
 init :: SampleGroup -> State
 init sg =
   { samples: df
   , dims: dims sg
+  , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
   , sliceSampleView: SSV.init (dims sg) df
   , dimViews: map (\{group: d, data: s} -> DV.init (I.round d) s) 
-                  (DF.run $ DF.groupBy groupByDim df)
+                  (DF.run $ gdf)
   }
   where 
   df = DF.init $ Slice.create sg
+  gdf = groupSamples GroupByDim df
 
 groupByDim :: Slice.SliceSample -> Number
 groupByDim (Slice.SliceSample s) = I.toNumber s.d
+
+groupByCluster :: Slice.SliceSample -> Number
+groupByCluster (Slice.SliceSample s) = I.toNumber s.clusterId
 
 filterFocusIds :: Array Int -> Slice.SliceSample -> Boolean
 filterFocusIds ids (Slice.SliceSample s) = elem s.focusPointId ids
@@ -62,7 +75,25 @@ filterRange dim metric hb (Slice.SliceSample s) =
        Just v -> dim == s.d && v >= hb.start && v <= hb.end
        Nothing -> false
 
+groupSamples :: GroupMethod 
+             -> AppData
+             -> DF.DataFrame {group :: Number, data :: AppData}
+groupSamples GroupByDim = DF.groupBy groupByDim
+groupSamples GroupByCluster = DF.groupBy groupByCluster
+
 update :: Action -> State -> State
+update (ChangeGroupMethod ev) state =
+  case ev.target.value of
+       "Dims"    -> state { groupMethod = GroupByDim
+                          , dimViews = initDVs GroupByDim
+                          }
+       "Clusters" -> state { groupMethod = GroupByCluster
+                           , dimViews = initDVs GroupByCluster
+                           }
+       otherwise -> state
+  where
+  initDVs gm = map (\{group: d, data: s} -> DV.init (I.round d) s) 
+                   (DF.run $ groupSamples gm state.samples)
 -- FIXME: see if there's a better way than this deep inspection
 update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
   updateFocusPoint (DF.rowFilter (filterFocusIds vp) state.samples) state
@@ -97,7 +128,13 @@ updateFocusPoint fp state = state
 view :: State -> Html Action
 view state =
   div [] 
-    [ map SliceSampleViewAction $ SSV.view state.sliceSampleView
+    [ div [className "group-controls"] 
+        [ select [onChange ChangeGroupMethod, value (show state.groupMethod)] 
+            [ option [value (show GroupByDim)]     [text (show GroupByDim)]
+            , option [value (show GroupByCluster)] [text (show GroupByCluster)]
+            ]
+        ]
+    , map SliceSampleViewAction $ SSV.view state.sliceSampleView
     , viewDims state
     ]
 

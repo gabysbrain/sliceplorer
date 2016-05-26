@@ -33,21 +33,19 @@ data Action
 init :: Int -> AppData -> State
 init d df =
   { dim: d
-  , sliceView: SV.init d df'
+  , sliceView: SV.init df
   , histogramStates: map H.init histos
   }
   where 
-  df' = DF.rowFilter (\(Slice.SliceSample s) -> s.d==d) df
-  histos = metricHistograms 11 df'
+  histos = metricHistograms 11 df
 
 update :: Action -> State -> State
 update (UpdateSamples df) state =
-  state { sliceView = SV.update (SV.UpdateSamples df') state.sliceView
+  state { sliceView = SV.update (SV.UpdateSamples df) state.sliceView
         , histogramStates = map H.init histos
         }
   where 
-  df' = DF.rowFilter (\(Slice.SliceSample s) -> s.d == state.dim) df
-  histos = metricHistograms 11 df'
+  histos = metricHistograms 11 df
 update (FocusPointFilter fp) state = state
   { sliceView = SV.update (SV.HoverSlice sliceIds) state.sliceView
   , histogramStates = if SM.isEmpty metricHighlights
@@ -57,7 +55,8 @@ update (FocusPointFilter fp) state = state
                                          metricHighlights
   }
   where 
-  fps = DF.run $ DF.rowFilter (\(Slice.SliceSample s) -> s.d==state.dim) fp
+  --fps = DF.run $ DF.rowFilter (\(Slice.SliceSample s) -> s.d==state.dim) fp
+  fps = DF.run fp
   sliceIds = map (\(Slice.SliceSample fp) -> fp.focusPointId) fps
   metricHighlights = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 update (SliceViewAction a) state =
@@ -100,16 +99,4 @@ metricHistograms bins df =
   where 
   fps = DF.run df
   values = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
-
-{--highlightedSlice :: State -> FocusPoint -> SV.VegaSlicePoint--}
-{--highlightedSlice state (FocusPoint fp) =--}
-  {--fromJust $ head $ SV.convertSlice (SV.sliceId state.sliceView slice) state.dim slice--}
-  {--where--}
-  {--slice = fromJust $ fp.slices !! state.dim--}
-
-{--sliceMetrics :: State -> FocusPoint -> Metrics--}
-{--sliceMetrics state (FocusPoint fp) =--}
-  {--metrics slice--}
-  {--where--}
-  {--slice = fromJust $ fp.slices !! state.dim--}
 
