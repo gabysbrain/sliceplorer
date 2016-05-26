@@ -59,20 +59,22 @@ function _spec() {
             'x': { 'scale': 'x', 'field': 'x' },
             'y': { 'scale': 'y', 'field': 'y' },
             'interpolate': { 'value': 'basis'},
+            'strokeWidth': { 'value': 1 },
+          },
+          'update': {
             'stroke': [{
               'test': "indata('highlight', datum.slice_id, 'slice_id')",
               'value': 'red'
             }, {
               'value': 'black'
             }],
-            'strokeWidth': { 'value': 1 },
             'strokeOpacity': [{
               'test': "indata('highlight', datum.slice_id, 'slice_id')",
               'value': 1
             }, { 
               'value': 0.1
             }]
-          },
+          }
         }
       }]
     }]
@@ -139,7 +141,7 @@ var VegaSlices = React.createClass({
       if(hoverSlice) {
         vis.data('highlight').insert(hoverSlice);
       }
-      vis.data('lines').remove(function() {return true;}).insert(data);
+      //vis.data('lines').remove(function() {return true;}).insert(data);
 
       vis.update();
     }

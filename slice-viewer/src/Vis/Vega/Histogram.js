@@ -64,6 +64,8 @@ function _spec() {
           'y2': { 'scale': 'y', 'value': 0 },
           'stroke': {'value': 'darkgrey'},
           'strokeWidth': { 'value': 1 },
+        },
+        'update': {
           'fill': [{
             'test': "indata('highlightBar', datum.bin_start, 'start')",
             'value': 'red'
@@ -155,7 +157,7 @@ var VegaHistogram = React.createClass({
       if(highlightTicks) {
         vis.data('highlightTicks').insert(highlightTicks);
       }
-      vis.data('bars').remove(function() {return true;}).insert(data);
+      //vis.data('bars').remove(function() {return true;}).insert(data);
 
       vis.update();
     }
