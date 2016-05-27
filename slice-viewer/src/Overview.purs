@@ -73,7 +73,7 @@ filterFocusIds ids (Slice.SliceSample s) = elem s.focusPointId ids
 filterRange :: Int -> String -> HistBin -> Slice.SliceSample -> Boolean
 filterRange dim metric hb (Slice.SliceSample s) =
   case SM.lookup metric s.metrics of
-       Just v -> dim == s.d && v >= hb.start && v <= hb.end
+       Just v -> v >= hb.start && v <= hb.end
        Nothing -> false
 
 groupSamples :: GroupMethod 
