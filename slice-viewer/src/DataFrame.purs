@@ -2,6 +2,7 @@ module DataFrame (
     DataFrame
   , init
   , empty
+  , rows
   , run
   , runOrig
   , filterNone
@@ -13,7 +14,7 @@ module DataFrame (
 where
 
 import Prelude
-import Data.Array (snoc, filter, take, sortBy)
+import Data.Array (snoc, filter, take, sortBy, length)
 import Data.Lazy (Lazy, defer, force)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (class Foldable, foldl)
@@ -44,6 +45,9 @@ init xs = TopLevel $ foldl snoc [] xs
 
 empty :: forall a. DataFrame a
 empty = init []
+
+rows :: forall a. DataFrame a -> Int
+rows = length <<< run
 
 run :: forall a. DataFrame a -> Array a
 run (TopLevel xs) = xs
