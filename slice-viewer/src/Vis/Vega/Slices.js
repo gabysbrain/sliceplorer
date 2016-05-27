@@ -105,7 +105,7 @@ function _spec() {
             'interpolate': { 'value': 'basis'},
             'strokeWidth': { 'value': 1 },
             'stroke': { 'value': 'blue' },
-            'strokeOpacity': { 'value': 0.1 }
+            'strokeOpacity': { 'value': 0.4 }
           }
         }
       }]
