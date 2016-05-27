@@ -1,6 +1,7 @@
 module DataFrame (
     DataFrame
   , init
+  , empty
   , run
   , runOrig
   , filterNone
@@ -40,6 +41,9 @@ data DataFrame a
 
 init :: forall a tr. (Foldable tr) => tr a -> DataFrame a
 init xs = TopLevel $ foldl snoc [] xs
+
+empty :: forall a. DataFrame a
+empty = init []
 
 run :: forall a. DataFrame a -> Array a
 run (TopLevel xs) = xs
