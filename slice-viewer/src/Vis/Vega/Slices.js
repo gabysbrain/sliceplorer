@@ -11,7 +11,11 @@ function _spec() {
   return {
     'width': 340,
     'height': 170,
-    'data': [{'name': 'lines'}, {'name': 'highlight'}],
+    'data': [
+      {'name': 'lines'}, 
+      {'name': 'hover-highlight'}, 
+      {'name': 'nbrs-highlight'}
+    ],
     'signals': [{
       'name': 'slicehover', 'init': null,
       'streams': [
@@ -68,7 +72,7 @@ function _spec() {
     }, {
       'type': 'group',
       'from': {
-        'data': 'highlight', 
+        'data': 'hover-highlight', 
         'transform': [{'type': 'facet', 'groupby': ['slice_id', 'd']}]
       },
       'marks': [{
@@ -82,6 +86,26 @@ function _spec() {
             'strokeWidth': { 'value': 1 },
             'stroke': { 'value': 'red' },
             'strokeOpacity': { 'value': 1 }
+          }
+        }
+      }]
+    }, {
+      'type': 'group',
+      'from': {
+        'data': 'nbrs-highlight', 
+        'transform': [{'type': 'facet', 'groupby': ['slice_id', 'd']}]
+      },
+      'marks': [{
+        'type': 'line',
+        'interactive': false,
+        'properties': {
+          'enter': {
+            'x': { 'scale': 'x', 'field': 'x' },
+            'y': { 'scale': 'y', 'field': 'y' },
+            'interpolate': { 'value': 'basis'},
+            'strokeWidth': { 'value': 1 },
+            'stroke': { 'value': 'blue' },
+            'strokeOpacity': { 'value': 0.1 }
           }
         }
       }]
@@ -106,6 +130,7 @@ var VegaSlices = React.createClass({
   componentDidMount: function() {
     var data = this.props.data;
     var hoverSlice = this.props.hoverSlice;
+    var nbrSlices = this.props['data-neighbors'];
     var handleHover = this.props.onSliceHover;
     var spec = _spec();
     //spec.axes[0].title = this.props.xAxisName;
@@ -116,9 +141,8 @@ var VegaSlices = React.createClass({
       var vis = chart({ el: self.refs.chartContainer, renderer: 'canvas' });
 
       // set the initial data
-      if(hoverSlice) {
-        vis.data('highlight').insert(hoverSlice);
-      }
+      vis.data('hover-highlight').insert(hoverSlice);
+      vis.data('nbrs-highlight').insert(nbrSlices);
       vis.data('lines').insert(data);
       
       // maybe enable hovering
@@ -142,13 +166,14 @@ var VegaSlices = React.createClass({
     var vis = this.state.vis;
     var data = this.props.data;
     var hoverSlice = this.props.hoverSlice;
+    var nbrSlices = this.props['data-neighbors'];
 
     if (vis) {
       // update data in case it changed
-      vis.data('highlight').remove(function() {return true;});
-      if(hoverSlice) {
-        vis.data('highlight').insert(hoverSlice);
-      }
+      vis.data('hover-highlight').remove(function() {return true;});
+      vis.data('hover-highlight').insert(hoverSlice);
+      vis.data('nbrs-highlight').remove(function() {return true;});
+      vis.data('nbrs-highlight').insert(nbrSlices);
       //vis.data('lines').remove(function() {return true;}).insert(data);
 
       vis.update();

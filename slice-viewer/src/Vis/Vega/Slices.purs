@@ -36,22 +36,25 @@ type SliceHoverEvent = Array VegaSlicePoint
 
 data Action
   = HoverSlice (Array VegaSlicePoint)
+  | HighlightNeighbors (Array VegaSlicePoint)
 
 type State = 
   {
-   slices :: Array VegaSlicePoint
+    slices :: Array VegaSlicePoint
   , hoverSlice :: Array VegaSlicePoint
+  , neighbors :: Array VegaSlicePoint
   }
 
 init :: AppData -> State 
 init sg = 
-  { 
-  slices: convertSamples sg
+  { slices: convertSamples sg
   , hoverSlice: []
+  , neighbors: []
   }
 
 update :: Action -> State -> State
 update (HoverSlice ev) state = state {hoverSlice=ev}
+update (HighlightNeighbors nbrs) state = state {neighbors=nbrs}
 
 onSliceHover :: forall action. (SliceHoverEvent -> action) -> Attribute action
 onSliceHover s = runFn2 handler "onSliceHover" saniHandler
@@ -62,9 +65,10 @@ view :: State -> Html Action
 view state = fromReact (attrs state) []
 
 attrs :: State -> Array (Attribute Action)
-attrs state = [da, fa, ha]
+attrs state = [da, na, fa, ha]
   where
   da = dataAttr $ toVegaData state.slices
+  na = attr "data-neighbors" $ toVegaData state.neighbors
   fa = onSliceHover HoverSlice
   ha = attr "hoverSlice" $ toVegaData state.hoverSlice
 
