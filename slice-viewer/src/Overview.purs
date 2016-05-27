@@ -6,7 +6,7 @@ import Data.Tuple (fst, snd)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
 import Data.StrMap as SM
-import Data.Foldable (elem, foldl)
+import Data.Foldable (elem, find, foldl)
 import Data.Int as I
 import Pux.Html (Html, div, h3, text, input, select, option)
 import Pux.Html.Attributes (className, type_, min, max, step, value)
@@ -123,17 +123,25 @@ updateDimView dim a state =
        Nothing -> state
        Just newDVs -> state {dimViews=newDVs}
 
-updateFocusPoint :: AppData -> State -> State
-updateFocusPoint fp state = 
-  foldl updateDV state' groupedViews -- update the dim views
+updateDimViewFocusPoints :: Array {group :: Int, data :: AppData} 
+                         -> Array DV.State 
+                         -> Array DV.State
+updateDimViewFocusPoints df dvStates =
+  mapEnum updateDV dvStates
   where
-  state' = state { focusPointFilter = fp
-                 , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
-                 }
-  groupedViews = DF.run $ groupSamples state.groupMethod fp
-  updateDV :: State -> {group::Number,data::AppData} -> State
-  updateDV s {group:g, data:gfp} = 
-    updateDimView (I.round g) (DV.FocusPointFilter gfp) s
+  updateDV i state = case find (\{group=g} -> g==i) df of
+    Just {data=d} -> DV.update (DV.FocusPointFilter d) state
+    Nothing       -> DV.update (DV.FocusPointFilter DF.empty) state
+
+updateFocusPoint :: AppData -> State -> State
+updateFocusPoint fp state = state
+  { focusPointFilter = fp
+  , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
+  , dimViews = updateDimViewFocusPoints groupedViews state.dimViews
+  }
+  where
+  groupedViews = map (\s -> s {group=I.round s.group}) $ 
+                     DF.run $ groupSamples state.groupMethod fp
 
 view :: State -> Html Action
 view state =
