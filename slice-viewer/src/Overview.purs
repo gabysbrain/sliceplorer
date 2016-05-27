@@ -28,6 +28,7 @@ import Data.SliceSample as Slice
 type State = 
   { samples :: AppData
   , dims :: Int
+  , dimViewKey :: Int
   , groupMethod :: GroupMethod
   , focusPointFilter :: AppData
   --, metricRangeFilter :: Maybe MetricRangeFilter
@@ -50,15 +51,15 @@ init :: SampleGroup -> State
 init sg =
   { samples: df
   , dims: dims sg
+  , dimViewKey: length gdf
   , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
   , sliceSampleView: SSV.init (dims sg) df
-  , dimViews: map (\{group: d, data: s} -> DV.init (I.round d) s) 
-                  (DF.run $ gdf)
+  , dimViews: mapEnum (\i {group: d, data: s} -> DV.init (i) (I.round d) s) gdf
   }
   where 
   df = DF.init $ Slice.create sg
-  gdf = groupSamples GroupByDim df
+  gdf = DF.run $ groupSamples GroupByDim df
 
 groupByDim :: Slice.SliceSample -> Number
 groupByDim (Slice.SliceSample s) = I.toNumber s.d
@@ -84,16 +85,18 @@ groupSamples GroupByCluster = DF.groupBy groupByCluster
 update :: Action -> State -> State
 update (ChangeGroupMethod ev) state =
   case ev.target.value of
-       "Dims"    -> state { groupMethod = GroupByDim
+       "Dims"    -> state { dimViewKey = state.dimViewKey + (length $ initDVs GroupByDim)
+                          , groupMethod = GroupByDim
                           , dimViews = initDVs GroupByDim
                           }
-       "Clusters" -> state { groupMethod = GroupByCluster
+       "Clusters" -> state { dimViewKey = state.dimViewKey + (length $ initDVs GroupByCluster)
+                           , groupMethod = GroupByCluster
                            , dimViews = initDVs GroupByCluster
                            }
        otherwise -> state
   where
-  initDVs gm = map (\{group: d, data: s} -> DV.init (I.round d) s) 
-                   (DF.run $ groupSamples gm state.samples)
+  initDVs gm = mapEnum (\i {group: d, data: s} -> DV.init (state.dimViewKey+i) (I.round d) s) 
+                       (DF.run $ groupSamples gm state.samples)
 -- FIXME: see if there's a better way than this deep inspection
 update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
   updateFocusPoint (DF.rowFilter (filterFocusIds vp') state.samples) state

@@ -5,7 +5,7 @@ import Data.StrMap as SM
 import Data.Maybe (Maybe(..))
 import Data.Array (concatMap)
 import Pux.Html (Html, div, text, h3)
-import Pux.Html.Attributes (className)
+import Pux.Html.Attributes (className, key)
 import Stats (Histogram, histogram)
 import Util (mapCombine)
 import App.Core (AppData)
@@ -19,7 +19,8 @@ import Vis.Vega.Histogram as H
 import Vis.Vega.Slices as SV
 
 type State =
-  { dim :: Int
+  { key :: Int -- used to force remounting
+  , dim :: Int
   , sliceView :: SV.State
   , histogramStates :: SM.StrMap H.State
   }
@@ -31,9 +32,10 @@ data Action
   | HistoAction String H.Action
 
 --update (UpdateSamples sg)
-init :: Int -> AppData -> State
-init d df =
-  { dim: d
+init :: Int -> Int -> AppData -> State
+init key d df =
+  { key: key
+  , dim: d
   , sliceView: SV.init df
   , histogramStates: map H.init histos
   }
@@ -67,8 +69,8 @@ update (HistoAction n a) state =
   newHisto = SM.update (\hs -> Just $ H.update a hs) n state.histogramStates
 
 view :: State -> Html Action
-view {dim=dim, histogramStates=mhs, sliceView=svState} =
-  div [className "dim-view"]
+view {key=k, dim=dim, histogramStates=mhs, sliceView=svState} =
+  div [className "dim-view", key $ show k]
     [ div [className "dim-name"] [text $ "dim " ++ (show dim)]
     , div [className "dim-charts"] 
         [ viewAllSlices svState
