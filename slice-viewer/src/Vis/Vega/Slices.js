@@ -69,7 +69,7 @@ function _spec() {
       'type': 'group',
       'from': {
         'data': 'highlight', 
-        'transform': [{'type': 'facet', 'groupby': ['slice_id']}]
+        'transform': [{'type': 'facet', 'groupby': ['slice_id', 'd']}]
       },
       'marks': [{
         'type': 'line',

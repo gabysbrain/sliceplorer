@@ -6,7 +6,7 @@ import Data.Tuple (fst, snd)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
 import Data.StrMap as SM
-import Data.Foldable (elem)
+import Data.Foldable (elem, foldl)
 import Data.Int as I
 import Pux.Html (Html, div, h3, text, input, select, option)
 import Pux.Html.Attributes (className, type_, min, max, step, value)
@@ -121,11 +121,16 @@ updateDimView dim a state =
        Just newDVs -> state {dimViews=newDVs}
 
 updateFocusPoint :: AppData -> State -> State
-updateFocusPoint fp state = state 
-  { focusPointFilter = fp
-  , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
-  , dimViews = map (DV.update (DV.FocusPointFilter fp)) state.dimViews
-  }
+updateFocusPoint fp state = 
+  foldl updateDV state' groupedViews -- update the dim views
+  where
+  state' = state { focusPointFilter = fp
+                 , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
+                 }
+  groupedViews = DF.run $ groupSamples state.groupMethod fp
+  updateDV :: State -> {group::Number,data::AppData} -> State
+  updateDV s {group:g, data:gfp} = 
+    updateDimView (I.round g) (DV.FocusPointFilter gfp) s
 
 view :: State -> Html Action
 view state =
