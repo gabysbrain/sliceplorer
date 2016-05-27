@@ -5,7 +5,7 @@ import Data.StrMap as SM
 import Data.Maybe (Maybe(..))
 import Data.Array (concatMap)
 import Pux.Html (Html, div, text, h3)
-import Pux.Html.Attributes (className)
+import Pux.Html.Attributes (className, key)
 import Stats (Histogram, histogram)
 import Util (mapCombine)
 import App.Core (AppData)
@@ -19,7 +19,8 @@ import Vis.Vega.Histogram as H
 import Vis.Vega.Slices as SV
 
 type State =
-  { dim :: Int
+  { key :: Int -- used to force remounting
+  , dim :: Int
   , sliceView :: SV.State
   , histogramStates :: SM.StrMap H.State
   }
@@ -31,24 +32,23 @@ data Action
   | HistoAction String H.Action
 
 --update (UpdateSamples sg)
-init :: Int -> AppData -> State
-init d df =
-  { dim: d
-  , sliceView: SV.init d df'
+init :: Int -> Int -> AppData -> State
+init key d df =
+  { key: key
+  , dim: d
+  , sliceView: SV.init df
   , histogramStates: map H.init histos
   }
   where 
-  df' = DF.rowFilter (\(Slice.SliceSample s) -> s.d==d) df
-  histos = metricHistograms 11 df'
+  histos = metricHistograms 11 df
 
 update :: Action -> State -> State
 update (UpdateSamples df) state =
-  state { sliceView = SV.init state.dim df'
+  state { sliceView = SV.init df
         , histogramStates = map H.init histos
         }
   where 
-  df' = DF.rowFilter (\(Slice.SliceSample s) -> s.d == state.dim) df
-  histos = metricHistograms 11 df'
+  histos = metricHistograms 11 df
 update (FocusPointFilter fp) state = state
   { sliceView = SV.update (SV.HoverSlice hoverSlices) state.sliceView
   , histogramStates = if SM.isEmpty metricHighlights
@@ -58,9 +58,8 @@ update (FocusPointFilter fp) state = state
                                          metricHighlights
   }
   where 
-  fps = DF.run $ DF.rowFilter (\(Slice.SliceSample s) -> s.d==state.dim) fp
+  fps = DF.run fp
   hoverSlices = concatMap SV.convertSlice fps
-  --sliceIds = map (\(Slice.SliceSample fp) -> fp.focusPointId) fps
   metricHighlights = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}
@@ -70,8 +69,8 @@ update (HistoAction n a) state =
   newHisto = SM.update (\hs -> Just $ H.update a hs) n state.histogramStates
 
 view :: State -> Html Action
-view {dim=dim, histogramStates=mhs, sliceView=svState} =
-  div [className "dim-view"]
+view {key=k, dim=dim, histogramStates=mhs, sliceView=svState} =
+  div [className "dim-view", key $ show k]
     [ div [className "dim-name"] [text $ "dim " ++ (show dim)]
     , div [className "dim-charts"] 
         [ viewAllSlices svState
@@ -102,16 +101,4 @@ metricHistograms bins df =
   where 
   fps = DF.run df
   values = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
-
-{--highlightedSlice :: State -> FocusPoint -> SV.VegaSlicePoint--}
-{--highlightedSlice state (FocusPoint fp) =--}
-  {--fromJust $ head $ SV.convertSlice (SV.sliceId state.sliceView slice) state.dim slice--}
-  {--where--}
-  {--slice = fromJust $ fp.slices !! state.dim--}
-
-{--sliceMetrics :: State -> FocusPoint -> Metrics--}
-{--sliceMetrics state (FocusPoint fp) =--}
-  {--metrics slice--}
-  {--where--}
-  {--slice = fromJust $ fp.slices !! state.dim--}
 
