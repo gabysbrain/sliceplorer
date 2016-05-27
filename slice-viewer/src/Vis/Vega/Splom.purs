@@ -33,20 +33,24 @@ type State =
   { focusPoints :: Array VegaPoint
   , fields :: Array String
   , hoverPoints :: Array VegaPoint
+  , neighborPoints :: Array VegaPoint
   }
 
 data Action 
   = HoverPoint PointHoverEvent
+  | HighlightNeighbors (Array VegaPoint)
 
 init :: Array String -> AppData -> State
 init fs sg = 
   { focusPoints: splomData sg
   , fields: fs
   , hoverPoints: []
+  , neighborPoints: []
   }
 
 update :: Action -> State -> State
 update (HoverPoint p) state = state {hoverPoints=p}
+update (HighlightNeighbors pts) state = state {neighborPoints=pts}
 
 onPointHover :: forall action. (PointHoverEvent -> action) -> Attribute action
 onPointHover s = runFn2 handler "onPointHover" saniHandler
@@ -57,12 +61,13 @@ view :: State -> Html Action
 view state = fromReact (attrs state) []
 
 attrs :: State -> Array (Attribute Action)
-attrs state = [da, fa, ha, hpa]
+attrs state = [da, fa, ha, hpa, na]
   where
   da = dataAttr $ toVegaData state.focusPoints
   ha = onPointHover HoverPoint
   fa = attr "fields" $ toVegaData state.fields
   hpa = attr "hoverPoint" $ toVegaData state.hoverPoints
+  na = attr "data-neighbors" $ toVegaData state.neighborPoints
 
 splomData :: AppData -> Array VegaPoint
 splomData df = map (\(Slice.SliceSample s) -> splomDatum s.focusPointId s.focusPoint) $ DF.run df
@@ -71,9 +76,4 @@ splomDatum :: Int -> FocusPoint -> VegaPoint
 splomDatum id fp = SM.fromFoldable $ named `snoc` (Tuple "id" (toNumber id))
   where
   named = mapEnum (\i x -> Tuple ("x"++(show (i+1))) x) $ fp
-
-{--focusPoint :: SampleGroup -> VegaPoint -> FocusPoint--}
-{--focusPoint (SampleGroup sg) vp = fromJust $ sg !! fpId--}
-  {--where --}
-  {--fpId = floor $ fromJust $ SM.lookup "id" vp--}
 

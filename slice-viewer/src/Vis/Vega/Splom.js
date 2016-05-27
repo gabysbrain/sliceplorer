@@ -11,7 +11,12 @@ function _spec() {
   return {
     'width': 450,
     'height': 450,
-    'data': [{'name': 'points'}, {'name': 'fields'}, {'name': 'highlight'}],
+    'data': [
+      {'name': 'points'}, 
+      {'name': 'fields'}, 
+      {'name': 'highlight'},
+      {'name': 'neighbors'}
+    ],
     'signals': [{
       'name': 'pointhover', 'init': null,
       'streams': [
@@ -90,6 +95,19 @@ function _spec() {
             'fill': { 'value': 'red' }
           }
         }
+      }, {
+        'type': 'symbol',
+        'interactive': false,
+        'from': {'data': 'neighbors'},
+        'properties': {
+          'enter': {
+            'x': {'scale': 'x', 'field': {'datum': {'parent': 'a.data'}}},
+            'y': {'scale': 'y', 'field': {'datum': {'parent': 'b.data'}}},
+            'fillOpacity': {'value': 1},
+            'size': {'value': 35},
+            'fill': { 'value': 'blue' }
+          }
+        }
       }]
     }]
   }
@@ -109,6 +127,7 @@ var VegaSplom = React.createClass({
     var data = this.props.data;
     var fields = this.props.fields;
     var hoverPoints = this.props.hoverPoint;
+    var nbrPoints = this.props['data-neighbors'];
     var handleHover = this.props.onPointHover;
     var spec = _spec();
     var self = this;
@@ -120,9 +139,8 @@ var VegaSplom = React.createClass({
       // set the initial data
       vis.data('fields').insert(fields);
       vis.data('points').insert(data);
-      if(hoverPoints) {
-        vis.data('highlight').insert(hoverPoints);
-      }
+      vis.data('highlight').insert(hoverPoints);
+      vis.data('neighbors').insert(nbrPoints);
 
       // maybe enable hovering
       if(handleHover) {
@@ -143,6 +161,7 @@ var VegaSplom = React.createClass({
     var data = this.props.data;
     var fields = this.props.fields;
     var hoverPoints = this.props.hoverPoint;
+    var nbrPoints = this.props['data-neighbors'];
 
     if (vis) {
       // update data in case it changed
@@ -151,9 +170,9 @@ var VegaSplom = React.createClass({
       //vis.data('fields').insert(fields);
       //vis.data('points').remove(function() {return true;}).insert(data);
       vis.data('highlight').remove(function() {return true;});
-      if(hoverPoints) {
-        vis.data('highlight').insert(hoverPoints);
-      }
+      vis.data('highlight').insert(hoverPoints);
+      vis.data('neighbors').remove(function() {return true;});
+      vis.data('neighbors').insert(nbrPoints);
 
       vis.update();
     }
