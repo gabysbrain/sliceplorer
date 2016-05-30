@@ -39,8 +39,23 @@ function _spec() {
       'domain': {'data': 'fields', 'field': 'data'}
     }],
     'axes': [
-      {'type': 'x', 'scale': 'gx', 'properties': {'axis': false}},
-      {'type': 'y', 'scale': 'gy'}
+      {'type': 'x', 'scale': 'gx', 'properties': {
+        'axis': {'stroke': false},
+        'ticks': {'stroke': false},
+        'labels': {
+          'dy': {'value': -10}
+        }
+      }},
+      {'type': 'y', 'scale': 'gy', 'properties': {
+        'axis': {'stroke': false},
+        'ticks': {'stroke': false},
+        'labels': {
+          'angle': {'value': -90},
+          'align': {'value': 'center'},
+          'dy': {'value': -25},
+          'dx': {'value': 18}
+        }
+      }}
     ],
     'marks': [{
       'type': 'group',
