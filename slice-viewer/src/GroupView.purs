@@ -22,7 +22,8 @@ import Vis.Vega.Slices as SV
 type State =
   { key :: Int -- used to force remounting
   , samples :: AppData
-  , dim :: Int
+  , groupName :: String
+  , groupId :: Int
   , sliceView :: SV.State
   , histogramStates :: SM.StrMap H.State
   }
@@ -33,12 +34,12 @@ data Action
   | SliceViewAction SV.Action
   | HistoAction String H.Action
 
---update (UpdateSamples sg)
-init :: Int -> Int -> AppData -> State
-init key d df =
+init :: Int -> String -> Int -> AppData -> State
+init key gn g df =
   { key: key
   , samples: df
-  , dim: d
+  , groupName: gn
+  , groupId: g
   , sliceView: SV.init df
   , histogramStates: map H.init histos
   }
@@ -84,14 +85,19 @@ neighborFilter :: Array Int -> Slice.SliceSample -> Boolean
 neighborFilter fpIds (Slice.SliceSample fp) = elem fp.focusPointId fpIds
 
 view :: State -> Html Action
-view {key=k, dim=dim, histogramStates=mhs, sliceView=svState} =
-  div [className "dim-view", key $ show k]
-    [ div [className "dim-name"] [text $ "dim " ++ (show dim)]
+view state =
+  div [className "dim-view", key $ show state.key]
+    [ viewName state
     , div [className "dim-charts"] 
-        [ viewAllSlices svState
-        , viewMetricHistograms mhs
+        [ viewAllSlices state.sliceView
+        , viewMetricHistograms state.histogramStates
         ]
     ]
+
+viewName :: State -> Html Action
+viewName state = div [className "dim-name"] [text groupName]
+  where
+  groupName = state.groupName ++ " " ++ (show state.groupId)
 
 viewAllSlices :: SV.State -> Html Action
 viewAllSlices svState =
