@@ -67,8 +67,9 @@ uniqueSamples df = DF.uniqueBy sEq df
   where
   sEq (Slice.SliceSample s1) (Slice.SliceSample s2) = s1.focusPointId == s2.focusPointId
 
-splomNeighbors :: AppData -> AppData -> Array Splom.VegaPoint
+splomNeighbors :: AppData -> AppData -> Array Splom.NeighborRelation
 splomNeighbors samples fps = case DF.run fps of
+  --[Slice.SliceSample fp] -> map (\fp' -> {source: Splom.splomDatum fp.focusPointId fp.focusPoint, target: fp'}) $ Splom.splomData $ nbrs fp.neighborIds
   [Slice.SliceSample fp] -> Splom.splomData $ nbrs fp.neighborIds
   otherwise -> []
   where

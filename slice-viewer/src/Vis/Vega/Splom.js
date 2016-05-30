@@ -38,11 +38,21 @@ function _spec() {
       'reverse': true,
       'domain': {'data': 'fields', 'field': 'data'}
     }],
+    'axes': [
+      {'type': 'x', 'scale': 'gx', 'properties': {'axis': false}},
+      {'type': 'y', 'scale': 'gy'}
+    ],
     'marks': [{
       'type': 'group',
       'from': {
         'data': 'fields',
-        'transform': [{'type': 'cross'}]
+        'transform': [
+          {'type': 'cross'},
+          {'type': 'formula', 'field': 'sourceX', 'expr': '"source."+datum.a.data'},
+          {'type': 'formula', 'field': 'sourceY', 'expr': '"source."+datum.b.data'},
+          {'type': 'formula', 'field': 'targetX', 'expr': '"target."+datum.a.data'},
+          {'type': 'formula', 'field': 'targetY', 'expr': '"target."+datum.b.data'}
+        ]
       },
       'properties': {
         'enter': { // each subplot of the splom
@@ -98,7 +108,9 @@ function _spec() {
       }, {
         'type': 'symbol',
         'interactive': false,
-        'from': {'data': 'neighbors'},
+        'from': {
+          'data': 'neighbors'
+        },
         'properties': {
           'enter': {
             'x': {'scale': 'x', 'field': {'datum': {'parent': 'a.data'}}},
@@ -134,7 +146,7 @@ var VegaSplom = React.createClass({
 
     // parse the vega spec and create the vis
     vg.parse.spec(spec, function(error, chart) {
-      var vis = chart({ el: self.refs.chartContainer, renderer: 'canvas' });
+      var vis = chart({ el: self.refs.chartContainer, renderer: 'svg' });
 
       // set the initial data
       vis.data('fields').insert(fields);

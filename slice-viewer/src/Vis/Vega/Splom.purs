@@ -26,6 +26,8 @@ import Vis.Vega (Data, dataAttr, toVegaData)
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
 type VegaPoint = SM.StrMap Number
+--type NeighborRelation = {source :: VegaPoint, target :: VegaPoint}
+type NeighborRelation = VegaPoint
 
 type PointHoverEvent = Array VegaPoint
 
@@ -33,12 +35,12 @@ type State =
   { focusPoints :: Array VegaPoint
   , fields :: Array String
   , hoverPoints :: Array VegaPoint
-  , neighborPoints :: Array VegaPoint
+  , neighborPoints :: Array NeighborRelation
   }
 
 data Action 
   = HoverPoint PointHoverEvent
-  | HighlightNeighbors (Array VegaPoint)
+  | HighlightNeighbors (Array NeighborRelation)
 
 init :: Array String -> AppData -> State
 init fs sg = 
