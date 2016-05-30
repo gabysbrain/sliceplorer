@@ -2,6 +2,7 @@ module DataFrame (
     DataFrame
   , init
   , empty
+  , rows
   , run
   , runOrig
   , filterNone
@@ -9,11 +10,12 @@ module DataFrame (
   , takeFilter
   , rowFilter
   , groupBy
+  , uniqueBy
   ) 
 where
 
 import Prelude
-import Data.Array (snoc, filter, take, sortBy)
+import Data.Array (snoc, filter, take, sortBy, nubBy, length)
 import Data.Lazy (Lazy, defer, force)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (class Foldable, foldl)
@@ -26,6 +28,7 @@ data Operation a
   | TakeFilter Int
   | RowFilter (a -> Boolean)
   | Sort (a -> a -> Ordering)
+  | Unique (a -> a -> Boolean)
 
 data DataFrame a
   = TopLevel (Array a) 
@@ -45,6 +48,9 @@ init xs = TopLevel $ foldl snoc [] xs
 empty :: forall a. DataFrame a
 empty = init []
 
+rows :: forall a. DataFrame a -> Int
+rows = length <<< run
+
 run :: forall a. DataFrame a -> Array a
 run (TopLevel xs) = xs
 run (LowerLevel df) = force df.results
@@ -54,6 +60,7 @@ runOp NoneFilter xs = []
 runOp (TakeFilter n) xs = take n xs
 runOp (RowFilter f) xs = filter f xs
 runOp (Sort f) xs = sortBy f xs
+runOp (Unique f) xs = nubBy f xs
 
 runOrig :: forall a. DataFrame a -> Array a
 runOrig (TopLevel xs) = xs
@@ -94,6 +101,14 @@ rowSort f p = LowerLevel
   , results: defer (\_ -> runOp op $ run p)
   }
   where op = Sort f
+
+uniqueBy :: forall a. (a -> a -> Boolean) -> DataFrame a -> DataFrame a
+uniqueBy f p = LowerLevel
+  { parent: p
+  , operation: op
+  , results: defer (\_ -> runOp op $ run p)
+  }
+  where op = Unique f
 
 -- TODO: make groups work for all Ords
 groupBy :: forall a. (a -> Number) -> DataFrame a -> DataFrame (GroupRow a)

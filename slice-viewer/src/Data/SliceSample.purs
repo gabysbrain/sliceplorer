@@ -1,6 +1,6 @@
 module Data.SliceSample where
 
-import Prelude (($))
+import Prelude (($), map)
 import Data.Array (concat)
 import Data.Samples (SampleGroup(..), FocusPoint, FocusPointInfo(..))
 import Data.Slices (Slice(..), Sample, Metrics)
@@ -9,6 +9,7 @@ import Util (mapEnum)
 data SliceSample = SliceSample
   { focusPointId :: Int
   , clusterId    :: Int
+  , neighborIds  :: Array Int
   , d            :: Int
   , focusPoint   :: FocusPoint
   , metrics      :: Metrics
@@ -17,16 +18,17 @@ data SliceSample = SliceSample
 
 create :: SampleGroup -> Array SliceSample
 create (SampleGroup sg) = 
-  concat $ mapEnum (\i fp -> createFromFocusPoint i fp) sg
+  concat $ map createFromFocusPoint sg
 
-createFromFocusPoint :: Int -> FocusPointInfo -> Array SliceSample
-createFromFocusPoint i (FocusPointInfo fp) =
-  mapEnum (\d s -> createFromSlice i d fp.focusPoint s) fp.slices
+createFromFocusPoint :: FocusPointInfo -> Array SliceSample
+createFromFocusPoint (FocusPointInfo fp) =
+  mapEnum (\d s -> createFromSlice fp.id d fp.neighborIds fp.focusPoint s) fp.slices
 
-createFromSlice :: Int -> Int -> Array Number -> Slice -> SliceSample
-createFromSlice i dim fp (Slice s) = SliceSample 
+createFromSlice :: Int -> Int -> Array Int -> Array Number -> Slice -> SliceSample
+createFromSlice i dim ns fp (Slice s) = SliceSample 
   { focusPointId: i
   , clusterId: s.clusterId
+  , neighborIds: ns
   , d: dim
   , focusPoint: fp
   , metrics: s.metrics

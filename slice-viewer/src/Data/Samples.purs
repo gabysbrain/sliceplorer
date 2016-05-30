@@ -20,20 +20,22 @@ type FocusPoint = Array Number
 
 -- the slices for a single focus point
 data FocusPointInfo = FocusPointInfo 
-  { id         :: Int
-  , dims       :: Int
-  , focusPoint :: FocusPoint
-  , slices     :: Array Slice
+  { id          :: Int
+  , neighborIds :: Array Int
+  , dims        :: Int
+  , focusPoint  :: FocusPoint
+  , slices      :: Array Slice
   }
 newtype SampleGroup = SampleGroup (Array FocusPointInfo)
 
 instance focusPointIsForeign :: IsForeign FocusPointInfo where
   read json = do
     i  <- readProp "group_id" json
+    ns <- readProp "neighbor_group_ids" json
     d  <- readProp "dims" json
     fp <- readProp "slice" json
     s  <- readProp "slices" json
-    pure $ FocusPointInfo {id: i, dims: d, focusPoint: fp, slices: s}
+    pure $ FocusPointInfo {id: i, neighborIds: ns, dims: d, focusPoint: fp, slices: s}
 
 instance sampleGroupIsForeign :: IsForeign SampleGroup where
   read json = do

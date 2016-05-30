@@ -4,6 +4,7 @@ import Prelude hiding (div)
 import Data.StrMap as SM
 import Data.Maybe (Maybe(..))
 import Data.Array (concatMap)
+import Data.Foldable (elem)
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, key)
 import Stats (Histogram, histogram)
@@ -20,6 +21,7 @@ import Vis.Vega.Slices as SV
 
 type State =
   { key :: Int -- used to force remounting
+  , samples :: AppData
   , dim :: Int
   , sliceView :: SV.State
   , histogramStates :: SM.StrMap H.State
@@ -35,6 +37,7 @@ data Action
 init :: Int -> Int -> AppData -> State
 init key d df =
   { key: key
+  , samples: df
   , dim: d
   , sliceView: SV.init df
   , histogramStates: map H.init histos
@@ -44,13 +47,15 @@ init key d df =
 
 update :: Action -> State -> State
 update (UpdateSamples df) state =
-  state { sliceView = SV.init df
+  state { samples = df
+        , sliceView = SV.init df
         , histogramStates = map H.init histos
         }
   where 
   histos = metricHistograms 11 df
 update (FocusPointFilter fp) state = state
-  { sliceView = SV.update (SV.HoverSlice hoverSlices) state.sliceView
+  { sliceView = SV.update (SV.HighlightNeighbors neighborSlices) $
+                  SV.update (SV.HoverSlice hoverSlices) state.sliceView
   , histogramStates = if SM.isEmpty metricHighlights
                          then map (\s -> H.update (H.ShowTicks []) s) state.histogramStates
                          else mapCombine (\s x -> H.update (H.ShowTicks x) s) 
@@ -59,7 +64,9 @@ update (FocusPointFilter fp) state = state
   }
   where 
   fps = DF.run fp
+  nbrs = findNeighbors state.samples fps
   hoverSlices = concatMap SV.convertSlice fps
+  neighborSlices = concatMap SV.convertSlice nbrs
   metricHighlights = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}
@@ -67,6 +74,14 @@ update (HistoAction n a) state =
   state {histogramStates=newHisto}
   where 
   newHisto = SM.update (\hs -> Just $ H.update a hs) n state.histogramStates
+
+findNeighbors :: AppData -> Array Slice.SliceSample -> Array Slice.SliceSample
+findNeighbors df [(Slice.SliceSample fp)] =
+  DF.run $ DF.rowFilter (neighborFilter fp.neighborIds) df
+findNeighbors _  _       = []
+
+neighborFilter :: Array Int -> Slice.SliceSample -> Boolean
+neighborFilter fpIds (Slice.SliceSample fp) = elem fp.focusPointId fpIds
 
 view :: State -> Html Action
 view {key=k, dim=dim, histogramStates=mhs, sliceView=svState} =

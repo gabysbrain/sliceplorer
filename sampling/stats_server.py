@@ -4,6 +4,7 @@ import itertools
 
 from compute_stats import convert_slices
 from cluster_slices import identify_clusters
+from slice_neighbors import slice_neighbors
 
 app = Flask(__name__)
 
@@ -18,8 +19,9 @@ class MyEncoder(json.JSONEncoder):
 def slice_req(function, dims, limit):
   s = convert_slices(function, dims)
   s = list(itertools.islice(s, limit))
-  cs = identify_clusters(s)
-  resp = Response(response=json.dumps(cs, cls=MyEncoder),
+  s = identify_clusters(s)
+  s = slice_neighbors(s)
+  resp = Response(response=json.dumps(s, cls=MyEncoder),
       status=200, mimetype="application/json")
   resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
   return resp
