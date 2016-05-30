@@ -19,7 +19,7 @@ import App.SliceSampleView as SSV
 import Vis.Vega.Splom as Splom
 import Vis.Vega.Slices as SV
 import Vis.Vega.Histogram as HV
-import App.DimensionView as DV
+import App.GroupView as GV
 
 import Data.Samples (SampleGroup, dims)
 import DataFrame as DF
@@ -33,13 +33,13 @@ type State =
   , focusPointFilter :: AppData
   --, metricRangeFilter :: Maybe MetricRangeFilter
   , sliceSampleView :: SSV.State
-  , dimViews :: Array DV.State
+  , dimViews :: Array GV.State
   }
 
 data Action 
   = ChangeGroupMethod FormEvent
   | SliceSampleViewAction SSV.Action
-  | DimViewAction Int DV.Action
+  | DimViewAction Int GV.Action
 
 data GroupMethod = GroupByDim | GroupByCluster
 
@@ -55,7 +55,7 @@ init sg =
   , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
   , sliceSampleView: SSV.init (dims sg) df
-  , dimViews: mapEnum (\i {group: d, data: s} -> DV.init (i) (I.round d) s) gdf
+  , dimViews: mapEnum (\i {group: d, data: s} -> GV.init (i) (I.round d) s) gdf
   }
   where 
   df = DF.init $ Slice.create sg
@@ -85,17 +85,17 @@ groupSamples GroupByCluster = DF.groupBy groupByCluster
 update :: Action -> State -> State
 update (ChangeGroupMethod ev) state =
   case ev.target.value of
-       "Dims"    -> state { dimViewKey = state.dimViewKey + (length $ initDVs GroupByDim)
+       "Dims"    -> state { dimViewKey = state.dimViewKey + (length $ initGVs GroupByDim)
                           , groupMethod = GroupByDim
-                          , dimViews = initDVs GroupByDim
+                          , dimViews = initGVs GroupByDim
                           }
-       "Clusters" -> state { dimViewKey = state.dimViewKey + (length $ initDVs GroupByCluster)
+       "Clusters" -> state { dimViewKey = state.dimViewKey + (length $ initGVs GroupByCluster)
                            , groupMethod = GroupByCluster
-                           , dimViews = initDVs GroupByCluster
+                           , dimViews = initGVs GroupByCluster
                            }
        otherwise -> state
   where
-  initDVs gm = mapEnum (\i {group: d, data: s} -> DV.init (state.dimViewKey+i) (I.round d) s) 
+  initGVs gm = mapEnum (\i {group: d, data: s} -> GV.init (state.dimViewKey+i) (I.round d) s) 
                        (DF.run $ groupSamples gm state.samples)
 -- FIXME: see if there's a better way than this deep inspection
 update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
@@ -104,11 +104,11 @@ update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
   vp' = map (\x -> I.round $ fromJust $ SM.lookup "id" x) vp
 update (SliceSampleViewAction a) state =
   state {sliceSampleView=SSV.update a state.sliceSampleView}
-update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
+update (DimViewAction dim a@(GV.SliceViewAction (SV.HoverSlice hs))) state =
   updateFocusPoint (DF.rowFilter (filterFocusIds hs') state.samples) state
   where 
   hs' = map (\x -> x.slice_id) hs
-update (DimViewAction dim a@(DV.HistoAction metric (HV.HoverBar rng))) state =
+update (DimViewAction dim a@(GV.HistoAction metric (HV.HoverBar rng))) state =
   updateDimView dim a $ updateFocusPoint df state -- maintain bar highlight
   where
   df = case rng of
@@ -117,21 +117,21 @@ update (DimViewAction dim a@(DV.HistoAction metric (HV.HoverBar rng))) state =
 update (DimViewAction dim a) state = 
   updateDimView dim a state
 
-updateDimView :: Int -> DV.Action -> State -> State
+updateDimView :: Int -> GV.Action -> State -> State
 updateDimView dim a state =
-  case modifyAt dim (DV.update a) state.dimViews of
+  case modifyAt dim (GV.update a) state.dimViews of
        Nothing -> state
-       Just newDVs -> state {dimViews=newDVs}
+       Just newGVs -> state {dimViews=newGVs}
 
 updateDimViewFocusPoints :: Array {group :: Int, data :: AppData} 
-                         -> Array DV.State 
-                         -> Array DV.State
+                         -> Array GV.State 
+                         -> Array GV.State
 updateDimViewFocusPoints df dvStates =
-  mapEnum updateDV dvStates
+  mapEnum updateGV dvStates
   where
-  updateDV i state = case find (\{group=g} -> g==i) df of
-    Just {data=d} -> DV.update (DV.FocusPointFilter d) state
-    Nothing       -> DV.update (DV.FocusPointFilter DF.empty) state
+  updateGV i state = case find (\{group=g} -> g==i) df of
+    Just {data=d} -> GV.update (GV.FocusPointFilter d) state
+    Nothing       -> GV.update (GV.FocusPointFilter DF.empty) state
 
 updateFocusPoint :: AppData -> State -> State
 updateFocusPoint fp state = state
@@ -158,7 +158,7 @@ view state =
 
 viewDims :: State -> Html Action
 viewDims state =
-  div [] $ mapEnum initDV state.dimViews
+  div [] $ mapEnum initGV state.dimViews
   where
-  initDV d s = map (DimViewAction d) $ DV.view s
+  initGV d s = map (DimViewAction d) $ GV.view s
 

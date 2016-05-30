@@ -1,4 +1,4 @@
-module App.DimensionView where
+module App.GroupView where
 
 import Prelude hiding (div)
 import Data.StrMap as SM
