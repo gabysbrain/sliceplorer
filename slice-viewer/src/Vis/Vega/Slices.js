@@ -7,7 +7,7 @@ var PureRenderMixin = require('react-addons-pure-render-mixin');
 var Pux = require('purescript-pux');
 var vg = require('vega');
 
-function _spec() {
+function _spec(minVal, maxVal) {
   return {
     'width': 340,
     'height': 170,
@@ -31,7 +31,8 @@ function _spec() {
     }, {
       'name': 'y',
       'type': 'linear',
-      'domain': {'data': 'lines', 'field': 'y'},
+      //'domain': {'data': 'lines', 'field': 'y'},
+      'domain': [minVal, maxVal],
       'range': 'height'
     }],
     'axes': [{
@@ -132,7 +133,9 @@ var VegaSlices = React.createClass({
     var hoverSlice = this.props.hoverSlice;
     var nbrSlices = this.props['data-neighbors'];
     var handleHover = this.props.onSliceHover;
-    var spec = _spec();
+    var minVal = this.props['data-minVal'];
+    var maxVal = this.props['data-maxVal'];
+    var spec = _spec(minVal, maxVal);
     //spec.axes[0].title = this.props.xAxisName;
     var self = this;
 

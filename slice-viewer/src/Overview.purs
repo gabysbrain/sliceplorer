@@ -55,7 +55,7 @@ init sg =
   , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
   , sliceSampleView: SSV.init (dims sg) df
-  , dimViews: mapEnum (\i {group: d, data: s} -> GV.init (i) gn (I.round d) s) gdf
+  , dimViews: mapEnum (\i {group: d, data: s} -> GV.init df (i) gn (I.round d) s) gdf
   }
   where 
   df = DF.init $ Slice.create sg
@@ -100,7 +100,7 @@ update (ChangeGroupMethod ev) state =
                            }
        otherwise -> state
   where
-  initGVs gm = mapEnum (\i {group: d, data: s} -> GV.init (state.dimViewKey+i) (dimViewName gm) (I.round d) s) 
+  initGVs gm = mapEnum (\i {group: d, data: s} -> GV.init state.samples (state.dimViewKey+i) (dimViewName gm) (I.round d) s) 
                        (DF.run $ groupSamples gm state.samples)
 -- FIXME: see if there's a better way than this deep inspection
 update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =

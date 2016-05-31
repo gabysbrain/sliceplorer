@@ -19,6 +19,7 @@ import Debug.Trace
 import DataFrame as DF
 import Data.SliceSample as Slice
 import Data.Slices (Sample(..))
+import Data.ValueRange (ValueRange, minVal, maxVal)
 
 import Vis.Vega (dataAttr, toVegaData)
 
@@ -61,12 +62,14 @@ onSliceHover s = runFn2 handler "onSliceHover" saniHandler
   where
   saniHandler e = s $ foldl (\a x -> a `snoc` x) [] (N.toMaybe e)
 
-view :: State -> Html Action
-view state = fromReact (attrs state) []
+view :: ValueRange -> State -> Html Action
+view yRange state = fromReact (attrs yRange state) []
 
-attrs :: State -> Array (Attribute Action)
-attrs state = [da, na, fa, ha]
+attrs :: ValueRange -> State -> Array (Attribute Action)
+attrs yRange state = [da, na, fa, ha, mnv, mxv]
   where
+  mnv = attr "data-minVal" $ minVal yRange
+  mxv = attr "data-maxVal" $ maxVal yRange
   da = dataAttr $ toVegaData state.slices
   na = attr "data-neighbors" $ toVegaData state.neighbors
   fa = onSliceHover HoverSlice

@@ -3,18 +3,22 @@ module App.GroupView where
 import Prelude hiding (div)
 import Data.StrMap as SM
 import Data.Maybe (Maybe(..))
+import Data.Maybe.Unsafe (fromJust)
 import Data.Array (concatMap)
-import Data.Foldable (elem)
+import Data.Foldable (elem, minimum, maximum)
+import Data.Tuple (Tuple(..))
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, key)
 import Stats (Histogram, histogram)
 import Util (mapCombine)
 import App.Core (AppData)
 
+import Data.Slices (yLoc)
 import Data.Samples (combineMaps)
 
 import DataFrame as DF
 import Data.SliceSample as Slice
+import Data.ValueRange (ValueRange)
 
 import Vis.Vega.Histogram as H
 import Vis.Vega.Slices as SV
@@ -24,7 +28,9 @@ type State =
   , samples :: AppData
   , groupName :: String
   , groupId :: Int
+  , sliceViewRange :: ValueRange
   , sliceView :: SV.State
+  , histogramRanges :: SM.StrMap ValueRange
   , histogramStates :: SM.StrMap H.State
   }
 
@@ -34,16 +40,19 @@ data Action
   | SliceViewAction SV.Action
   | HistoAction String H.Action
 
-init :: Int -> String -> Int -> AppData -> State
-init key gn g df =
+init :: AppData -> Int -> String -> Int -> AppData -> State
+init origData key gn g df =
   { key: key
   , samples: df
   , groupName: gn
   , groupId: g
+  , sliceViewRange: fromJust svRange
   , sliceView: SV.init df
+  , histogramRanges: histogramRanges origData
   , histogramStates: map H.init histos
   }
   where 
+  svRange = DF.range (\(Slice.SliceSample s) -> fromJust $ maximum $ map yLoc s.slice) origData
   histos = metricHistograms 11 df
 
 update :: Action -> State -> State
@@ -89,7 +98,7 @@ view state =
   div [className "dim-view", key $ show state.key]
     [ viewName state
     , div [className "dim-charts"] 
-        [ viewAllSlices state.sliceView
+        [ viewAllSlices state
         , viewMetricHistograms state.histogramStates
         ]
     ]
@@ -99,10 +108,10 @@ viewName state = div [className "dim-name"] [text groupName]
   where
   groupName = state.groupName ++ " " ++ (show state.groupId)
 
-viewAllSlices :: SV.State -> Html Action
-viewAllSlices svState =
+viewAllSlices :: State -> Html Action
+viewAllSlices state =
   div [className "slices-view"] 
-    [ map SliceViewAction $ SV.view svState ]
+    [ map SliceViewAction $ SV.view state.sliceViewRange state.sliceView ]
 
 viewMetricHistograms :: SM.StrMap H.State -> Html Action
 viewMetricHistograms hs = 
@@ -117,9 +126,15 @@ viewMetricHistogram name h =
     ]
 
 metricHistograms :: Int -> AppData -> SM.StrMap Histogram
-metricHistograms bins df =
-  map (histogram bins) values
-  where 
+metricHistograms bins df = map (histogram bins) $ metricData df
+
+histogramRanges :: AppData -> SM.StrMap ValueRange
+histogramRanges df = map rng $ metricData df
+  where
+  rng xs = Tuple (fromJust $ minimum xs) (fromJust $ maximum xs)
+
+metricData :: AppData -> SM.StrMap (Array Number)
+metricData df = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
+  where
   fps = DF.run df
-  values = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 
