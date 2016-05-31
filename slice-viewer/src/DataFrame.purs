@@ -11,6 +11,7 @@ module DataFrame (
   , rowFilter
   , groupBy
   , uniqueBy
+  , range
   ) 
 where
 
@@ -19,6 +20,7 @@ import Data.Array (snoc, filter, take, sortBy, nubBy, length)
 import Data.Lazy (Lazy, defer, force)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (class Foldable, foldl)
+import Data.Maybe (Maybe(Just, Nothing))
 import Data.Map as M
 
 type GroupRow a = {group :: Number, data :: DataFrame a}
@@ -37,10 +39,10 @@ data DataFrame a
       , operation :: Operation a
       , results :: Lazy (Array a)
       }
-  {--| GroupLevel--}
-      {--{ parent :: DataFrame a--}
-      {--, results :: Lazy (Array (GroupRow a))--}
-      {--}--}
+  | GroupLevel
+      { parent :: DataFrame a
+      , results :: Lazy (Array a)
+      }
 
 init :: forall a tr. (Foldable tr) => tr a -> DataFrame a
 init xs = TopLevel $ foldl snoc [] xs
@@ -54,6 +56,7 @@ rows = length <<< run
 run :: forall a. DataFrame a -> Array a
 run (TopLevel xs) = xs
 run (LowerLevel df) = force df.results
+run (GroupLevel df) = force df.results
 
 runOp :: forall a. Operation a -> Array a -> Array a
 runOp NoneFilter xs = []
@@ -65,6 +68,7 @@ runOp (Unique f) xs = nubBy f xs
 runOrig :: forall a. DataFrame a -> Array a
 runOrig (TopLevel xs) = xs
 runOrig (LowerLevel df) = runOrig df.parent
+runOrig (GroupLevel df) = runOrig df.parent
 
 filterNone :: forall a. DataFrame a -> DataFrame a
 filterNone = init <<< runOrig
@@ -112,17 +116,28 @@ uniqueBy f p = LowerLevel
 
 -- TODO: make groups work for all Ords
 groupBy :: forall a. (a -> Number) -> DataFrame a -> DataFrame (GroupRow a)
-groupBy f p = init $ groups f (run p) 
+groupBy f p = init $ groups f p
 -- FIXME: this is wrong, it needs to be incorporated into the rest of the hierarchy
 
-groups :: forall a. (a -> Number) -> Array a -> Array (GroupRow a)
-groups f xs = foldl (\x t -> x `snoc` (convert' t)) [] $ M.toList groupMap
+--| returns the range of applying some function over the data frame
+range :: forall a. (a -> Number) -> DataFrame a -> Maybe (Tuple Number Number)
+range f df = foldl range' Nothing $ run df
+  where
+  range' Nothing  x' = Just $ Tuple (f x') (f x')
+  range' (Just (Tuple mn mx)) x' = 
+    Just $ Tuple (if (f x') < mn then f x' else mn) (if (f x') > mx then f x' else mx)
+
+groups :: forall a. (a -> Number) -> DataFrame a -> Array (GroupRow a)
+groups f xs = foldl (\x t -> x `snoc` (convert' xs t)) [] $ M.toList groupMap
   where
   groupMap :: M.Map Number (Array a)
-  groupMap = M.fromFoldableWith (++) $ groupIds f xs
+  groupMap = M.fromFoldableWith (++) $ groupIds f $ run xs
 
-convert' :: forall a. Tuple Number (Array a) -> GroupRow a
-convert' (Tuple gid vs) = {group: gid, data: init vs} -- FIXME: shouldn't use init here!
+convert' :: forall a. DataFrame a -> Tuple Number (Array a) -> GroupRow a
+convert' p (Tuple gid vs) = 
+  { group: gid
+  , data: GroupLevel { parent: p, results: defer (\_ -> vs) }
+  }
 
 groupIds :: forall a. (a -> Number) -> Array a -> Array (Tuple Number (Array a))
 groupIds f = map (\x -> Tuple (f x) [x])
