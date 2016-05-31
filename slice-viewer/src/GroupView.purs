@@ -10,7 +10,7 @@ import Data.Tuple (Tuple(..))
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, key)
 import Stats (Histogram, histogram)
-import Util (mapCombine)
+import Util (mapCombine, zipMap)
 import App.Core (AppData)
 
 import Data.Slices (yLoc)
@@ -30,7 +30,7 @@ type State =
   , groupId :: Int
   , sliceViewRange :: ValueRange
   , sliceView :: SV.State
-  , histogramRanges :: SM.StrMap ValueRange
+  , histogramRanges :: SM.StrMap Histogram
   , histogramStates :: SM.StrMap H.State
   }
 
@@ -48,7 +48,7 @@ init origData key gn g df =
   , groupId: g
   , sliceViewRange: fromJust svRange
   , sliceView: SV.init df
-  , histogramRanges: histogramRanges origData
+  , histogramRanges: metricHistograms 11 origData
   , histogramStates: map H.init histos
   }
   where 
@@ -99,7 +99,7 @@ view state =
     [ viewName state
     , div [className "dim-charts"] 
         [ viewAllSlices state
-        , viewMetricHistograms state.histogramStates
+        , viewMetricHistograms state
         ]
     ]
 
@@ -113,17 +113,22 @@ viewAllSlices state =
   div [className "slices-view"] 
     [ map SliceViewAction $ SV.view state.sliceViewRange state.sliceView ]
 
-viewMetricHistograms :: SM.StrMap H.State -> Html Action
-viewMetricHistograms hs = 
+viewMetricHistograms :: State -> Html Action
+viewMetricHistograms state = 
   div [className "metric-histograms"] $
-    SM.foldMap (\k v -> [viewMetricHistogram k v]) hs
+    SM.foldMap (\k (Tuple r s) -> [viewMetricHistogram k r s]) hs
+  where
+  hs = zipMap state.histogramRanges state.histogramStates
 
-viewMetricHistogram :: String -> H.State -> Html Action
-viewMetricHistogram name h =
+viewMetricHistogram :: String -> Histogram -> H.State -> Html Action
+viewMetricHistogram name h st =
   div [className "metric-histogram"]
     [ h3 [className "chart-title"] [text name]
-    , map (HistoAction name) $ H.view h
+    , map (HistoAction name) $ H.view rng maxCount st
     ]
+  where
+  rng = Tuple h.min h.max
+  maxCount = fromJust $ maximum h.counts
 
 metricHistograms :: Int -> AppData -> SM.StrMap Histogram
 metricHistograms bins df = map (histogram bins) $ metricData df
