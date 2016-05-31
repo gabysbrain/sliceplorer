@@ -18,3 +18,11 @@ mapCombine f ma mb =
                                     Just vb -> SM.insert ka (f va vb) mm
                                     Nothing -> SM.insert ka va mm
 
+zipMap :: forall a b. SM.StrMap a -> SM.StrMap b -> SM.StrMap (Tuple a b)
+zipMap m1 m2 =
+  SM.fold handleFold SM.empty m1
+  where
+  handleFold mm k v1 = case SM.lookup k m2 of
+                            Just v2 -> SM.insert k (Tuple v1 v2) mm
+                            Nothing -> mm
+

@@ -7,7 +7,7 @@ var PureRenderMixin = require('react-addons-pure-render-mixin');
 var Pux = require('purescript-pux');
 var vg = require('vega');
 
-function _spec() {
+function _spec(binsMin, binsMax, countMax) {
   return {
     'width': 100,
     'height': 100,
@@ -26,14 +26,14 @@ function _spec() {
     'scales': [{
       'name': 'x',
       'type': 'linear',
-      'domainMin': {'data': 'bars', 'field': 'bin_start'},
-      'domainMax': {'data': 'bars', 'field': 'bin_end'},
+      'domain': [binsMin, binsMax],
       'range': 'width',
+      'nice': true,
       'zero': false
     }, {
       'name': 'y',
       'type': 'linear',
-      'domain': {'data': 'bars', 'field': 'count'},
+      'domain': [0, countMax],
       'range': 'height'
     }],
     'axes': [{
@@ -126,7 +126,10 @@ var VegaHistogram = React.createClass({
     var highlightBar = this.props.highlightBar;
     var highlightTicks = this.props.highlightTicks;
     var handleHover = this.props.onBarHover;
-    var spec = _spec();
+    var binMin = this.props['data-binMin'];
+    var binMax = this.props['data-binMax'];
+    var countMax = this.props['data-maxCount'];
+    var spec = _spec(binMin, binMax, countMax);
     //spec.axes[0].title = this.props.xAxisName;
     var self = this;
 

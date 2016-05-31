@@ -3,18 +3,23 @@ module App.GroupView where
 import Prelude hiding (div)
 import Data.StrMap as SM
 import Data.Maybe (Maybe(..))
+import Data.Maybe.Unsafe (fromJust)
 import Data.Array (concatMap)
-import Data.Foldable (elem)
+import Data.Foldable (elem, minimum, maximum)
+import Data.Tuple (Tuple(..), uncurry)
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, key)
-import Stats (Histogram, histogram)
-import Util (mapCombine)
+import Stats (Histogram, histogram, histogram', histRanges)
+import Util (mapCombine, zipMap)
 import App.Core (AppData)
+import Debug.Trace
 
+import Data.Slices (yLoc)
 import Data.Samples (combineMaps)
 
 import DataFrame as DF
 import Data.SliceSample as Slice
+import Data.ValueRange (ValueRange)
 
 import Vis.Vega.Histogram as H
 import Vis.Vega.Slices as SV
@@ -24,7 +29,9 @@ type State =
   , samples :: AppData
   , groupName :: String
   , groupId :: Int
+  , sliceViewRange :: ValueRange
   , sliceView :: SV.State
+  , histogramRanges :: SM.StrMap Histogram
   , histogramStates :: SM.StrMap H.State
   }
 
@@ -34,26 +41,30 @@ data Action
   | SliceViewAction SV.Action
   | HistoAction String H.Action
 
-init :: Int -> String -> Int -> AppData -> State
-init key gn g df =
+init :: AppData -> Int -> String -> Int -> AppData -> State
+init origData key gn g df =
   { key: key
   , samples: df
   , groupName: gn
   , groupId: g
+  , sliceViewRange: fromJust svRange
   , sliceView: SV.init df
-  , histogramStates: map H.init histos
+  , histogramRanges: origDataHists
+  , histogramStates: map H.init $ metricHistograms' origDataRngs df
   }
   where 
-  histos = metricHistograms 11 df
+  svRange = DF.range (\(Slice.SliceSample s) -> fromJust $ maximum $ map yLoc s.slice) origData
+  origDataHists = metricHistograms 11 origData
+  origDataRngs = map histRanges origDataHists
 
 update :: Action -> State -> State
 update (UpdateSamples df) state =
   state { samples = df
         , sliceView = SV.init df
-        , histogramStates = map H.init histos
+        , histogramStates = map H.init $ metricHistograms' origDataRngs df
         }
   where 
-  histos = metricHistograms 11 df
+  origDataRngs = map histRanges state.histogramRanges
 update (FocusPointFilter fp) state = state
   { sliceView = SV.update (SV.HighlightNeighbors neighborSlices) $
                   SV.update (SV.HoverSlice hoverSlices) state.sliceView
@@ -89,8 +100,8 @@ view state =
   div [className "dim-view", key $ show state.key]
     [ viewName state
     , div [className "dim-charts"] 
-        [ viewAllSlices state.sliceView
-        , viewMetricHistograms state.histogramStates
+        [ viewAllSlices state
+        , viewMetricHistograms state
         ]
     ]
 
@@ -99,27 +110,41 @@ viewName state = div [className "dim-name"] [text groupName]
   where
   groupName = state.groupName ++ " " ++ (show state.groupId)
 
-viewAllSlices :: SV.State -> Html Action
-viewAllSlices svState =
+viewAllSlices :: State -> Html Action
+viewAllSlices state =
   div [className "slices-view"] 
-    [ map SliceViewAction $ SV.view svState ]
+    [ map SliceViewAction $ SV.view state.sliceViewRange state.sliceView ]
 
-viewMetricHistograms :: SM.StrMap H.State -> Html Action
-viewMetricHistograms hs = 
+viewMetricHistograms :: State -> Html Action
+viewMetricHistograms state = 
   div [className "metric-histograms"] $
-    SM.foldMap (\k v -> [viewMetricHistogram k v]) hs
+    SM.foldMap (\k (Tuple r s) -> [viewMetricHistogram k r s]) hs
+  where
+  hs = zipMap state.histogramRanges state.histogramStates
 
-viewMetricHistogram :: String -> H.State -> Html Action
-viewMetricHistogram name h =
+viewMetricHistogram :: String -> Histogram -> H.State -> Html Action
+viewMetricHistogram name h st =
   div [className "metric-histogram"]
     [ h3 [className "chart-title"] [text name]
-    , map (HistoAction name) $ H.view h
+    , map (HistoAction name) $ H.view rng maxCount st
     ]
+  where
+  rng = Tuple h.min h.max
+  maxCount = fromJust $ maximum h.counts
 
 metricHistograms :: Int -> AppData -> SM.StrMap Histogram
-metricHistograms bins df =
-  map (histogram bins) values
-  where 
+metricHistograms bins df = map (histogram bins) $ metricData df
+
+metricHistograms' :: SM.StrMap (Array ValueRange) -> AppData -> SM.StrMap Histogram
+metricHistograms' binMap df = map (uncurry histogram') $ zipMap binMap (metricData df)
+
+histogramRanges :: AppData -> SM.StrMap ValueRange
+histogramRanges df = map rng $ metricData df
+  where
+  rng xs = Tuple (fromJust $ minimum xs) (fromJust $ maximum xs)
+
+metricData :: AppData -> SM.StrMap (Array Number)
+metricData df = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
+  where
   fps = DF.run df
-  values = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 

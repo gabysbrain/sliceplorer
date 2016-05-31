@@ -1,7 +1,7 @@
 module Data.Slices where
 
 import Prelude
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), fst, snd)
 import Data.StrMap (StrMap)
 import Data.StrMap as SM
 import Data.Foreign.Class (class IsForeign, readProp)
@@ -54,4 +54,10 @@ sortBy cmp = sortBy cmp
 
 metrics :: Slice -> Metrics
 metrics (Slice s) = s.metrics
+
+xLoc :: Sample -> Number
+xLoc (Sample s) = fst s
+
+yLoc :: Sample -> Number
+yLoc (Sample s) = snd s
 
