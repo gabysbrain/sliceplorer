@@ -1,14 +1,15 @@
 module Stats where
 
 import Prelude
-import Data.Array (span, snoc, cons, sort, length)
+import Data.Array (span, snoc, cons, sort, length, zip, filter, head, last)
 import Data.Foldable (maximum, minimum)
+import Data.Tuple (Tuple(..))
 import Data.Int (toNumber)
 import Data.Maybe.Unsafe (fromJust)
 
-import Debug.Trace
+import Data.ValueRange (ValueRange, minVal, maxVal)
 
-import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
+import Debug.Trace
 
 type Histogram =
   { min :: Number
@@ -31,37 +32,35 @@ type HistBin =
     {--"{start: " ++ (show s) ++ (" end: " ++ (show e) ++ " count: " ++ (show c) ++ "}"--}
 
 histogram :: Int -> Array Number -> Histogram
-histogram numBins nums = 
-  if width < 1e-9
-     then { min: mn
-          , max: mx
-          , width: mx-mn
-          , numBins: 1
-          , binStarts: [mn]
-          , binEnds: [mx]
-          , counts: [length nums]
-          } -- FIXME: find a better solution for small difference numbers
-     else let bins = h' mn width (sort nums) []
-           in { min: mn
-              , max: mx
-              , width: width
-              , numBins: numBins
-              , binStarts: map (\x -> x.start) bins
-              , binEnds: map (\x -> x.end) bins
-              , counts: map (\x -> x.count) bins
-              }
+histogram numBins nums = histogram' (binRanges numBins nums) nums
+
+histogram' :: Array ValueRange -> Array Number -> Histogram
+histogram' binSpecs nums =
+  { min: (fromJust $ head bins).start
+  , max: (fromJust $ last bins).end
+  , width: (fromJust $ head bins).end - (fromJust $ head bins).start
+  , numBins: length binSpecs
+  , binStarts: map (\x -> x.start) bins
+  , binEnds: map (\x -> x.end) bins
+  , counts: map (\x -> x.count) bins
+  }
+  where
+  binCount rng = length $ filter (\x -> x >= minVal rng && x <= maxVal rng) nums
+  bins = map (\rng -> {start: minVal rng, end: maxVal rng, count: binCount rng}) binSpecs
+
+binRanges :: Int -> Array Number -> Array ValueRange
+binRanges numBins nums =
+  if width < 1e-9 
+     then [Tuple mn mx] 
+     else zip (range' numBins mn width []) (range' numBins (mn+width) width [])
   where
   mx = fromJust $ maximum nums
   mn = fromJust $ minimum nums
   width = (mx-mn) / (toNumber numBins)
 
--- nums must be sorted!!!
-h' :: Number -> Number -> Array Number -> Array HistBin -> Array HistBin
-h' start width nums bins =
-  case splotted of
-       {rest=[]} -> bins
-       {init=xs, rest=rst} -> h' (start+width) width rst $ 
-                                snoc bins {start: start, end: start+width, count: length xs}
-  where
-  splotted = span (\x -> x <= (start+width)) nums
+range' :: Int -> Number -> Number -> Array Number -> Array Number
+range' n start width nums 
+  | n < 1     = nums
+  | otherwise = range' (n-1) (start+width) width $ nums `snoc` start
+
 
