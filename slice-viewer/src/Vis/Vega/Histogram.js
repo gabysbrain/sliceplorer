@@ -40,16 +40,22 @@ function _spec(binsMin, binsMax, countMax) {
       'type': 'x',
       'scale': 'x',
       'offset': 5,
-      //'ticks': 5,
-      //'title': 'Distance',
-      //'format': 'e',
-      'layer': 'back'
+      'ticks': 7,
+      'format': '0.2f',
+      'layer': 'back',
+      'properties': {
+        'labels': {
+          'angle': {'value': -45},
+          'align': {'value': 'right'},
+          'baseline': {'value': 'middle'}
+        }
+      }
     }, {
       'type': 'y',
       'scale': 'y',
       'offset': 5,
       'ticks': 5,
-      //'title': 'Value',
+      'title': 'count',
       'layer': 'back'
     }],
     'marks': [{
