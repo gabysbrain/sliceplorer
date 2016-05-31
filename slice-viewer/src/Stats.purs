@@ -58,6 +58,9 @@ binRanges numBins nums =
   mn = fromJust $ minimum nums
   width = (mx-mn) / (toNumber numBins)
 
+histRanges :: Histogram -> Array ValueRange
+histRanges hist = zip hist.binStarts hist.binEnds
+
 range' :: Int -> Number -> Number -> Array Number -> Array Number
 range' n start width nums 
   | n < 1     = nums

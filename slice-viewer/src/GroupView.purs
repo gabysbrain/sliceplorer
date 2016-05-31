@@ -6,12 +6,13 @@ import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
 import Data.Array (concatMap)
 import Data.Foldable (elem, minimum, maximum)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), uncurry)
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, key)
-import Stats (Histogram, histogram)
+import Stats (Histogram, histogram, histogram', histRanges)
 import Util (mapCombine, zipMap)
 import App.Core (AppData)
+import Debug.Trace
 
 import Data.Slices (yLoc)
 import Data.Samples (combineMaps)
@@ -48,21 +49,22 @@ init origData key gn g df =
   , groupId: g
   , sliceViewRange: fromJust svRange
   , sliceView: SV.init df
-  , histogramRanges: metricHistograms 11 origData
-  , histogramStates: map H.init histos
+  , histogramRanges: origDataHists
+  , histogramStates: map H.init $ metricHistograms' origDataRngs df
   }
   where 
   svRange = DF.range (\(Slice.SliceSample s) -> fromJust $ maximum $ map yLoc s.slice) origData
-  histos = metricHistograms 11 df
+  origDataHists = metricHistograms 11 origData
+  origDataRngs = map histRanges origDataHists
 
 update :: Action -> State -> State
 update (UpdateSamples df) state =
   state { samples = df
         , sliceView = SV.init df
-        , histogramStates = map H.init histos
+        , histogramStates = map H.init $ metricHistograms' origDataRngs df
         }
   where 
-  histos = metricHistograms 11 df
+  origDataRngs = map histRanges state.histogramRanges
 update (FocusPointFilter fp) state = state
   { sliceView = SV.update (SV.HighlightNeighbors neighborSlices) $
                   SV.update (SV.HoverSlice hoverSlices) state.sliceView
@@ -132,6 +134,9 @@ viewMetricHistogram name h st =
 
 metricHistograms :: Int -> AppData -> SM.StrMap Histogram
 metricHistograms bins df = map (histogram bins) $ metricData df
+
+metricHistograms' :: SM.StrMap (Array ValueRange) -> AppData -> SM.StrMap Histogram
+metricHistograms' binMap df = map (uncurry histogram') $ zipMap binMap (metricData df)
 
 histogramRanges :: AppData -> SM.StrMap ValueRange
 histogramRanges df = map rng $ metricData df
