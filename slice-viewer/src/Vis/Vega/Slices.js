@@ -40,14 +40,12 @@ function _spec(minVal, maxVal) {
       'scale': 'x',
       'offset': 5,
       'ticks': 5,
-      //'title': 'Distance',
       'layer': 'back'
     }, {
       'type': 'y',
       'scale': 'y',
       'offset': 5,
       'ticks': 5,
-      //'title': 'Value',
       'layer': 'back'
     }],
     'marks': [{

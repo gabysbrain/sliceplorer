@@ -90,10 +90,15 @@ function _spec() {
         'round': true,
         'domain': {'data': 'points', 'field': {'parent': 'b.data'}}
       }],
-      'axes': [
-        {'type': 'x', 'scale': 'x'},
-        {'type': 'y', 'scale': 'y'}
-      ],
+      'axes': [{
+        'type': 'x', 
+        'scale': 'x',
+        'ticks': 7
+      }, {
+        'type': 'y', 
+        'scale': 'y',
+        'ticks': 7
+      }],
       'marks': [{
         'type': 'symbol',
         'name': 'point',
