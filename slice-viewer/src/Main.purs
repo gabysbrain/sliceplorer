@@ -5,18 +5,18 @@ import Prelude (bind, return)
 import Control.Bind ((=<<))
 import App.Layout (Action, State, view, update)
 import Control.Monad.Eff (Eff)
---import Pux (App, Config, CoreEffects, renderToDOM)
+import Pux (App, Config, CoreEffects, renderToDOM)
 import Pux (App, CoreEffects, renderToDOM)
 --import Pux.Router (sampleUrl)
 --import Signal ((~>))
 --import Signal.Channel (CHANNEL)
 import App.Core (AppEffects)
+import DOM (DOM)
 
 -- | App configuration
-{--config :: forall eff.--}
-          {--State ->--}
-          {--Eff (CoreEffects AppEffects)--}
-            {--(Config State Action (channel :: CHANNEL | eff))--}
+config :: forall eff.
+          State ->
+          Eff eff (Config State Action AppEffects)
 config state = do
   -- | Create a signal of URL changes.
   --urlSignal <- sampleUrl
