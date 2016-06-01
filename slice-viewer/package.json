@@ -10,30 +10,27 @@
     "starter-app"
   ],
   "scripts": {
-    "postinstall": "./node_modules/.bin/bower cache clean && ./node_modules/.bin/bower install",
-    "clean": "rimraf dist && rimraf output",
-    "build": "npm run clean && set NODE_ENV=production && ./node_modules/.bin/webpack --config ./webpack.production.config.js --progress --profile --colors",
-    "serve:watch": "node ./webpack.config.js",
-    "serve:prod": "http-server dist --cors -p 3000",
-    "start": "npm run serve:watch",
+    "postinstall": "bower cache clean && bower install",
+    "clean": "rimraf static/dist && rimraf dist && rimraf output",
+    "build": "webpack --config ./webpack.production.config.js --progress --profile --colors",
+    "watch": "node ./webpack.config.js",
+    "serve": "http-server static --cors -p 3000",
+    "start": "npm run watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/alexmingoia/pux-starter-app.git"
+    "url": "git@github.com:gabysbrain/slicesplorer.git"
   },
-  "author": "Alexander C. Mingoia",
+  "author": "Thomas Torsney-Weir",
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/alexmingoia/pux-starter-app/issues"
-  },
   "babel": {
     "presets": [
       "es2015"
     ]
   },
   "dependencies": {
-    "purescript": "^0.8.6-rc.1",
+    "purescript": "^0.8.5",
     "react": "^15.0.0",
     "react-addons-pure-render-mixin": "^15.0.1",
     "react-dom": "^15.0.0",
@@ -41,16 +38,14 @@
   },
   "devDependencies": {
     "bower": "*",
-    "browserify-versionify": "^1.0.6",
-    "copy-webpack-plugin": "^2.1.3",
+    "connect-history-api-fallback": "^1.2.0",
     "css-loader": "^0.23.1",
     "express": "^4.13.4",
     "html-webpack-plugin": "^2.15.0",
     "http-server": "^0.9.0",
     "node-sass": "^3.5.3",
     "purescript-psa": "^0.3.5",
-    "purescript-webpack-plugin": "^0.3.0",
-    "purs-loader": "^0.6.0",
+    "purs-loader": "^1.0.0-rc.1",
     "rimraf": "^2.5.2",
     "sass-loader": "^3.2.0",
     "source-map-loader": "^0.1.5",

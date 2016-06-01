@@ -1,8 +1,6 @@
 var path = require('path');
 var webpack = require('webpack');
-var PurescriptWebpackPlugin = require('purescript-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 var port = process.env.PORT || 3000;
 
@@ -14,14 +12,24 @@ var config = {
   debug: true,
   devtool: 'cheap-module-eval-source-map',
   output: {
-    path: path.resolve('./dist'),
+    path: path.resolve('./static/dist'),
     filename: '[name].js',
     publicPath: '/'
   },
   module: {
     loaders: [
       { test: /\.js$/, loader: 'source-map-loader', exclude: /node_modules|bower_components/ },
-      { test: /\.purs$/, loader: 'purs-loader', exclude: /node_modules/ },
+      {
+        test: /\.purs$/,
+        loader: 'purs-loader',
+        exclude: /node_modules/,
+        query: {
+          psc: 'psa',
+          pscArgs: {
+            sourceMaps: true
+          }
+        }
+      },
       { test: /\.scss$/, loaders: ['style', 'css?sourceMap', 'sass?sourceMap'] }
     ],
   },
@@ -29,28 +37,7 @@ var config = {
     includePaths: [path.resolve(__dirname, './bower_components/foundation-sites/scss/')]
   },
   plugins: [
-    {
-      apply: function (compiler) {
-        compiler.plugin("should-emit", function(compilation) {
-          if (compilation.errors.length > 1)
-            compilation.errors = compilation.errors.filter(function (error) {
-              var message = error.message || error
-              return !~message.indexOf('PureScript compilation has failed.');
-            });
-        });
-      }
-    },
-    new PurescriptWebpackPlugin({
-      src: ['bower_components/purescript-*/src/**/*.purs', 'src/**/*.purs'],
-      ffi: ['bower_components/purescript-*/src/**/*.js', 'src/**/*.js'],
-      bundle: false,
-      psc: 'psa',
-      pscArgs: {
-        sourceMaps: true
-      }
-    }),
     new webpack.DefinePlugin({
-      'process.env.WEBPACK_ENV': '"dev"',
       'process.env.NODE_ENV': JSON.stringify('development')
     }),
     new webpack.optimize.OccurenceOrderPlugin(true),
@@ -64,9 +51,6 @@ var config = {
       inject: 'body',
       filename: 'index.html'
     }),
-    new CopyWebpackPlugin([
-      { from: 'static' }
-    ]),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoErrorsPlugin(),
   ],
@@ -94,6 +78,8 @@ if (require.main === module) {
   // webpack-dev-server, because webpack-hot-middleware provides more reliable
   // HMR behavior, and an in-browser overlay that displays build errors
   app
+    .use(express.static('./static'))
+    .use(require('connect-history-api-fallback')())
     .use(require("webpack-dev-middleware")(compiler, {
       publicPath: config.output.publicPath,
       stats: {
