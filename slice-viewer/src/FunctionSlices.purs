@@ -46,7 +46,8 @@ init =
   , overview: Nothing
   }
 
-update :: Action -> State -> EffModel State Action (ajax :: AJAX)
+-- FIXME: ideally unifying this type is handled at a higher level...
+update :: forall eff. Action -> State -> EffModel State Action (ajax :: AJAX | eff)
 update (RequestSamples) state =
   { state: state {samples=Nothing}
   , effects: [ do

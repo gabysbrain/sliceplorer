@@ -1,14 +1,14 @@
 module Main where
 
 import Prelude (bind, return)
---import App.Routes (match)
+import App.Routes (match)
 import Control.Bind ((=<<))
-import App.Layout (Action, State, view, update)
+import App.Layout (Action(PageView), State, view, update)
 import Control.Monad.Eff (Eff)
 import Pux (App, Config, CoreEffects, renderToDOM)
 import Pux (App, CoreEffects, renderToDOM)
---import Pux.Router (sampleUrl)
---import Signal ((~>))
+import Pux.Router (sampleUrl)
+import Signal ((~>))
 --import Signal.Channel (CHANNEL)
 import App.Core (AppEffects)
 import DOM (DOM)
@@ -16,20 +16,20 @@ import DOM (DOM)
 -- | App configuration
 config :: forall eff.
           State ->
-          Eff eff (Config State Action AppEffects)
+          Eff (dom :: DOM | eff) (Config State Action AppEffects)
 config state = do
   -- | Create a signal of URL changes.
-  --urlSignal <- sampleUrl
+  urlSignal <- sampleUrl
   		  
   -- | Map a signal of URL changes to PageView actions.
-  --let routeSignal = urlSignal ~> \r -> PageView (match r)
+  let routeSignal = urlSignal ~> \r -> PageView (match r)
 
   return 
     { initialState: state
     , update: update
     , view: view
-    --, inputs: [routeSignal]
-    , inputs: []
+    , inputs: [routeSignal]
+    --, inputs: []
     }
 
 -- | Entry point for the browser.
