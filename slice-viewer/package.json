@@ -1,7 +1,7 @@
 {
-  "name": "purescript-starter-app",
-  "version": "5.0.1",
-  "description": "Starter Pux application using webpack with hot-reloading.",
+  "name": "slicesplorer",
+  "version": "0.0.1",
+  "description": "Viewer of slices",
   "main": "support/index.js",
   "keywords": [
     "pux",
