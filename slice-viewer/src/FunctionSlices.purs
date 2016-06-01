@@ -61,7 +61,8 @@ update (RequestSamples) state =
     ]
   }
 update (UpdateSamples (Left err)) state =
-  noEffects $ state {error = Just err}
+  -- errors cancel everything
+  noEffects $ state {error = Just err, samples=Unset, overview=Nothing}
 update (UpdateSamples (Right s@(SampleGroup xs))) state =
   noEffects $ state { samples = Loaded s
                     , sliceMetrics = metricNames (fromJust $ head xs)
