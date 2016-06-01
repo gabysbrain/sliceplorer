@@ -1,6 +1,8 @@
 
 @import "foundation";
 
+@import "spinner";
+
 .error {
   @include callout-base;
   @include callout-style($alert-color);

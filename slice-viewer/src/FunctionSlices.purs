@@ -17,13 +17,18 @@ import Pux.Html.Attributes (className, disabled, value, type_, min, max, step)
 import Data.Samples (SampleGroup(..), jsonSamples, metricNames)
 import App.Overview as Overview
 
+data DataLoadState
+  = Unset
+  | Loading
+  | Loaded SampleGroup
+
 type State =
   { d :: Int
   , function :: String
   , sampleLimit :: Int
   , sliceMetrics :: Array String
   , error :: Maybe Error
-  , samples :: Maybe SampleGroup
+  , samples :: DataLoadState
   , overview :: Maybe Overview.State
   }
 
@@ -42,14 +47,14 @@ init =
   , sampleLimit: 50
   , sliceMetrics: []
   , error: Nothing
-  , samples: Nothing
+  , samples: Unset
   , overview: Nothing
   }
 
 -- FIXME: ideally unifying this type is handled at a higher level...
 update :: forall eff. Action -> State -> EffModel State Action (ajax :: AJAX | eff)
 update (RequestSamples) state =
-  { state: state {samples=Nothing}
+  { state: state {samples=Loading}
   , effects: [ do
       samples <- jsonSamples state.function state.d state.sampleLimit
       return $ UpdateSamples samples
@@ -58,7 +63,7 @@ update (RequestSamples) state =
 update (UpdateSamples (Left err)) state =
   noEffects $ state {error = Just err}
 update (UpdateSamples (Right s@(SampleGroup xs))) state =
-  noEffects $ state { samples = Just s
+  noEffects $ state { samples = Loaded s
                     , sliceMetrics = metricNames (fromJust $ head xs)
                     , overview = Just (Overview.init s)
                     , error = Nothing
@@ -136,7 +141,13 @@ viewError Nothing  = text ""
 viewError (Just err) = div [className "error"] [text $ show err]
 
 viewSamples :: State -> Html Action
-viewSamples {samples=Nothing} = p [] [text "Nothing loaded"]
+viewSamples {samples=Unset} = p [] [text "Nothing loaded"]
+viewSamples {samples=Loading} =
+  div [className "loading-panel"]
+    [ div [className "spinner"] $
+        map (\i -> div [className ("spinner-stage-" ++ (show i))] []) (1..12)
+    , div [className "spinner-text"] [text "Loading..."]
+    ]
 viewSamples {overview=Just o} =
   div [className "samples"]
     [ map OverviewView $ Overview.view o ]
