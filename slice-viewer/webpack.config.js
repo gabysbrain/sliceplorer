@@ -34,7 +34,8 @@ var config = {
     ],
   },
   sassLoader: {
-    includePaths: [path.resolve(__dirname, './bower_components/foundation-sites/scss/')]
+    includePaths: [path.resolve(__dirname, './bower_components/foundation-sites/scss/'),
+                   path.resolve(__dirname, './bower_components/')]
   },
   plugins: [
     new webpack.DefinePlugin({
