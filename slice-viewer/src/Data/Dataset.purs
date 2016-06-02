@@ -1,0 +1,50 @@
+
+module Data.Dataset where
+
+import Prelude
+import Data.Maybe (Maybe)
+import Data.Either (Either(..))
+import Data.Foldable (find, elem)
+import Data.Foreign.Class (class IsForeign, readProp, readJSON)
+import Control.Monad.Eff.Exception (Error, error)
+import Control.Monad.Aff (Aff, attempt)
+import Network.HTTP.Affjax (AJAX, get)
+
+type Datasets = Array Dataset
+
+data Dataset = Dataset
+  { name :: String
+  , dims :: Array Int
+  }
+
+instance datasetIsForeign :: IsForeign Dataset where
+  read json = do
+    n <- readProp "name" json
+    d <- readProp "dims" json
+    pure $ Dataset {name: n, dims: d}
+
+jsonDatasets :: forall eff. Aff (ajax :: AJAX | eff) (Either Error Datasets)
+jsonDatasets = do
+  res <- attempt $ get "http://localhost:5000/slice"
+  let datasets = case res of
+        Right r -> parseJson r.response
+        Left err -> Left err
+  pure datasets
+
+parseJson :: String -> Either Error Datasets
+parseJson json = case readJSON json of
+                      Left err -> Left (error $ show err)
+                      Right res -> Right res
+
+lookup :: String -> Datasets -> Maybe Dataset
+lookup ds datasets = find (\(Dataset d) -> d.name == ds) datasets
+
+dsName :: Dataset -> String
+dsName (Dataset ds) = ds.name
+
+dsDims :: Dataset -> Array Int
+dsDims (Dataset ds) = ds.dims
+
+validDim :: Int -> Dataset -> Boolean
+validDim d (Dataset ds) = elem d ds.dims
+

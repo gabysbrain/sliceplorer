@@ -2,7 +2,7 @@ module Data.Samples where
 
 import Prelude
 import Data.Slices (Slice(..), metrics)
-import Data.Array (nub, take, concat, head, snoc, (!!))
+import Data.Array (nub, take, concat, snoc, (!!))
 import Data.Array as A
 import Data.Foldable (foldl)
 import Data.Maybe (Maybe(Just, Nothing))
@@ -62,6 +62,9 @@ jsonSamples fname d n = do
         Left err -> Left err
   pure $ samples
 
+head :: SampleGroup -> Maybe FocusPointInfo
+head (SampleGroup sg) = A.head sg
+
 parseJson :: String -> Either Error SampleGroup
 parseJson json = case readJSON json of
                       Left err -> Left (error $ show err)
@@ -81,7 +84,7 @@ subset :: Int -> SampleGroup -> SampleGroup
 subset n (SampleGroup sg) = SampleGroup $ take n sg
 
 dims :: SampleGroup -> Int
-dims (SampleGroup sg) = 
+dims sg = 
   case head sg of
        Nothing -> 0
        Just (FocusPointInfo x) -> x.dims
