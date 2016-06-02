@@ -38,8 +38,8 @@ def samples(fname, n, dim, seed=0):
   outputs[:,:-1] = np.repeat(X, dim*SAMPLE_N, axis=0)
   for i in range(0, outputs.shape[0], dim*SAMPLE_N): # samples
     for d,j in zip(range(dim), range(i,i+dim*SAMPLE_N,SAMPLE_N)): # dimensions
-      slide_samples = np.linspace(mn, mx, num=SAMPLE_N)
-      outputs[j:(j+SAMPLE_N),d] = slide_samples
+      slice_samples = np.linspace(mn, mx, num=SAMPLE_N)
+      outputs[j:(j+SAMPLE_N),d] = slice_samples
   f = sampler.get_func(fname)
   #print(outputs)
   #print(dd)
