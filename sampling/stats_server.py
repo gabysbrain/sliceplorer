@@ -21,6 +21,7 @@ def slices():
   s = [{'dataset': ds, 'dims': d} for ds,d in slice_list()]
   resp = Response(response=json.dumps(s, cls=MyEncoder),
       status=200, mimetype="application/json")
+  resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
   return resp
 
 @app.route('/slice/<function>/<int:dims>/<int:limit>', methods = ['GET'])
