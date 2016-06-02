@@ -27,7 +27,8 @@ function _spec(minVal, maxVal) {
       'name': 'x',
       'type': 'linear',
       'domain': {'data': 'lines', 'field': 'x'},
-      'range': 'width'
+      'range': 'width',
+      'zero': false
     }, {
       'name': 'y',
       'type': 'linear',
