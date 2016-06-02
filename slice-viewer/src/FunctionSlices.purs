@@ -5,6 +5,7 @@ import Data.Maybe (Maybe(Just, Nothing))
 import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..))
 import Data.Array ((..), length)
+import Data.Array as A
 import Data.Int (fromString)
 import Control.Monad.Eff.Exception (Error, error)
 import Network.HTTP.Affjax (AJAX)
@@ -15,7 +16,7 @@ import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, disabled, value, type_, min, max, step)
 
 import Data.Samples (SampleGroup(..), jsonSamples, metricNames, head)
-import Data.Dataset (Datasets, Dataset, jsonDatasets, lookup, dsName, dsDims)
+import Data.Dataset (Datasets, Dataset, jsonDatasets, lookup, dsName, dsDims, validDim)
 import App.Overview as Overview
 
 type DatasetInfo =
@@ -92,7 +93,7 @@ update (DimChange ev) state = case dsInfo state of
   Nothing -> noEffects state
 update (FunctionChange ev) state = case dsInfo state of
   -- TODO: maybe some error checking?
-  Just dsi -> update RequestSamples (LoadingSamples $ dsi {function=ev.target.value})
+  Just dsi -> update RequestSamples $ updateFunction ev.target.value dsi
   Nothing -> noEffects state
 update (UpdateSampleLimit ev) state = 
   case dsi' of
@@ -106,6 +107,15 @@ update (UpdateSampleLimit ev) state =
 update (OverviewView action) (SamplesLoaded st@{overview=o}) =
   noEffects $ SamplesLoaded (st {overview=Overview.update action o})
 update (OverviewView action) state = noEffects state
+
+updateFunction :: String -> DatasetInfo -> State
+updateFunction fname dsi = case lookup fname dsi.datasets of
+  Nothing -> SampleLoadingError { dataset: dsi
+                                , error: error $ "dataset '" ++ fname ++ "' not found" 
+                                }
+  Just ds -> LoadingSamples $ dsi { function = fname
+                                  , dim = if validDim dsi.dim ds then dsi.dim else fromJust $ A.head $ dsDims ds
+                                  }
 
 view :: State -> Html Action
 view LoadingDatasets = viewSpinner
