@@ -19,7 +19,7 @@ data Dataset = Dataset
 
 instance datasetIsForeign :: IsForeign Dataset where
   read json = do
-    n <- readProp "name" json
+    n <- readProp "dataset" json
     d <- readProp "dims" json
     pure $ Dataset {name: n, dims: d}
 
