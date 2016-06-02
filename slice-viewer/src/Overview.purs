@@ -1,15 +1,14 @@
 module App.Overview where
 
 import Prelude hiding (div)
-import Data.Array (concatMap, modifyAt, snoc, zip, zipWith, concat, length, (!!), (..))
-import Data.Tuple (fst, snd)
+import Data.Array (modifyAt, length)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
 import Data.StrMap as SM
-import Data.Foldable (elem, find, foldl)
+import Data.Foldable (elem, find)
 import Data.Int as I
-import Pux.Html (Html, div, h3, text, input, select, option)
-import Pux.Html.Attributes (className, type_, min, max, step, value)
+import Pux.Html (Html, div, text, select, option)
+import Pux.Html.Attributes (className, value)
 import Pux.Html.Events (onChange, FormEvent)
 import Util (mapEnum)
 import Stats (HistBin)

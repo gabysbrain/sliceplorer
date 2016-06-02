@@ -4,18 +4,17 @@ import Prelude hiding (div)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..))
-import Data.Array ((..), length)
-import Data.Array as A
+import Data.Array ((..), length, head)
 import Data.Int (fromString)
 import Control.Monad.Eff.Exception (Error, error)
 import Network.HTTP.Affjax (AJAX)
 
 import Pux (EffModel, noEffects)
-import Pux.Html (Html, div, button, text, p, select, option, input)
+import Pux.Html (Html, div, button, text, select, option, input)
 import Pux.Html.Events (onChange, onClick, FormEvent)
 import Pux.Html.Attributes (className, disabled, value, type_, min, max, step)
 
-import Data.Samples (SampleGroup(..), jsonSamples, metricNames, head)
+import Data.Samples (SampleGroup, jsonSamples)
 import Data.Dataset (Datasets, Dataset, jsonDatasets, lookup, dsName, dsDims, validDim)
 import App.Overview as Overview
 
@@ -114,7 +113,7 @@ updateFunction fname dsi = case lookup fname dsi.datasets of
                                 , error: error $ "dataset '" ++ fname ++ "' not found" 
                                 }
   Just ds -> LoadingSamples $ dsi { function = fname
-                                  , dim = if validDim dsi.dim ds then dsi.dim else fromJust $ A.head $ dsDims ds
+                                  , dim = if validDim dsi.dim ds then dsi.dim else fromJust $ head $ dsDims ds
                                   }
 
 view :: State -> Html Action

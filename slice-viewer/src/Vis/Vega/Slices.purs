@@ -1,20 +1,15 @@
 module Vis.Vega.Slices where
 
-import Prelude
+import Prelude 
 import Data.Function (runFn2)
-import Data.Maybe (Maybe(..))
-import Data.Maybe.Unsafe (fromJust)
-import Data.Array (zipWith, concat, concatMap, snoc, elemIndex, (!!))
-import Data.Foldable (foldl, foldMap)
+import Data.Array (concatMap, snoc)
+import Data.Foldable (foldl)
 import Data.Tuple (fst, snd)
 import Data.Nullable as N
-import Stats (Histogram, HistBin)
 import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
-import Util (mapEnum)
 import App.Core (AppData)
-import Debug.Trace
 
 import DataFrame as DF
 import Data.SliceSample as Slice
