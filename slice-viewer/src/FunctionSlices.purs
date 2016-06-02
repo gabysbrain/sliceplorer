@@ -62,6 +62,12 @@ update RequestDatasets state =
       return $ UpdateDatasets datasets
     ]
   }
+update (UpdateDatasets (Left err)) state =
+  noEffects $ DatasetLoadingError err
+update (UpdateDatasets (Right ds)) state =
+  update RequestSamples $ LoadingSamples dsi
+  where
+  dsi = {datasets: ds, function: "ackley", dim: 2, sampleLimit: 50}
 update (RequestSamples) state = case dsInfo state of
   Just dsi -> { state: LoadingSamples dsi
               , effects: [ do
@@ -127,7 +133,7 @@ viewControls' :: DatasetInfo -> Maybe Dataset -> Html Action
 viewControls' dsi Nothing =
   div []
     [ viewError $ error ("dataset '" ++ dsi.function ++ "' not found") ]
-viewConrols' dsi (Just ds) =
+viewControls' dsi (Just ds) =
   div [] 
     [ div [className "data-controls"] 
         [ dimSelector dsi ds

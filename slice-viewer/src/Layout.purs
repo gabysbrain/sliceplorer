@@ -6,6 +6,7 @@ import Prelude (($), map)
 import Pux (EffModel, mapState, mapEffects, noEffects)
 import Pux.Html (Html, div, h1, text)
 import App.Core (AppEffects)
+import Debug.Trace
 
 data Action
   = SliceView (Slices.Action)
@@ -23,6 +24,10 @@ init =
   }
 
 update :: Action -> State -> EffModel State Action AppEffects
+update (PageView Home) state =
+  update (SliceView Slices.RequestDatasets) state'
+  where
+  state' = state {route=Home}
 update (PageView route) state = 
   noEffects $ state { route = route }
 update (SliceView action) state = 
