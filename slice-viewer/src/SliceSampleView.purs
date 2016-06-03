@@ -1,24 +1,16 @@
 module App.SliceSampleView where
 
 import Prelude hiding (div)
-import Data.Array (elemIndex, (..))
-import Data.Tuple (Tuple(..))
-import Data.StrMap as SM
-import Data.Maybe
-import Data.Maybe.Unsafe (fromJust)
+import Data.Array ((..))
 import Data.Foldable (elem)
-import Data.Int (toNumber)
 import Pux.Html (Html, div, h3, text)
 import Pux.Html.Attributes (className)
 import App.Core (AppData)
-import Debug.Trace
 
 import Data.SliceSample as Slice
 import DataFrame as DF
 
 import Vis.Vega.Splom as Splom
-
-import Util (mapEnum)
 
 data Action
   = UpdateSamples AppData

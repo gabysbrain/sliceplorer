@@ -3,25 +3,22 @@ module Vis.Vega.Splom where
 import Prelude hiding (div)
 import Data.Function (runFn2)
 import Data.StrMap as SM 
-import Data.Maybe (Maybe(..))
-import Data.Maybe.Unsafe (fromJust)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (foldl)
-import Data.Int (toNumber, floor)
-import Data.Array ((!!), snoc)
+import Data.Int (toNumber)
+import Data.Array (snoc)
 import Data.Nullable as N
 import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
-import Debug.Trace
 import Util (mapEnum)
 import App.Core (AppData)
 
 import DataFrame as DF
 import Data.SliceSample as Slice
-import Data.Samples (FocusPoint(..))
+import Data.Samples (FocusPoint)
 
-import Vis.Vega (Data, dataAttr, toVegaData)
+import Vis.Vega (dataAttr, toVegaData)
 
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
