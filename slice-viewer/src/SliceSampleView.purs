@@ -8,7 +8,7 @@ import Data.Maybe
 import Data.Maybe.Unsafe (fromJust)
 import Data.Foldable (elem)
 import Data.Int (toNumber)
-import Pux.Html (Html, div)
+import Pux.Html (Html, div, h3, text)
 import Pux.Html.Attributes (className)
 import App.Core (AppData)
 import Debug.Trace
@@ -56,7 +56,8 @@ update (SplomAction a) state = state
 view :: State -> Html Action
 view state =
   div [className "focus-points"]
-    [ map SplomAction $ Splom.view state.splom
+    [ h3 [] [text "Focus points"]
+    , map SplomAction $ Splom.view state.splom
     ]
 
 fields :: Int -> Array String

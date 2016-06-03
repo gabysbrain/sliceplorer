@@ -3,13 +3,31 @@
 
 @import "spinner";
 
+
+h3 {
+  text-align: center;
+}
+
 .error {
   @include callout-base;
   @include callout-style($alert-color);
 }
 
+.overview-info {
+  @include grid-row($behavior: nest);
+}
+
 .focus-points {
-  @include grid-column-row;
+  @include grid-column(6);
+}
+
+.topological-spine {
+  @include grid-column(5);
+  @include grid-column-end;
+
+  img {
+    width: 100%;
+  }
 }
 
 .dim-view {

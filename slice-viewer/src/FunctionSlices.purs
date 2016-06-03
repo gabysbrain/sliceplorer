@@ -83,7 +83,7 @@ update (UpdateSamples (Left err)) state = case dsInfo state of
 update (UpdateSamples (Right sg)) state = case dsInfo state of
   Just dsi -> noEffects $ SamplesLoaded { dataset: dsi
                                         , samples: sg
-                                        , overview: Overview.init sg
+                                        , overview: Overview.init dsi.function sg
                                         }
   Nothing -> noEffects state
 update (DimChange ev) state = case dsInfo state of

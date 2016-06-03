@@ -19,6 +19,7 @@ import Vis.Vega.Splom as Splom
 import Vis.Vega.Slices as SV
 import Vis.Vega.Histogram as HV
 import App.GroupView as GV
+import App.TopoSpine as TS
 
 import Data.Samples (SampleGroup, dims)
 import DataFrame as DF
@@ -26,6 +27,7 @@ import Data.SliceSample as Slice
 
 type State = 
   { samples :: AppData
+  , datasetName :: String
   , dims :: Int
   , dimViewKey :: Int
   , groupMethod :: GroupMethod
@@ -46,9 +48,10 @@ instance showGroupMethod :: Show GroupMethod where
   show GroupByDim     = "Dims"
   show GroupByCluster = "Clusters"
 
-init :: SampleGroup -> State
-init sg =
+init :: String -> SampleGroup -> State
+init name sg =
   { samples: df
+  , datasetName: name
   , dims: dims sg
   , dimViewKey: length gdf
   , groupMethod: GroupByDim
@@ -156,7 +159,10 @@ view state =
             , option [value (show GroupByCluster)] [text (show GroupByCluster)]
             ]
         ]
-    , map SliceSampleViewAction $ SSV.view state.sliceSampleView
+    , div [className "overview-info"]
+        [ map SliceSampleViewAction $ SSV.view state.sliceSampleView
+        , TS.view state.datasetName state.dims
+        ]
     , viewDims state
     ]
 

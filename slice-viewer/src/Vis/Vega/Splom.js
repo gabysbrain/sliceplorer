@@ -63,6 +63,7 @@ function _spec() {
         'data': 'fields',
         'transform': [
           {'type': 'cross'},
+          //{'type': 'cross', 'filter': 'datum.a.data < datum.b.data'},
           {'type': 'formula', 'field': 'sourceX', 'expr': '"source."+datum.a.data'},
           {'type': 'formula', 'field': 'sourceY', 'expr': '"source."+datum.b.data'},
           {'type': 'formula', 'field': 'targetX', 'expr': '"target."+datum.a.data'},
