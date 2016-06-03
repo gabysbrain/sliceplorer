@@ -4,7 +4,8 @@ import Prelude
 import Data.Slices (Slice(..), metrics)
 import Data.Array (nub, take, concat, snoc, (!!))
 import Data.Array as A
-import Data.Foldable (foldl)
+import Data.Foldable as F
+import Data.Monoid (Monoid, mempty)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..))
@@ -41,6 +42,18 @@ instance sampleGroupIsForeign :: IsForeign SampleGroup where
   read json = do
     sg <- read json
     pure $ SampleGroup sg
+
+foldMap :: forall m. (Monoid m) => (FocusPointInfo -> m) -> SampleGroup -> m
+foldMap f (SampleGroup sg) = F.foldMap f sg
+
+-- these are too specific right now
+{--instance sampleGroupFunctor :: Functor SampleGroup where--}
+  {--map f (SampleGroup sg) = SampleGroup $ map f sg--}
+
+{--instance sampleGroupFoldable :: F.Foldable SampleGroup where--}
+  {--foldr f b (SampleGroup sg) = F.foldr f b sg--}
+  {--foldl f b (SampleGroup sg) = F.foldl f b sg--}
+  {--foldMap = foldMap--}
 
 instance focusPointEq :: Eq FocusPointInfo where
   eq (FocusPointInfo fp1) (FocusPointInfo fp2) = fp1.id == fp2.id
@@ -106,16 +119,10 @@ flattenMetrics dim sg'@(SampleGroup sg) =
   procDs d (FocusPointInfo ds) = metrics (fromJust $ ds.slices !! d)
 
 combineMaps :: Array (SM.StrMap Number) -> SM.StrMap (Array Number)
-combineMaps ms = 
-  foldl mergeMaps SM.empty ms
+combineMaps = F.foldMap mergeMaps
 
-mergeMaps :: SM.StrMap (Array Number) -> SM.StrMap Number -> SM.StrMap (Array Number)
-mergeMaps out m = 
-  SM.fold (\o k v -> SM.alter (merge v) k o) out m
-
-merge :: Number -> Maybe (Array Number) -> Maybe (Array Number)
-merge x Nothing = Just [x]
-merge x (Just xs) = Just $ snoc xs x
+mergeMaps :: SM.StrMap Number -> SM.StrMap (Array Number)
+mergeMaps = map pure
 
 getFocusPoint :: Int -> SampleGroup -> Maybe FocusPointInfo
 getFocusPoint i (SampleGroup sg) = sg !! i
