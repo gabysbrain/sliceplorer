@@ -1,6 +1,6 @@
 module App.GroupView where
 
-import Prelude hiding (div)
+import Prelude (map, ($), show, (++))
 import Data.StrMap as SM
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
@@ -12,7 +12,6 @@ import Pux.Html.Attributes (className, key)
 import Stats (Histogram, histogram, histogram', histRanges)
 import Util (mapCombine, zipMap)
 import App.Core (AppData)
-import Debug.Trace
 
 import Data.Slices (yLoc)
 import Data.Samples (combineMaps)
