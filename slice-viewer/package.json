@@ -52,9 +52,9 @@
     "style-loader": "^0.13.1",
     "through": "^2.3.8",
     "transform-loader": "^0.2.3",
-    "webpack": "^1.12.14",
-    "webpack-dev-middleware": "^1.6.1",
-    "webpack-hot-middleware": "^2.10.0",
+    "webpack": "^2.1.0-beta.25",
+    "webpack-dev-middleware": "^1.8.3",
+    "webpack-hot-middleware": "^2.12.2",
     "webpack-strip": "^0.1.0"
   }
 }

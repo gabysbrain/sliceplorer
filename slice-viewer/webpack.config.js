@@ -9,7 +9,6 @@ var config = {
     'webpack-hot-middleware/client?reload=true',
     path.join(__dirname, 'support/index.js'),
   ],
-  debug: true,
   devtool: 'cheap-module-eval-source-map',
   output: {
     path: path.resolve('./static/dist'),
@@ -17,8 +16,12 @@ var config = {
     publicPath: '/'
   },
   module: {
-    loaders: [
-      { test: /\.js$/, loader: 'source-map-loader', exclude: /node_modules|bower_components/ },
+    rules: [
+      { 
+        test: /\.js$/, 
+        loader: 'source-map-loader', 
+        exclude: /node_modules|bower_components/ 
+      },
       {
         test: /\.purs$/,
         loader: 'purs-loader',
@@ -30,18 +33,32 @@ var config = {
           }
         }
       },
-      { test: /\.scss$/, loaders: ['style', 'css?sourceMap', 'sass?sourceMap'] }
+      { 
+        test: /\.scss$/, 
+        use: [
+          { loader: 'style-loader' }, 
+          { loader: 'css-loader?sourceMap' }, 
+          {
+            loader: 'sass-loader?sourceMap',
+            options: {
+              includePaths: [
+                path.resolve(__dirname, './bower_components/foundation-sites/scss/'),
+                path.resolve(__dirname, './bower_components/')
+              ]
+            }
+          }
+        ]
+      }
     ],
-  },
-  sassLoader: {
-    includePaths: [path.resolve(__dirname, './bower_components/foundation-sites/scss/'),
-                   path.resolve(__dirname, './bower_components/')]
   },
   plugins: [
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('development')
     }),
-    new webpack.optimize.OccurenceOrderPlugin(true),
+    new webpack.optimize.OccurrenceOrderPlugin(true),
+    new webpack.LoaderOptionsPlugin({
+      debug: true
+    }),
     new webpack.SourceMapDevToolPlugin({
       filename: '[file].map',
       moduleFilenameTemplate: '[absolute-resource-path]',
@@ -56,15 +73,16 @@ var config = {
     new webpack.NoErrorsPlugin(),
   ],
   resolveLoader: {
-    root: path.join(__dirname, 'node_modules')
+    modules: [
+      path.join(__dirname, 'node_modules')
+    ]
   },
   resolve: {
-    root: './node_modules',
-    modulesDirectories: [
+    modules: [
       'node_modules',
       'bower_components'
     ],
-    extensions: ['', '.js', '.purs']
+    extensions: ['.js', '.purs']
   },
 };
 
