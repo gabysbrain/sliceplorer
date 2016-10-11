@@ -16,13 +16,17 @@ class MyEncoder(json.JSONEncoder):
     except AttributeError:
       return str(o)
 
-@app.route('/slice', methods = ['GET'])
-def slices():
-  s = [{'dataset': ds, 'dims': d} for ds,d in slice_list()]
-  resp = Response(response=json.dumps(s, cls=MyEncoder),
+def tojson(obj):
+  resp = Response(response=json.dumps(obj, cls=MyEncoder),
       status=200, mimetype="application/json")
   resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
   return resp
+  
+
+@app.route('/slice', methods = ['GET'])
+def slices():
+  s = [{'dataset': ds, 'dims': d} for ds,d in slice_list()]
+  return tojson(s)
 
 @app.route('/slice/<function>/<int:dims>/<int:limit>', methods = ['GET'])
 def slice_req(function, dims, limit):
@@ -30,10 +34,7 @@ def slice_req(function, dims, limit):
   s = list(itertools.islice(s, limit))
   s = identify_clusters(s)
   s = slice_neighbors(s)
-  resp = Response(response=json.dumps(s, cls=MyEncoder),
-      status=200, mimetype="application/json")
-  resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
-  return resp
+  return tojson(s)
 
 if __name__ == '__main__':
   app.debug = True
