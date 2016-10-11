@@ -1,0 +1,1 @@
+web: gunicorn stats_server:app
