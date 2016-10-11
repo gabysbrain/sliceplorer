@@ -21,7 +21,6 @@ Pillow==3.2.0
 ptyprocess==0.5.1
 pyDOE==0.3.8
 pygraphviz==1.3.1
-pylab==0.1.3
 PyMonad==1.3
 pyparsing==2.1.4
 python-dateutil==2.5.3
