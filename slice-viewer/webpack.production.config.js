@@ -21,8 +21,13 @@ module.exports = {
           bundle: true,
           warnings: false
         }
-      }
+      },
+      { test: /\.scss$/, loaders: ['style', 'css?sourceMap', 'sass?sourceMap'] }
     ],
+  },
+  sassLoader: {
+    includePaths: [path.resolve(__dirname, './bower_components/foundation-sites/scss/'),
+                   path.resolve(__dirname, './bower_components/')]
   },
   plugins: [
     new webpack.DefinePlugin({
