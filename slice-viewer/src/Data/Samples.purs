@@ -5,15 +5,15 @@ import Data.Slices (Slice(..), metrics)
 import Data.Array (length, nub, take, concat, snoc, (!!))
 import Data.Array as A
 import Data.Foldable as F
-import Data.Monoid (Monoid, mempty)
 import Data.Maybe (Maybe(Just, Nothing))
-import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..))
 import Data.StrMap as SM
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
 import Control.Monad.Eff.Exception (Error, error)
 import Control.Monad.Aff (Aff, attempt)
 import Network.HTTP.Affjax (AJAX, get)
+import Util (unsafeJust)
+import Control.Monad.Except (runExcept)
 
 import Stats (Histogram, histogram)
 
@@ -43,12 +43,8 @@ instance sampleGroupIsForeign :: IsForeign SampleGroup where
     sg <- read json
     pure $ SampleGroup sg
 
-foldMap :: forall m. (Monoid m) => (FocusPointInfo -> m) -> SampleGroup -> m
-foldMap f (SampleGroup sg) = F.foldMap f sg
-
 instance focusPointEq :: Eq FocusPointInfo where
   eq (FocusPointInfo fp1) (FocusPointInfo fp2) = fp1.id == fp2.id
-    --fp1.dims == fp2.dims && fp1.focusPoint == fp2.focusPoint && fp1.slices == fp2.slices
 
 type MetricRangeFilter =
   { metric :: String
@@ -58,7 +54,7 @@ type MetricRangeFilter =
 
 jsonSamples :: forall eff. String -> Int -> Int -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
 jsonSamples fname d n = do
-  let url = "http://localhost:5000/slice/" ++ fname ++ "/" ++ (show d) ++ "/" ++ (show n)
+  let url = "http://localhost:5000/slice/" <> fname <> "/" <> (show d) <> "/" <> (show n)
   --res <- attempt $ get "/data/test.csv"
   res <- attempt $ get url
   let samples = case res of
@@ -70,7 +66,7 @@ head :: SampleGroup -> Maybe FocusPointInfo
 head (SampleGroup sg) = A.head sg
 
 parseJson :: String -> Either Error SampleGroup
-parseJson json = case readJSON json of
+parseJson json = case runExcept $ readJSON json of
                       Left err -> Left (error $ show err)
                       Right res -> Right res
 
@@ -111,7 +107,7 @@ flattenMetrics dim sg'@(SampleGroup sg) =
   tmp = map (procDs dim) sg
 
   procDs :: Int -> FocusPointInfo -> SM.StrMap Number
-  procDs d (FocusPointInfo ds) = metrics (fromJust $ ds.slices !! d)
+  procDs d (FocusPointInfo ds) = metrics (unsafeJust $ ds.slices !! d)
 
 combineMaps :: Array (SM.StrMap Number) -> SM.StrMap (Array Number)
 combineMaps = F.foldMap mergeMaps

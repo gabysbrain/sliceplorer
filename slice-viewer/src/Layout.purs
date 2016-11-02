@@ -1,5 +1,6 @@
 module App.Layout where
 
+import App.NotFound as NotFound
 import App.FunctionSlices as Slices
 import App.Routes (Route(Home, NotFound))
 import Prelude (($), map)
@@ -33,11 +34,11 @@ update (SliceView action) state =
    mapEffects SliceView (mapState (\s -> state {slices=s}) (Slices.update action state.slices))
 
 view :: State -> Html Action
-view state@{route=Home} =
+view state@{route: Home} =
   div
     []
     [ h1 [] [ text "Slice viewer" ]
     , map SliceView $ Slices.view state.slices
     ]
-view state@{route=NotFound} = App.NotFound.view state
+view state@{route: NotFound} = NotFound.view state
 

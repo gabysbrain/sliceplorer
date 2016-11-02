@@ -5,11 +5,9 @@ import Data.Array (span, snoc, cons, sort, length, zip, filter, head, last)
 import Data.Foldable (maximum, minimum)
 import Data.Tuple (Tuple(..))
 import Data.Int (toNumber)
-import Data.Maybe.Unsafe (fromJust)
+import Util (unsafeJust)
 
 import Data.ValueRange (ValueRange, minVal, maxVal)
-
-import Debug.Trace
 
 type Histogram =
   { min :: Number
@@ -36,9 +34,9 @@ histogram numBins nums = histogram' (binRanges numBins nums) nums
 
 histogram' :: Array ValueRange -> Array Number -> Histogram
 histogram' binSpecs nums =
-  { min: (fromJust $ head bins).start
-  , max: (fromJust $ last bins).end
-  , width: (fromJust $ head bins).end - (fromJust $ head bins).start
+  { min: (unsafeJust $ head bins).start
+  , max: (unsafeJust $ last bins).end
+  , width: (unsafeJust $ head bins).end - (unsafeJust $ head bins).start
   , numBins: length binSpecs
   , binStarts: map (\x -> x.start) bins
   , binEnds: map (\x -> x.end) bins
@@ -54,8 +52,8 @@ binRanges numBins nums =
      then [Tuple mn mx] 
      else zip (range' numBins mn width []) (range' numBins (mn+width) width [])
   where
-  mx = fromJust $ maximum nums
-  mn = fromJust $ minimum nums
+  mx = unsafeJust $ maximum nums
+  mn = unsafeJust $ minimum nums
   width = (mx-mn) / (toNumber numBins)
 
 histRanges :: Histogram -> Array ValueRange

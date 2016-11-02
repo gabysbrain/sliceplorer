@@ -135,7 +135,7 @@ groups :: forall a. (a -> Number) -> DataFrame a -> Array (GroupRow a)
 groups f xs = foldl (\x t -> x `snoc` (convert' xs t)) [] $ M.toList groupMap
   where
   groupMap :: M.Map Number (Array a)
-  groupMap = M.fromFoldableWith (++) $ groupIds f $ run xs
+  groupMap = M.fromFoldableWith (<>) $ groupIds f $ run xs
 
 convert' :: forall a. DataFrame a -> Tuple Number (Array a) -> GroupRow a
 convert' p (Tuple gid vs) = 

@@ -1,11 +1,10 @@
 module Vis.Vega.Slices where
 
 import Prelude 
-import Data.Function (runFn2)
+import Data.Function.Uncurried (runFn2)
 import Data.Array (concatMap, mapMaybe, snoc, last, findIndex, findLastIndex, (!!))
 import Data.Foldable (foldl)
 import Data.Maybe
-import Data.Maybe.Unsafe (fromJust)
 import Data.Tuple (Tuple, fst, snd)
 import Data.Nullable as N
 import Pux.Html (Html, Attribute)
@@ -18,9 +17,9 @@ import Data.SliceSample as Slice
 import Data.Slices (Sample(..), xLoc, yLoc)
 import Data.ValueRange (ValueRange, minVal, maxVal)
 
-import Vis.Vega (dataAttr, toVegaData)
+import Util (unsafeJust)
 
-import Debug.Trace
+import Vis.Vega (dataAttr, toVegaData)
 
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
@@ -85,7 +84,7 @@ sample2slice :: Slice.SliceSample -> Array VegaSlicePoint
 sample2slice (Slice.SliceSample s) =
   map convertSample s.slice
   where 
-  focusPtX = fromJust $ s.focusPoint !! s.d
+  focusPtX = unsafeJust $ s.focusPoint !! s.d
   convertSample (Sample s') = 
     { slice_id: s.focusPointId
     , d: s.d
@@ -99,15 +98,15 @@ predictValue :: Array Sample -> Number -> Number
 predictValue slice x = 
   let upper = findIndex (\x' -> x <= xLoc x') slice
    in case upper of
-           Just u | u == 0 -> yLoc $ fromJust (slice !! 0)
+           Just u | u == 0 -> yLoc $ unsafeJust (slice !! 0)
            -- ideally we average the neighboring slice values to compute 
            -- the focus point y-value
-           Just u  -> lerp (xLoc $ fromJust (slice !! u)) 
-                           (xLoc $ fromJust (slice !! (u-1)))
-                           (yLoc $ fromJust (slice !! u)) 
-                           (yLoc $ fromJust (slice !! (u-1)))
+           Just u  -> lerp (xLoc $ unsafeJust (slice !! u)) 
+                           (xLoc $ unsafeJust (slice !! (u-1)))
+                           (yLoc $ unsafeJust (slice !! u)) 
+                           (yLoc $ unsafeJust (slice !! (u-1)))
                            x
-           Nothing -> yLoc $ fromJust (last slice)
+           Nothing -> yLoc $ unsafeJust (last slice)
 
 lerp :: Number -> Number -> Number -> Number -> Number -> Number
 lerp x1 x2 y1 y2 x =

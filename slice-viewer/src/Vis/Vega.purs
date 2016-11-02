@@ -28,7 +28,7 @@ specAttr :: forall a. VegaSpec -> Attribute a
 specAttr = attr "spec"
 
 vegaChart :: forall a. Array (Attribute a) -> VegaSpec -> Data -> Html a
-vegaChart attrs s d = fromReact (attrs ++ [sa, da]) []
+vegaChart attrs s d = fromReact (attrs <> [sa, da]) []
   where
     sa = specAttr s
     da = dataAttr d

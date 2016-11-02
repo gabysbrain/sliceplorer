@@ -1,7 +1,7 @@
 module Vis.Vega.Histogram where
 
 import Prelude
-import Data.Function (runFn2)
+import Data.Function.Uncurried (runFn2)
 import Data.Maybe (Maybe(..))
 import Data.Array (zipWith)
 import Data.Nullable as N

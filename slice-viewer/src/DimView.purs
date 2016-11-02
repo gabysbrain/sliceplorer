@@ -5,14 +5,13 @@ import Data.Array (modifyAt, zipWith, concatMap)
 import Data.Foldable (elem, find, minimum, maximum)
 import Data.Int as I
 import Data.Maybe
-import Data.Maybe.Unsafe (fromJust)
 import Data.StrMap as SM
 import Data.Tuple (Tuple(..), uncurry)
 import Stats (Histogram, histogram, histogram', histRanges)
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, key)
 --import Pux.Html.Events (onChange, FormEvent)
-import Util (mapEnum, mapCombine, zipMap)
+import Util (mapEnum, mapCombine, zipMap, unsafeJust)
 
 import Data.Slices (yLoc)
 import Data.Samples (combineMaps)
@@ -50,14 +49,14 @@ init origDf dn df =
   { dimName: dn
   , samples: df
   , showClusters: false
-  , sliceViewRange: fromJust svRange
+  , sliceViewRange: unsafeJust svRange
   , sliceView: SV.init df
   , clusterSliceView: CSV.init df
   , histogramRanges: origDataHists
   , histogramStates: map H.init $ metricHistograms' origDataRngs df
   }
   where 
-  svRange = DF.range (\(Slice.SliceSample s) -> fromJust $ maximum $ map yLoc s.slice) origDf
+  svRange = DF.range (\(Slice.SliceSample s) -> unsafeJust $ maximum $ map yLoc s.slice) origDf
   origDataHists = metricHistograms 11 origDf
   origDataRngs = map histRanges origDataHists
 
@@ -141,7 +140,7 @@ viewMetricHistogram name h st =
     ]
   where
   rng = Tuple h.min h.max
-  maxCount = fromJust $ maximum h.counts
+  maxCount = unsafeJust $ maximum h.counts
 
 metricHistograms :: Int -> AppData -> SM.StrMap Histogram
 metricHistograms bins df = map (histogram bins) $ metricData df
@@ -152,7 +151,7 @@ metricHistograms' binMap df = map (uncurry histogram') $ zipMap binMap (metricDa
 histogramRanges :: AppData -> SM.StrMap ValueRange
 histogramRanges df = map rng $ metricData df
   where
-  rng xs = Tuple (fromJust $ minimum xs) (fromJust $ maximum xs)
+  rng xs = Tuple (unsafeJust $ minimum xs) (unsafeJust $ maximum xs)
 
 metricData :: AppData -> SM.StrMap (Array Number)
 metricData df = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps

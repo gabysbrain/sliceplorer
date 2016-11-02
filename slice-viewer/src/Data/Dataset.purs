@@ -8,6 +8,7 @@ import Data.Foldable (find, elem)
 import Data.Foreign.Class (class IsForeign, readProp, readJSON)
 import Control.Monad.Eff.Exception (Error, error)
 import Control.Monad.Aff (Aff, attempt)
+import Control.Monad.Except (runExcept)
 import Network.HTTP.Affjax (AJAX, get)
 
 type Datasets = Array Dataset
@@ -32,7 +33,7 @@ jsonDatasets = do
   pure datasets
 
 parseJson :: String -> Either Error Datasets
-parseJson json = case readJSON json of
+parseJson json = case runExcept $ readJSON json of
                       Left err -> Left (error $ show err)
                       Right res -> Right res
 

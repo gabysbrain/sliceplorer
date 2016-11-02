@@ -1,8 +1,7 @@
 module App.FunctionSlices where
 
-import Prelude hiding (div)
+import Prelude hiding (div, max, min)
 import Data.Maybe (Maybe(Just, Nothing))
-import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..))
 import Data.Array ((..), length, head)
 import Data.Int (fromString)
@@ -17,6 +16,8 @@ import Pux.Html.Attributes (className, disabled, value, type_, min, max, step)
 import Data.Samples (SampleGroup, jsonSamples)
 import Data.Dataset (Datasets, Dataset, jsonDatasets, lookup, dsName, dsDims, validDim)
 import App.Overview as Overview
+
+import Util (unsafeJust)
 
 type DatasetInfo =
   { datasets :: Datasets
@@ -59,7 +60,7 @@ update RequestDatasets state =
   { state: LoadingDatasets
   , effects: [ do
       datasets <- jsonDatasets
-      return $ UpdateDatasets datasets
+      pure $ UpdateDatasets datasets
     ]
   }
 update (UpdateDatasets (Left err)) state =
@@ -72,7 +73,7 @@ update (RequestSamples) state = case dsInfo state of
   Just dsi -> { state: LoadingSamples dsi
               , effects: [ do
                   samples <- jsonSamples dsi.function dsi.dim dsi.sampleLimit
-                  return $ UpdateSamples samples
+                  pure $ UpdateSamples samples
                 ]
               }
   Nothing -> noEffects state
@@ -88,7 +89,7 @@ update (UpdateSamples (Right sg)) state = case dsInfo state of
   Nothing -> noEffects state
 update (DimChange ev) state = case dsInfo state of
   -- TODO: maybe some error checking?
-  Just dsi -> update RequestSamples (LoadingSamples $ dsi {dim=fromJust $ fromString ev.target.value})
+  Just dsi -> update RequestSamples (LoadingSamples $ dsi {dim=unsafeJust $ fromString ev.target.value})
   Nothing -> noEffects state
 update (FunctionChange ev) state = case dsInfo state of
   -- TODO: maybe some error checking?
@@ -102,18 +103,18 @@ update (UpdateSampleLimit ev) state =
   dsi' = do
     dsi <- dsInfo state
     n' <- fromString ev.target.value
-    return $ dsi {sampleLimit=n'}
-update (OverviewView action) (SamplesLoaded st@{overview=o}) =
+    pure $ dsi {sampleLimit=n'}
+update (OverviewView action) (SamplesLoaded st@{overview:o}) =
   noEffects $ SamplesLoaded (st {overview=Overview.update action o})
 update (OverviewView action) state = noEffects state
 
 updateFunction :: String -> DatasetInfo -> State
 updateFunction fname dsi = case lookup fname dsi.datasets of
   Nothing -> SampleLoadingError { dataset: dsi
-                                , error: error $ "dataset '" ++ fname ++ "' not found" 
+                                , error: error $ "dataset '" <> fname <> "' not found" 
                                 }
   Just ds -> LoadingSamples $ dsi { function = fname
-                                  , dim = if validDim dsi.dim ds then dsi.dim else fromJust $ head $ dsDims ds
+                                  , dim = if validDim dsi.dim ds then dsi.dim else unsafeJust $ head $ dsDims ds
                                   }
 
 view :: State -> Html Action
@@ -124,12 +125,12 @@ view (LoadingSamples dsi) =
     [ viewControls dsi
     , viewSpinner
     ]
-view (SampleLoadingError {dataset=dsi, error=err}) =
+view (SampleLoadingError {dataset: dsi, error: err}) =
   div []
     [ viewControls dsi
     , viewError err
     ]
-view (SamplesLoaded {dataset=dsi, overview=o}) =
+view (SamplesLoaded {dataset: dsi, overview: o}) =
   div []
     [ viewControls dsi
     , viewSamples o
@@ -141,7 +142,7 @@ viewControls dsi = viewControls' dsi (lookup dsi.function dsi.datasets)
 viewControls' :: DatasetInfo -> Maybe Dataset -> Html Action
 viewControls' dsi Nothing =
   div []
-    [ viewError $ error ("dataset '" ++ dsi.function ++ "' not found") ]
+    [ viewError $ error ("dataset '" <> dsi.function <> "' not found") ]
 viewControls' dsi (Just ds) =
   div [] 
     [ div [className "data-controls"] 
@@ -184,7 +185,7 @@ viewSpinner :: Html Action
 viewSpinner = 
   div [className "loading-panel"]
     [ div [className "spinner"] $
-        map (\i -> div [className ("spinner-stage-" ++ (show i))] []) (1..12)
+        map (\i -> div [className ("spinner-stage-" <> (show i))] []) (1..12)
     , div [className "spinner-text"] [text "Loading..."]
     ]
 

@@ -2,10 +2,11 @@ module Util where
 
 import Prelude
 import Data.Array (zipWith, length, (..))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (foldl)
 import Data.StrMap as SM
+import Partial.Unsafe (unsafePartial)
 
 mapEnum :: forall a b. (Int -> a -> b) -> Array a -> Array b
 mapEnum f xs = zipWith f (0..(length xs - 1)) xs
@@ -25,4 +26,7 @@ zipMap m1 m2 =
   handleFold mm k v1 = case SM.lookup k m2 of
                             Just v2 -> SM.insert k (Tuple v1 v2) mm
                             Nothing -> mm
+
+unsafeJust :: forall a. Maybe a -> a
+unsafeJust x = unsafePartial (fromJust x)
 

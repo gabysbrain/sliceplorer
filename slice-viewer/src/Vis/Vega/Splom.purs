@@ -1,7 +1,7 @@
 module Vis.Vega.Splom where
 
 import Prelude hiding (div)
-import Data.Function (runFn2)
+import Data.Function.Uncurried (runFn2)
 import Data.StrMap as SM 
 import Data.Tuple (Tuple(..))
 import Data.Foldable (foldl)
@@ -74,5 +74,5 @@ splomData df = map (\(Slice.SliceSample s) -> splomDatum s.focusPointId s.focusP
 splomDatum :: Int -> FocusPoint -> VegaPoint
 splomDatum id fp = SM.fromFoldable $ named `snoc` (Tuple "id" (toNumber id))
   where
-  named = mapEnum (\i x -> Tuple ("x"++(show (i+1))) x) $ fp
+  named = mapEnum (\i x -> Tuple ("x"<>(show (i+1))) x) $ fp
 

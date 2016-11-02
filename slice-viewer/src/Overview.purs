@@ -112,8 +112,8 @@ updateDimViewFocusPoints dvFp dvStates =
   mapEnum updateDV dvStates
   where
   dvFp' = DF.run dvFp
-  updateDV i state = case find (\{group=g} -> g==I.toNumber i) dvFp' of
-    Just {data=d} -> DV.update (DV.FocusPointFilter d) state
+  updateDV i state = case find (\{group:g} -> g==I.toNumber i) dvFp' of
+    Just {data:d} -> DV.update (DV.FocusPointFilter d) state
     Nothing       -> DV.update (DV.FocusPointFilter DF.empty) state
 
 updateFocusPoint :: AppData -> State -> State
@@ -143,5 +143,5 @@ viewDims state =
   initDV d s = map (DimViewAction d) $ DV.view s
 
 dimName :: Array String -> Int -> String
-dimName dimNames d = fromMaybe ("Dim " ++ show d) $ dimNames !! d
+dimName dimNames d = fromMaybe ("Dim " <> show d) $ dimNames !! d
 
