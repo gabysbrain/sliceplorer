@@ -5,6 +5,7 @@ module DataFrame (
   , rows
   , run
   , runOrig
+  , mapRows
   , filterNone
   , filterAll
   , takeFilter
@@ -113,6 +114,9 @@ uniqueBy f p = LowerLevel
   , results: defer (\_ -> runOp op $ run p)
   }
   where op = Unique f
+
+mapRows :: forall a b. (a -> b) -> DataFrame a -> DataFrame b
+mapRows f df = init $ map f $ run df
 
 -- TODO: make groups work for all Ords
 groupBy :: forall a. (a -> Number) -> DataFrame a -> DataFrame (GroupRow a)

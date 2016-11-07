@@ -26,8 +26,6 @@ import Vis.Vega.Slices as SV
 type State =
   { key :: Int -- used to force remounting
   , samples :: AppData
-  , groupName :: String
-  , groupId :: Int
   , sliceViewRange :: ValueRange
   , sliceView :: SV.State
   , histogramRanges :: SM.StrMap Histogram
@@ -40,12 +38,10 @@ data Action
   | SliceViewAction SV.Action
   | HistoAction String H.Action
 
-init :: AppData -> Int -> String -> Int -> AppData -> State
-init origData key gn g df =
+init :: AppData -> Int -> AppData -> State
+init origData key df =
   { key: key
   , samples: df
-  , groupName: gn
-  , groupId: g
   , sliceViewRange: fromJust svRange
   , sliceView: SV.init df
   , histogramRanges: origDataHists
@@ -96,18 +92,10 @@ neighborFilter fpIds (Slice.SliceSample fp) = elem fp.focusPointId fpIds
 
 view :: State -> Html Action
 view state =
-  div [className "dim-view", key $ show state.key]
-    [ viewName state
-    , div [className "dim-charts"] 
-        [ viewAllSlices state
-        , viewMetricHistograms state
-        ]
+  div [className "dim-charts"] 
+    [ viewAllSlices state
+    , viewMetricHistograms state
     ]
-
-viewName :: State -> Html Action
-viewName state = div [className "dim-name"] [text groupName]
-  where
-  groupName = state.groupName ++ " " ++ (show state.groupId)
 
 viewAllSlices :: State -> Html Action
 viewAllSlices state =
