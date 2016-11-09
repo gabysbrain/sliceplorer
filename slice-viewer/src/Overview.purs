@@ -1,7 +1,7 @@
 module App.Overview where
 
 import Prelude hiding (div)
-import Data.Array (modifyAt, length)
+import Data.Array (modifyAt)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.Unsafe (fromJust)
 import Data.StrMap as SM

@@ -37,8 +37,8 @@ init origDf dn df =
   --, samples: df
   , showClusters: false
   , fullView: GV.init origDf 0 df
-  , clusterViews: mapEnum (\i {group=_,data=df'} -> GV.init origDf i df') 
-                          (DF.run $ clusterGroups df)
+  , clusterViews: map (\{group=g,data=df'} -> GV.init origDf (I.round g) df')
+                      (DF.run $ clusterGroups df)
   }
 
 clusterGroups :: AppData -> GroupData
@@ -67,6 +67,7 @@ viewGroup gid state = map (GroupViewAction gid) $ GV.view state
 update :: Action -> State -> State
 update (GroupViewAction i a) state =
   updateGroupView i a state
+update (ShowClusterView s) state = state {showClusters=s}
 update (FocusPointFilter fp) state = state
   { fullView = GV.update (GV.FocusPointFilter fp) state.fullView
   , clusterViews = map updateFp state.clusterViews
