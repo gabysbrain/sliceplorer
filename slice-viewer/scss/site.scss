@@ -49,6 +49,15 @@ h3 {
     justify-content: center;
   }
 
+  .group-views {
+    display: table-cell;
+    //display: block;
+
+    .dim-charts {
+      display: block;
+    }
+  }
+
   .dim-charts {
     border-left: 1px solid lightgrey;
     display: table-cell;
