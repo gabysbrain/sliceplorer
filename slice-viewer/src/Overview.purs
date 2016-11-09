@@ -12,7 +12,7 @@ import Pux.Html.Attributes (className, value)
 import Pux.Html.Events (onChange, FormEvent)
 import Util (mapEnum)
 import Stats (HistBin)
-import App.Core (AppData, GroupData)
+import App.Core (AppData, DimData)
 
 import App.SliceSampleView as SSV
 import Vis.Vega.Splom as Splom
@@ -30,7 +30,6 @@ type State =
   { samples :: AppData
   , datasetName :: String
   , dims :: Int
-  , dimViewKey :: Int
   , groupMethod :: GroupMethod
   , focusPointFilter :: AppData
   --, metricRangeFilter :: Maybe MetricRangeFilter
@@ -54,29 +53,17 @@ init name sg =
   { samples: df
   , datasetName: name
   , dims: dims sg
-  , dimViewKey: length gdf
   , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
   , sliceSampleView: SSV.init (dims sg) df
-  , dimViews: map (\{group: d, data: s} -> DV.init df (gn ++ show (I.round d)) s) gdf
+  , dimViews: map (\{group: d, data: s} -> DV.init df ("Dim " ++ show (I.round d)) s) gdf
   }
   where 
   df = DF.init $ Slice.create sg
-  gdf = DF.run $ groupSamples GroupByDim df
-  gn = dimViewName GroupByDim
-
-groupByNull :: Slice.SliceSample -> Number
-groupByNull = const 0.0
+  gdf = DF.run $ DF.groupBy groupByDim df
 
 groupByDim :: Slice.SliceSample -> Number
 groupByDim (Slice.SliceSample s) = I.toNumber s.d
-
-groupByCluster :: Slice.SliceSample -> Number
-groupByCluster (Slice.SliceSample s) = I.toNumber s.clusterId
-
-dimViewName :: GroupMethod -> String
-dimViewName GroupByDim = "Dim"
-dimViewName GroupByCluster = "Cluster"
 
 filterFocusIds :: Array Int -> Slice.SliceSample -> Boolean
 filterFocusIds ids (Slice.SliceSample s) = elem s.focusPointId ids
@@ -87,29 +74,16 @@ filterRange dim metric hb (Slice.SliceSample s) =
        Just v -> v >= hb.start && v <= hb.end
        Nothing -> false
 
-groupSamples :: GroupMethod 
-             -> AppData
-             -> DF.DataFrame {group :: Number, data :: GroupData}
-groupSamples method df = DF.mapRows (clusterGroup method) $ DF.groupBy groupByDim df
-  where
-  clusterGroup GroupByDim     {group=d,data=df'} = {group:d,data:DF.groupBy groupByNull df'}
-  clusterGroup GroupByCluster {group=d,data=df'} = {group:d,data:DF.groupBy groupByCluster df'}
-
 update :: Action -> State -> State
 update (ChangeGroupMethod ev) state =
   case ev.target.value of
-       "Dims"    -> state { dimViewKey = state.dimViewKey + (length $ initDVs GroupByDim)
-                          , groupMethod = GroupByDim
-                          , dimViews = initDVs GroupByDim
+       "Dims"    -> state { groupMethod = GroupByDim
+                          , dimViews = map (DV.update (DV.ShowClusterView false)) state.dimViews
                           }
-       "Clusters" -> state { dimViewKey = state.dimViewKey + (length $ initDVs GroupByCluster)
-                           , groupMethod = GroupByCluster
-                           , dimViews = initDVs GroupByCluster
+       "Clusters" -> state { groupMethod = GroupByCluster
+                           , dimViews = map (DV.update (DV.ShowClusterView true)) state.dimViews
                            }
        otherwise -> state
-  where
-  initDVs gm = mapEnum (\i {group: d, data: s} -> DV.init state.samples ((dimViewName gm) ++ show (I.round d)) s) 
-                       (DF.run $ groupSamples gm state.samples)
 -- FIXME: see if there's a better way than this deep inspection
 update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
   updateFocusPoint (DF.rowFilter (filterFocusIds vp') state.samples) state
@@ -136,13 +110,12 @@ updateDimView dim a state =
        Nothing -> state
        Just newDVs -> state {dimViews=newDVs}
 
-updateDimViewFocusPoints :: Array {group :: Int, data :: GroupData} 
-                         -> Array DV.State 
-                         -> Array DV.State
-updateDimViewFocusPoints df dvStates =
+updateDimViewFocusPoints :: DimData -> Array DV.State -> Array DV.State
+updateDimViewFocusPoints dvFp dvStates =
   mapEnum updateDV dvStates
   where
-  updateDV i state = case find (\{group=g} -> g==i) df of
+  dvFp' = DF.run dvFp
+  updateDV i state = case find (\{group=g} -> g==I.toNumber i) dvFp' of
     Just {data=d} -> DV.update (DV.FocusPointFilter d) state
     Nothing       -> DV.update (DV.FocusPointFilter DF.empty) state
 
@@ -150,13 +123,10 @@ updateFocusPoint :: AppData -> State -> State
 updateFocusPoint fp state = state
   { focusPointFilter = fp
   , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
-  , dimViews = updateDimViewFocusPoints groupedViews state.dimViews
+  , dimViews = updateDimViewFocusPoints dvFp state.dimViews
   }
   where
-  -- need to group the focus points here to be 
-  -- passed down to the dim views and such
-  groupedViews = map (\s -> s {group=I.round s.group}) $ 
-                     DF.run $ groupSamples state.groupMethod fp
+  dvFp = DF.groupBy groupByDim fp
 
 view :: State -> Html Action
 view state =
