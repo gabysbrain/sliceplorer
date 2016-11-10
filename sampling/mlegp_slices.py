@@ -27,7 +27,8 @@ def run_samples(env_file, n, seed=0):
   r.load(env_file)
   mn = list(r.inputs[0])
   mx = list(r.inputs[1])
-  dim = len(mn)
+  dim_names = list(r.colnames(r.get('X', r.m)))
+  dim = len(dim_names)
   X = sample_points(n, dim, mn, mx, seed)
   outputs = np.zeros((n*dim*SAMPLE_N, dim+1))
   outputs[:,:-1] = np.repeat(X, dim*SAMPLE_N, axis=0)
@@ -37,7 +38,7 @@ def run_samples(env_file, n, seed=0):
       outputs[j:(j+SAMPLE_N),d] = slice_samples
   outputs[:,dim] = np.array(r.predict(r.m, outputs[:,:-1]))[:,0]
   newseed = seed + n
-  return outputs, newseed
+  return dim_names, outputs, newseed
 
 if __name__ == '__main__':
   args = parser.parse_args()
@@ -47,7 +48,8 @@ if __name__ == '__main__':
   seed = args.seed
   with open(args.dest, 'wb') as outf:
     for numsamples in chunk(args.n, 1000):
-      x,seed = run_samples(args.gpfile, numsamples, seed)
+      dim_names,x,seed = run_samples(args.gpfile, numsamples, seed)
+      outf.write((",".join(dim_names + ['y']) + "\n").encode('utf-8'))
       np.savetxt(outf, x, fmt="%10.5f", delimiter=",")
   print("final seed: %s" % (seed))
 

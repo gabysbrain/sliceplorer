@@ -60,6 +60,8 @@ if __name__ == '__main__':
   #print(samples(args.function, args.n, args.d, args.seed))
   seed = args.seed
   with open(args.dest, 'wb') as outf:
+    dim_names = ["x%s" % dd for dd in range(1,args.d+1)] + ['y']
+    outf.write((",".join(dim_names) + "\n").encode('utf-8'))
     for numsamples in chunk(args.n, 1000): # keep things small
       x,seed = samples(args.function, numsamples, args.d, seed)
       np.savetxt(outf, x, fmt='%10.5f', delimiter=',')

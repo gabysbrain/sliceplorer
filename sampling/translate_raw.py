@@ -43,6 +43,7 @@ if __name__ == '__main__':
   sample_n = int(argv[1])
   with open(argv[2], "rb") as file:
     get_slice = slice_func(xsize, ysize, zsize, file)
+    print("x1,x2,x3,y")
     for [x,y,z] in sobol_samples(sample_n, xsize, ysize, zsize):
       for d in range(3):
         for s in get_slice(d, x, y, z):

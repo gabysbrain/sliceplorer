@@ -13,12 +13,16 @@ class SliceGroup(object):
 
     self.group_id = group_id
     self.slice = list(s)
-    self.dims = dims
+    self.dim_names = list(xs.columns[:-1])
     self.slices = list(dim_groups(sample_n, xs))
 
   @property
   def num_slice_samples(self):
     return len(self.slices[0].slice)
+
+  @property
+  def dims(self):
+    return len(self.dim_names)
 
 class Slice(object):
   def __init__(self, d, samples):
@@ -41,7 +45,6 @@ def slice_groups(samples):
 
   start_idxs = np.where(samples.iloc[:,0]==samples.iloc[0,0])
   sample_count = start_idxs[0][1]
-  #print(sample_count)
 
   step_size = dims * sample_count
 
@@ -62,11 +65,7 @@ def convert_slices(fname, dims):
   fname = 'slice_samples/%s_%s_slices.csv' % (fname, dims)
   # TODO: check for file existence
 
-  s = pd.read_csv(fname, header=None, dtype='float64')
-
-  # set the column names
-  col_names = ['x%s' % i for i in range(1, len(s.columns))] + ['y']
-  s.columnns = col_names
+  s = pd.read_csv(fname, dtype='float64')
 
   return slice_groups(s)
 
