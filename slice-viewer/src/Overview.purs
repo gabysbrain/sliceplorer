@@ -1,8 +1,8 @@
 module App.Overview where
 
 import Prelude hiding (div)
-import Data.Array (modifyAt)
-import Data.Maybe (Maybe(..))
+import Data.Array (modifyAt, length, (!!))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Maybe.Unsafe (fromJust)
 import Data.StrMap as SM
 import Data.Foldable (elem, find)
@@ -22,14 +22,15 @@ import App.DimView as DV
 import App.GroupView as GV
 import App.TopoSpine as TS
 
-import Data.Samples (SampleGroup, dims)
+import Data.Samples (SampleGroup, dims, dimNames)
 import DataFrame as DF
 import Data.SliceSample as Slice
 
 type State = 
   { samples :: AppData
   , datasetName :: String
-  , dims :: Int
+  --, dims :: Int
+  , dimNames :: Array String
   , groupMethod :: GroupMethod
   , focusPointFilter :: AppData
   --, metricRangeFilter :: Maybe MetricRangeFilter
@@ -52,15 +53,20 @@ init :: String -> SampleGroup -> State
 init name sg =
   { samples: df
   , datasetName: name
-  , dims: dims sg
+  --, dims: dims sg
+  , dimNames: dns
   , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
   , sliceSampleView: SSV.init (dims sg) df
-  , dimViews: map (\{group: d, data: s} -> DV.init df ("Dim " ++ show (I.round d)) s) gdf
+  , dimViews: map (\{group: d, data: s} -> DV.init df (dimName dns (I.floor d)) s) gdf
   }
   where 
   df = DF.init $ Slice.create sg
   gdf = DF.run $ DF.groupBy groupByDim df
+  dns = dimNames sg
+
+nDim :: State -> Int
+nDim state = length state.dimNames
 
 groupByDim :: Slice.SliceSample -> Number
 groupByDim (Slice.SliceSample s) = I.toNumber s.d
@@ -139,7 +145,7 @@ view state =
         ]
     , div [className "overview-info"]
         [ map SliceSampleViewAction $ SSV.view state.sliceSampleView
-        , TS.view state.datasetName state.dims
+        , TS.view state.datasetName (nDim state)
         ]
     , viewDims state
     ]
@@ -149,4 +155,7 @@ viewDims state =
   div [] $ mapEnum initDV state.dimViews
   where
   initDV d s = map (DimViewAction d) $ DV.view s
+
+dimName :: Array String -> Int -> String
+dimName dimNames d = fromMaybe ("Dim " ++ show d) $ dimNames !! d
 

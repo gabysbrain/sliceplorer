@@ -2,7 +2,7 @@ module Data.Samples where
 
 import Prelude
 import Data.Slices (Slice(..), metrics)
-import Data.Array (nub, take, concat, snoc, (!!))
+import Data.Array (length, nub, take, concat, snoc, (!!))
 import Data.Array as A
 import Data.Foldable as F
 import Data.Monoid (Monoid, mempty)
@@ -23,7 +23,7 @@ type FocusPoint = Array Number
 data FocusPointInfo = FocusPointInfo 
   { id          :: Int
   , neighborIds :: Array Int
-  , dims        :: Int
+  , dimNames    :: Array String
   , focusPoint  :: FocusPoint
   , slices      :: Array Slice
   }
@@ -33,10 +33,10 @@ instance focusPointIsForeign :: IsForeign FocusPointInfo where
   read json = do
     i  <- readProp "group_id" json
     ns <- readProp "neighbor_group_ids" json
-    d  <- readProp "dims" json
+    dn <- readProp "dim_names" json
     fp <- readProp "slice" json
     s  <- readProp "slices" json
-    pure $ FocusPointInfo {id: i, neighborIds: ns, dims: d, focusPoint: fp, slices: s}
+    pure $ FocusPointInfo {id: i, neighborIds: ns, dimNames: dn, focusPoint: fp, slices: s}
 
 instance sampleGroupIsForeign :: IsForeign SampleGroup where
   read json = do
@@ -45,15 +45,6 @@ instance sampleGroupIsForeign :: IsForeign SampleGroup where
 
 foldMap :: forall m. (Monoid m) => (FocusPointInfo -> m) -> SampleGroup -> m
 foldMap f (SampleGroup sg) = F.foldMap f sg
-
--- these are too specific right now
-{--instance sampleGroupFunctor :: Functor SampleGroup where--}
-  {--map f (SampleGroup sg) = SampleGroup $ map f sg--}
-
-{--instance sampleGroupFoldable :: F.Foldable SampleGroup where--}
-  {--foldr f b (SampleGroup sg) = F.foldr f b sg--}
-  {--foldl f b (SampleGroup sg) = F.foldl f b sg--}
-  {--foldMap = foldMap--}
 
 instance focusPointEq :: Eq FocusPointInfo where
   eq (FocusPointInfo fp1) (FocusPointInfo fp2) = fp1.id == fp2.id
@@ -97,10 +88,14 @@ subset :: Int -> SampleGroup -> SampleGroup
 subset n (SampleGroup sg) = SampleGroup $ take n sg
 
 dims :: SampleGroup -> Int
-dims sg = 
-  case head sg of
-       Nothing -> 0
-       Just (FocusPointInfo x) -> x.dims
+dims sg = case head sg of
+  Nothing -> 0
+  Just (FocusPointInfo x) -> length x.dimNames
+
+dimNames :: SampleGroup -> Array String
+dimNames sg = case head sg of
+  Nothing -> []
+  Just (FocusPointInfo x) -> x.dimNames
 
 metricHistograms :: Int -> Int -> SampleGroup -> SM.StrMap Histogram
 metricHistograms bins dim sg =
