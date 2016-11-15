@@ -10,10 +10,11 @@ import rpy2.robjects.numpy2ri
 rpy2.robjects.numpy2ri.activate()
 
 importr('mlegp')
+importr('neuralnet')
 
-parser = argparse.ArgumentParser(description='Generate 1D orthogonal slices from mlegp models built in R.')
+parser = argparse.ArgumentParser(description='Generate 1D orthogonal slices from various ml models built in R.')
 parser.add_argument('--seed', default=0, type=int)
-parser.add_argument('gpfile', type=str)
+parser.add_argument('mlfile', type=str)
 parser.add_argument('n', type=int)
 parser.add_argument('dest', type=str)
 
@@ -27,7 +28,11 @@ def run_samples(env_file, n, seed=0):
   r.load(env_file)
   mn = list(r.inputs[0])
   mx = list(r.inputs[1])
-  dim_names = list(r.colnames(r.get('X', r.m)))
+  #if r.rclass(r.m) == "nn":
+  if r.m.rclass[0] == "nn": # rclass is a tuple
+    dim_names = list(r.colnames(r.get('data', r.m)))[:-1]
+  else: # gp
+    dim_names = list(r.colnames(r.get('X', r.m)))
   dim = len(dim_names)
   X = sample_points(n, dim, mn, mx, seed)
   outputs = np.zeros((n*dim*SAMPLE_N, dim+1))
@@ -48,7 +53,7 @@ if __name__ == '__main__':
   seed = args.seed
   with open(args.dest, 'wb') as outf:
     for numsamples in chunk(args.n, 1000):
-      dim_names,x,seed = run_samples(args.gpfile, numsamples, seed)
+      dim_names,x,seed = run_samples(args.mlfile, numsamples, seed)
       outf.write((",".join(dim_names + ['y']) + "\n").encode('utf-8'))
       np.savetxt(outf, x, fmt="%10.5f", delimiter=",")
   print("final seed: %s" % (seed))
