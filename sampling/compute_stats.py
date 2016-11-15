@@ -65,7 +65,8 @@ def convert_slices(fname, dims):
   fname = 'slice_samples/%s_%s_slices.csv' % (fname, dims)
   # TODO: check for file existence
 
-  s = pd.read_csv(fname, dtype='float64')
+  #s = pd.read_csv(fname, dtype='float64')
+  s = pd.read_csv(fname)
 
   return slice_groups(s)
 
