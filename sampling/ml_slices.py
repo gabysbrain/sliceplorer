@@ -11,6 +11,7 @@ rpy2.robjects.numpy2ri.activate()
 
 importr('mlegp')
 importr('neuralnet')
+importr('e1071')
 
 parser = argparse.ArgumentParser(description='Generate 1D orthogonal slices from various ml models built in R.')
 parser.add_argument('--seed', default=0, type=int)
@@ -31,6 +32,8 @@ def run_samples(env_file, n, seed=0):
   #if r.rclass(r.m) == "nn":
   if r.m.rclass[0] == "nn": # rclass is a tuple
     dim_names = list(r.colnames(r.get('data', r.m)))[:-1]
+  if r.m.rclass[0] == "svm":
+    dim_names = list(r.colnames(r.X))
   else: # gp
     dim_names = list(r.colnames(r.get('X', r.m)))
   dim = len(dim_names)
