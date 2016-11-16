@@ -28,6 +28,12 @@ in
       mypypi.rpy2
       mypypi.sobol-seq
     ];
+    
+    bowerComponents = pkgs.buildBowerComponents {
+      name = "sliceplorer";
+      generated = ./bower-packages-generated.nix;
+      src = ./slice-viewer;
+    };
   };
 }
 
