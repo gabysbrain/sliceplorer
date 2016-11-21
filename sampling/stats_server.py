@@ -6,6 +6,7 @@ from compute_stats import convert_slices
 from cluster_slices import identify_clusters
 from slice_neighbors import slice_neighbors
 from slice_list import slice_list
+import optim_trace
 
 app = Flask(__name__)
 
@@ -35,6 +36,16 @@ def slice_req(function, dims, limit):
   s = identify_clusters(s)
   s = slice_neighbors(s)
   return tojson(s)
+
+@app.route('/trace', methods = ['GET'])
+def optim_traces():
+  s = list(optim_trace.trace_list())
+  return tojson(s)
+
+@app.route('/trace/<function>/<int:dims>/<int:run>', methods = ['GET'])
+def get_trace(function, dims, run):
+  s = optim_trace.load_trace(function, dims, run)
+  return tojson(json.loads(s.to_json()))
 
 if __name__ == '__main__':
   app.debug = True
