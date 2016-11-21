@@ -37,7 +37,7 @@ def cluster_slices_within_dims(focus_points):
   # now cluster each dimension individually
   for obs in dim_obs:
     wobs = vq.whiten(obs) # make everything uniform
-    centroids,_ = vq.kmeans(wobs, 6)
+    centroids,_ = vq.kmeans(wobs, 3) # 3 centroids for now
     cids,_ = vq.vq(wobs, centroids)
     cluster_ids.append(cids)
   return cluster_ids # this is an array of cluster ids per dimension
