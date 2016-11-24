@@ -29,10 +29,9 @@ def run_samples(env_file, n, seed=0):
   r.load(env_file)
   mn = list(r.inputs[0])
   mx = list(r.inputs[1])
-  #if r.rclass(r.m) == "nn":
   if r.m.rclass[0] == "nn": # rclass is a tuple
     dim_names = list(r.colnames(r.get('data', r.m)))[:-1]
-  if r.m.rclass[0] == "svm":
+  elif r.m.rclass[0] == "svm":
     dim_names = list(r.colnames(r.X))
   else: # gp
     dim_names = list(r.colnames(r.get('X', r.m)))
