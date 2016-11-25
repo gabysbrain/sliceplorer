@@ -3,7 +3,6 @@ module App.Overview where
 import Prelude hiding (div)
 import Data.Array (modifyAt, length, (!!))
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Maybe.Unsafe (fromJust)
 import Data.StrMap as SM
 import Data.Foldable (elem, find)
 import Data.Int as I
@@ -14,15 +13,13 @@ import Util (mapEnum)
 import Stats (HistBin)
 import App.Core (AppData, DimData)
 
-import App.SliceSampleView as SSV
-import Vis.Vega.Splom as Splom
 import Vis.Vega.Slices as SV
 import Vis.Vega.Histogram as HV
 import App.DimView as DV
 import App.GroupView as GV
 import App.TopoSpine as TS
 
-import Data.Samples (SampleGroup, dims, dimNames)
+import Data.Samples (SampleGroup, dimNames)
 import DataFrame as DF
 import Data.SliceSample as Slice
 
@@ -34,13 +31,11 @@ type State =
   , groupMethod :: GroupMethod
   , focusPointFilter :: AppData
   --, metricRangeFilter :: Maybe MetricRangeFilter
-  , sliceSampleView :: SSV.State
   , dimViews :: Array DV.State
   }
 
 data Action 
   = ChangeGroupMethod FormEvent
-  | SliceSampleViewAction SSV.Action
   | DimViewAction Int DV.Action
 
 data GroupMethod = GroupByDim | GroupByCluster
@@ -57,7 +52,6 @@ init name sg =
   , dimNames: dns
   , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
-  , sliceSampleView: SSV.init (dims sg) df
   , dimViews: map (\{group: d, data: s} -> DV.init df (dimName dns (I.floor d)) s) gdf
   }
   where 
@@ -91,12 +85,6 @@ update (ChangeGroupMethod ev) state =
                            }
        otherwise -> state
 -- FIXME: see if there's a better way than this deep inspection
-update (SliceSampleViewAction a@(SSV.SplomAction (Splom.HoverPoint vp))) state =
-  updateFocusPoint (DF.rowFilter (filterFocusIds vp') state.samples) state
-  where 
-  vp' = map (\x -> I.round $ fromJust $ SM.lookup "id" x) vp
-update (SliceSampleViewAction a) state =
-  state {sliceSampleView=SSV.update a state.sliceSampleView}
 update (DimViewAction dim a@(DV.GroupViewAction _ (GV.SliceViewAction (SV.HoverSlice hs)))) state =
   updateFocusPoint (DF.rowFilter (filterFocusIds hs') state.samples) state
   where 
@@ -128,7 +116,6 @@ updateDimViewFocusPoints dvFp dvStates =
 updateFocusPoint :: AppData -> State -> State
 updateFocusPoint fp state = state
   { focusPointFilter = fp
-  , sliceSampleView = SSV.update (SSV.FocusPointFilter fp) state.sliceSampleView
   , dimViews = updateDimViewFocusPoints dvFp state.dimViews
   }
   where
@@ -144,8 +131,8 @@ view state =
             ]
         ]
     , div [className "overview-info"]
-        [ map SliceSampleViewAction $ SSV.view state.sliceSampleView
-        , TS.view state.datasetName (nDim state)
+        [ 
+          TS.view state.datasetName (nDim state)
         ]
     , viewDims state
     ]
