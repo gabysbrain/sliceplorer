@@ -17,7 +17,6 @@ import Vis.Vega.Slices as SV
 import Vis.Vega.Histogram as HV
 import App.DimView as DV
 import App.GroupView as GV
-import App.TopoSpine as TS
 
 import Data.Samples (SampleGroup, dimNames)
 import DataFrame as DF
@@ -129,10 +128,6 @@ view state =
             [ option [value (show GroupByDim)]     [text (show GroupByDim)]
             , option [value (show GroupByCluster)] [text (show GroupByCluster)]
             ]
-        ]
-    , div [className "overview-info"]
-        [ 
-          TS.view state.datasetName (nDim state)
         ]
     , viewDims state
     ]
