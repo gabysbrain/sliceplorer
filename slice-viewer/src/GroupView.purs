@@ -72,8 +72,8 @@ update (FocusPointFilter fp) state = state
   where 
   fps = DF.run fp
   nbrs = findNeighbors state.samples fps
-  hoverSlices = concatMap SV.convertSlice fps
-  neighborSlices = concatMap SV.convertSlice nbrs
+  hoverSlices = concatMap SV.sample2slice fps
+  neighborSlices = concatMap SV.sample2slice nbrs
   metricHighlights = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}

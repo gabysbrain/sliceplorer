@@ -88,6 +88,18 @@ function _spec(minVal, maxVal) {
             'strokeOpacity': { 'value': 1 }
           }
         }
+      }, {
+        'type': 'symbol',
+        'interactive': false,
+        'properties': {
+          'enter': {
+            'x': { 'scale': 'x', 'field': 'fpX' },
+            'y': { 'scale': 'y', 'field': 'fpY' },
+            'fillOpacity': {'value': 1},
+            'size': {'value': 35},
+            'fill': { 'value': 'red' }
+          }
+        }
       }]
     }, {
       'type': 'group',
