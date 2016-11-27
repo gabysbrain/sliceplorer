@@ -102,8 +102,16 @@ predictValue slice x =
            Just u | u == 0 -> yLoc $ fromJust (slice !! 0)
            -- ideally we average the neighboring slice values to compute 
            -- the focus point y-value
-           Just u  -> ((yLoc $ fromJust (slice !! u)) +
-                       (yLoc $ fromJust (slice !! (u-1)))) /
-                      2.0
+           Just u  -> lerp (xLoc $ fromJust (slice !! u)) 
+                           (xLoc $ fromJust (slice !! (u-1)))
+                           (yLoc $ fromJust (slice !! u)) 
+                           (yLoc $ fromJust (slice !! (u-1)))
+                           x
            Nothing -> yLoc $ fromJust (last slice)
+
+lerp :: Number -> Number -> Number -> Number -> Number -> Number
+lerp x1 x2 y1 y2 x =
+  y1 + (y2 - y1) * pct
+  where
+  pct = (x - x1) / (x2 - x1)
 
