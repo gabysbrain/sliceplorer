@@ -97,7 +97,7 @@ sample2slice (Slice.SliceSample s) =
 
 predictValue :: Array Sample -> Number -> Number
 predictValue slice x = 
-  let upper = findIndex (\x' -> x <= yLoc x') slice
+  let upper = findIndex (\x' -> x <= xLoc x') slice
    in case upper of
            Just u | u == 0 -> yLoc $ fromJust (slice !! 0)
            -- ideally we average the neighboring slice values to compute 
