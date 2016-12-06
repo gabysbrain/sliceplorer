@@ -16,7 +16,6 @@ import App.Core (AppData, DimData)
 import Vis.Vega.Slices as SV
 import Vis.Vega.Histogram as HV
 import App.DimView as DV
-import App.GroupView as GV
 
 import Data.Samples (SampleGroup, dimNames)
 import DataFrame as DF
@@ -84,11 +83,11 @@ update (ChangeGroupMethod ev) state =
                            }
        otherwise -> state
 -- FIXME: see if there's a better way than this deep inspection
-update (DimViewAction dim a@(DV.GroupViewAction _ (GV.SliceViewAction (SV.HoverSlice hs)))) state =
+update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
   updateFocusPoint (DF.rowFilter (filterFocusIds hs') state.samples) state
   where 
   hs' = map (\x -> x.slice_id) hs
-update (DimViewAction dim a@(DV.GroupViewAction _ (GV.HistoAction metric (HV.HoverBar rng)))) state =
+update (DimViewAction dim a@(DV.HistoAction metric (HV.HoverBar rng))) state =
   updateDimView dim a $ updateFocusPoint df state -- maintain bar highlight
   where
   df = case rng of
