@@ -28,7 +28,7 @@ def cluster_slices_within_dims(focus_points):
   nsamples = focus_points[0].num_slice_samples
   # cluster based on the input values as well as the outputs
   # this is list of matrice where each row is a 1D slice
-  dim_obs = [np.zeros((len(focus_points), nsamples))] * dims
+  dim_obs = [np.zeros((len(focus_points), nsamples)) for d in range(dims)] # need to create a separate matrix per dimension
   cluster_ids = []
   for i,fp in enumerate(focus_points):
     for d,(s,obs) in enumerate(zip(fp.slices, dim_obs)):
