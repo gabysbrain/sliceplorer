@@ -13,7 +13,7 @@ class SliceGroup(object):
 
     self.group_id = group_id
     self.slice = list(s)
-    self.dim_names = list(xs.columns[:-1])
+    self.dim_names = [x.strip() for x in xs.columns[:-1]]
     self.slices = list(dim_groups(sample_n, xs))
 
   @property
