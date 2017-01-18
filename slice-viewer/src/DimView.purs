@@ -1,45 +1,102 @@
 module App.DimView where
 
 import Prelude hiding (div)
-import Data.Array (modifyAt, zipWith)
-import Data.Foldable (elem, find)
+import Data.Array (modifyAt, zipWith, concatMap)
+import Data.Foldable (elem, find, minimum, maximum)
 import Data.Int as I
 import Data.Maybe
-import Data.Tuple (Tuple(..))
-
-import Pux.Html (Html, div, text)
+import Data.Maybe.Unsafe (fromJust)
+import Data.StrMap as SM
+import Data.Tuple (Tuple(..), uncurry)
+import Stats (Histogram, histogram, histogram', histRanges)
+import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, key)
 --import Pux.Html.Events (onChange, FormEvent)
-import Util (mapEnum)
+import Util (mapEnum, mapCombine, zipMap)
+
+import Data.Slices (yLoc)
+import Data.Samples (combineMaps)
 
 import App.Core (AppData, DimData, GroupData)
 import DataFrame as DF
+import Data.ValueRange (ValueRange)
 
-import App.GroupView as GV
+import Vis.Vega.Histogram as H
+import Vis.Vega.Slices as SV
+import Vis.Vega.ClusterSlices as CSV
 import Data.SliceSample as Slice
 
 type State =
   { dimName :: String
-  --, samples :: AppData
+  , samples :: AppData
   , showClusters :: Boolean
-  , fullView :: GV.State
-  , clusterViews :: Array GV.State
+  , sliceViewRange :: ValueRange
+  , sliceView :: SV.State
+  , clusterSliceView :: CSV.State
+  , histogramRanges :: SM.StrMap Histogram
+  , histogramStates :: SM.StrMap H.State
   }
 
-data Action =
-    GroupViewAction Int GV.Action
-  | ShowClusterView Boolean
+data Action
+  = ShowClusterView Boolean
   | FocusPointFilter AppData
+  | UpdateSamples AppData
+  | SliceViewAction SV.Action
+  | ClusterSliceViewAction CSV.Action
+  | HistoAction String H.Action
 
 init :: AppData -> String -> AppData -> State
 init origDf dn df = 
   { dimName: dn
-  --, samples: df
+  , samples: df
   , showClusters: false
-  , fullView: GV.init origDf 0 df
-  , clusterViews: map (\{group=g,data=df'} -> GV.init origDf (I.round g) df')
-                      (DF.run $ clusterGroups df)
+  , sliceViewRange: fromJust svRange
+  , sliceView: SV.init df
+  , clusterSliceView: CSV.init df
+  , histogramRanges: origDataHists
+  , histogramStates: map H.init $ metricHistograms' origDataRngs df
   }
+  where 
+  svRange = DF.range (\(Slice.SliceSample s) -> fromJust $ maximum $ map yLoc s.slice) origDf
+  origDataHists = metricHistograms 11 origDf
+  origDataRngs = map histRanges origDataHists
+
+update :: Action -> State -> State
+update (ShowClusterView s) state = state {showClusters=s}
+update (UpdateSamples df) state =
+  state { samples = df
+        , sliceView = SV.init df
+        , histogramStates = map H.init $ metricHistograms' origDataRngs df
+        }
+  where 
+  origDataRngs = map histRanges state.histogramRanges
+update (FocusPointFilter fp) state = state
+  { sliceView = SV.update (SV.HighlightNeighbors neighborSlices) $
+                  SV.update (SV.HoverSlice hoverSlices) state.sliceView
+  , clusterSliceView = CSV.update (CSV.HighlightNeighbors cvNeighborSlices) $
+                  CSV.update (CSV.HoverSlice cvHoverSlices) state.clusterSliceView
+  , histogramStates = if SM.isEmpty metricHighlights
+                         then map (\s -> H.update (H.ShowTicks []) s) state.histogramStates
+                         else mapCombine (\s x -> H.update (H.ShowTicks x) s) 
+                                         state.histogramStates 
+                                         metricHighlights
+  }
+  where 
+  fps = DF.run fp
+  nbrs = findNeighbors state.samples fps
+  hoverSlices = concatMap SV.sample2slice fps
+  neighborSlices = concatMap SV.sample2slice nbrs
+  cvHoverSlices = concatMap CSV.sample2slice fps
+  cvNeighborSlices = concatMap CSV.sample2slice nbrs
+  metricHighlights = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
+update (SliceViewAction a) state =
+  state {sliceView=SV.update a state.sliceView}
+update (ClusterSliceViewAction a) state =
+  state {clusterSliceView=CSV.update a state.clusterSliceView}
+update (HistoAction n a) state =
+  state {histogramStates=newHisto}
+  where 
+  newHisto = SM.update (\hs -> Just $ H.update a hs) n state.histogramStates
 
 clusterGroups :: AppData -> GroupData
 clusterGroups = DF.groupBy groupByCluster
@@ -50,37 +107,64 @@ view :: State -> Html Action
 view state =
   div [className "dim-view"]
     [ viewName state.dimName
-    , viewGroups state.showClusters state
+    , div [className "dim-charts"]
+      [ viewAllSlices state
+      , viewMetricHistograms state
+      ]
     ]
 
 viewName :: String -> Html Action
 viewName name = div [className "dim-name"] [text name]
 
-viewGroups :: Boolean -> State -> Html Action
-viewGroups false state = viewGroup 0 state.fullView
-viewGroups true  state = div [className "group-views"] $
-  mapEnum viewGroup state.clusterViews
+viewAllSlices :: State -> Html Action
+viewAllSlices state =
+  div [className "slices-view"] 
+    [ sliceView state.showClusters ]
+  where 
+  sliceView false = 
+    map SliceViewAction $ SV.view state.sliceViewRange state.sliceView
+  sliceView true = 
+    map ClusterSliceViewAction $ CSV.view state.sliceViewRange state.clusterSliceView
 
-viewGroup :: Int -> GV.State -> Html Action
-viewGroup gid state = map (GroupViewAction gid) $ GV.view state
-
-update :: Action -> State -> State
-update (GroupViewAction i a) state =
-  updateGroupView i a state
-update (ShowClusterView s) state = state {showClusters=s}
-update (FocusPointFilter fp) state = state
-  { fullView = GV.update (GV.FocusPointFilter fp) state.fullView
-  , clusterViews = map updateFp state.clusterViews
-  }
+viewMetricHistograms :: State -> Html Action
+viewMetricHistograms state = 
+  div [className "metric-histograms"] $
+    SM.foldMap (\k (Tuple r s) -> [viewMetricHistogram k r s]) hs
   where
-  groupedFp = DF.run $ clusterGroups fp
-  updateFp gvs = case find (\{group=g} -> g==I.toNumber gvs.key) groupedFp of
-    Just {data=d} -> GV.update (GV.FocusPointFilter d) gvs
-    Nothing       -> GV.update (GV.FocusPointFilter DF.empty) gvs
+  hs = zipMap state.histogramRanges state.histogramStates
 
-updateGroupView :: Int -> GV.Action -> State -> State
-updateGroupView i a state =
-  case modifyAt i (GV.update a) state.clusterViews of
-       Nothing     -> state
-       Just newGVs -> state {clusterViews=newGVs}
+viewMetricHistogram :: String -> Histogram -> H.State -> Html Action
+viewMetricHistogram name h st =
+  div [className "metric-histogram"]
+    [ h3 [className "chart-title"] [text name]
+    , map (HistoAction name) $ H.view rng maxCount st
+    ]
+  where
+  rng = Tuple h.min h.max
+  maxCount = fromJust $ maximum h.counts
+
+metricHistograms :: Int -> AppData -> SM.StrMap Histogram
+metricHistograms bins df = map (histogram bins) $ metricData df
+
+metricHistograms' :: SM.StrMap (Array ValueRange) -> AppData -> SM.StrMap Histogram
+metricHistograms' binMap df = map (uncurry histogram') $ zipMap binMap (metricData df)
+
+histogramRanges :: AppData -> SM.StrMap ValueRange
+histogramRanges df = map rng $ metricData df
+  where
+  rng xs = Tuple (fromJust $ minimum xs) (fromJust $ maximum xs)
+
+metricData :: AppData -> SM.StrMap (Array Number)
+metricData df = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
+  where
+  fps = DF.run df
+
+findNeighbors :: AppData -> Array Slice.SliceSample -> Array Slice.SliceSample
+findNeighbors df [(Slice.SliceSample fp)] =
+  DF.run $ DF.rowFilter (neighborFilter fp.neighborIds) df
+findNeighbors _  _       = []
+
+neighborFilter :: Array Int -> Slice.SliceSample -> Boolean
+neighborFilter fpIds (Slice.SliceSample fp) = elem fp.focusPointId fpIds
+
 
