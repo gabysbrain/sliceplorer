@@ -32,9 +32,9 @@ def slices():
 @app.route('/slice/<function>/<int:dims>/<int:limit>', methods = ['GET'])
 def slice_req(function, dims, limit):
   s = convert_slices(function, dims)
-  s = list(itertools.islice(s, limit))
   s = identify_clusters(s)
   s = slice_neighbors(s)
+  s = list(itertools.islice(s, limit))
   return tojson(s)
 
 @app.route('/trace', methods = ['GET'])
