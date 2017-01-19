@@ -3,6 +3,10 @@ from glob import iglob
 from os.path import basename
 import re
 
+from compute_stats import convert_slices
+from cluster_slices import identify_clusters
+from slice_neighbors import slice_neighbors
+
 def slice_list():
   curname = None
   dimlist = []
@@ -19,6 +23,12 @@ def slice_list():
   dimlist.sort()
   if curname != None:
     yield (curname, dimlist)
+
+def get(function, dims):
+  s = convert_slices(function, dims)
+  s = identify_clusters(s)
+  s = slice_neighbors(s)
+  return s
 
 if __name__ == '__main__':
   print(list(slice_list()))
