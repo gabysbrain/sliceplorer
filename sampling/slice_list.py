@@ -1,11 +1,17 @@
 
 from glob import iglob
 from os.path import basename
+import os
 import re
+import json
+import numpy
 
-from compute_stats import convert_slices
+from compute_stats import convert_slices, SliceGroup, Slice
 from cluster_slices import identify_clusters
 from slice_neighbors import slice_neighbors
+from myio import MyEncoder
+
+JSONDIR = "json_cache"
 
 def slice_list():
   curname = None
@@ -25,9 +31,25 @@ def slice_list():
     yield (curname, dimlist)
 
 def get(function, dims):
-  s = convert_slices(function, dims)
-  s = identify_clusters(s)
-  s = slice_neighbors(s)
+  cachefile = JSONDIR + "/cache_%s_%s.json" % (function, dims)
+  # TODO: check code hash and data mod date
+  f = None
+  try:
+    f = open(cachefile, 'r')
+    s = json.load(f)
+    s = [SliceGroup.from_dict(sg) for sg in s]
+  except OSError:
+    s = convert_slices(function, dims)
+    s = identify_clusters(s)
+    s = slice_neighbors(s)
+
+    # save the cache file
+    if not os.path.exists(JSONDIR):
+      os.makedirs(JSONDIR)
+    f = open(cachefile, 'w')
+    json.dump(s, f, cls=MyEncoder)
+  finally:
+    if f: f.close()
   return s
 
 if __name__ == '__main__':

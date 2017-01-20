@@ -4,16 +4,10 @@ import itertools
 
 from slice_list import slice_list
 from slice_list import get as get_slices
+from myio import MyEncoder
 import optim_trace
 
 app = Flask(__name__)
-
-class MyEncoder(json.JSONEncoder):
-  def default(self, o):
-    try:
-      return o.__dict__
-    except AttributeError:
-      return str(o)
 
 def tojson(obj):
   resp = Response(response=json.dumps(obj, cls=MyEncoder),

@@ -24,6 +24,26 @@ class SliceGroup(object):
   def dims(self):
     return len(self.dim_names)
 
+  @property
+  def to_json(self):
+    return { 'group_id': self.group_id,
+             'slice': self.slice,
+             'dim_names': self.dim_names,
+             'slices': self.slices }
+
+  @classmethod
+  def from_dict(cls, o):
+    self = SliceGroup.__new__(SliceGroup)
+    self.group_id = o['group_id']
+    self.slice = o['slice']
+    self.dim_names = o['dim_names']
+    self.slices = [Slice.from_dict(s) for s in o['slices']]
+
+    # optional things
+    if 'neighbor_group_ids' in o:
+      self.neighbor_group_ids = o['neighbor_group_ids']
+    return self
+
 class Slice(object):
   def __init__(self, d, samples):
     self.d = d
@@ -39,6 +59,35 @@ class Slice(object):
     self.slice = list(samples.apply(lambda x: {'x': float(x.iloc[d]), 
                                                'y': float(x.iloc[-1])}, 
                                     axis=1))
+
+  @property
+  def to_json(self):
+    return { 'd': self.d,
+             'dims': self.dims,
+             'variance': self.variance,
+             'min_value': self.min_value,
+             'max_value': self.max_value,
+             'avg_value': self.avg_value,
+             'avg_gradient': self.avg_gradient,
+             'avg_pos_gradient': self.avg_pos_gradient,
+             'slice': self.slice }
+
+  @classmethod
+  def from_dict(cls, o):
+    self = Slice.__new__(Slice)
+    self.d = o['d']
+    self.dims = o['dims']
+    self.variance = o['variance']
+    self.min_value = o['min_value']
+    self.max_value = o['max_value']
+    self.avg_value = o['avg_value']
+    self.avg_gradient = o['avg_gradient']
+    self.avg_pos_gradient = o['avg_pos_gradient']
+    self.slice = o['slice']
+    # optional things
+    if 'cluster_id' in o:
+      self.cluster_id = o['cluster_id']
+    return self
 
 def slice_groups(samples):
   dims = len(samples.columns) - 1
