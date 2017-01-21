@@ -19,6 +19,7 @@ import Vis.Vega.Histogram as HV
 import App.DimView as DV
 
 import Data.Samples (SampleGroup, dimNames, subset)
+import Data.Samples as Samples
 import DataFrame as DF
 import Data.SliceSample as Slice
 
@@ -30,6 +31,7 @@ type State =
   , datasetName :: String
   , dimNames :: Array String
   , samplesToShow :: Int
+  , totalSlices :: Int
   , groupMethod :: GroupMethod
   , focusPointFilter :: AppData
   --, metricRangeFilter :: Maybe MetricRangeFilter
@@ -54,6 +56,7 @@ init name sg =
   , datasetName: name
   , dimNames: dns
   , samplesToShow: 10
+  , totalSlices: Samples.length sg
   , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
   , dimViews: initDimViews df dns $ trimGroups 10 gdf
@@ -154,7 +157,7 @@ view state =
             , option [value (show GroupByCluster)] [text (show GroupByCluster)]
             ]
         , input [ type_ "range", value (show state.samplesToShow)
-                , max (show (length (DF.runOrig state.samples))), min "0", step "10"
+                , max (show state.totalSlices), min "0", step "10"
                 , onChange UpdateNumberFilter
                 ]
                 []

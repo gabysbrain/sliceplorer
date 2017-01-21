@@ -2,7 +2,7 @@ module Data.Samples where
 
 import Prelude
 import Data.Slices (Slice(..), metrics)
-import Data.Array (length, nub, take, concat, snoc, (!!))
+import Data.Array (nub, take, concat, snoc, (!!))
 import Data.Array as A
 import Data.Foldable as F
 import Data.Maybe (Maybe(Just, Nothing))
@@ -52,9 +52,9 @@ type MetricRangeFilter =
   , maxVal :: Number
   }
 
-jsonSamples :: forall eff. String -> Int -> Int -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
-jsonSamples fname d n = do
-  let url = "http://localhost:5000/slice/" <> fname <> "/" <> (show d) <> "/" <> (show n)
+jsonSamples :: forall eff. String -> Int -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
+jsonSamples fname d = do
+  let url = "http://localhost:5000/slice/" <> fname <> "/" <> (show d) <> "/1000"
   --res <- attempt $ get "/data/test.csv"
   res <- attempt $ get url
   let samples = case res of
@@ -64,6 +64,9 @@ jsonSamples fname d n = do
 
 head :: SampleGroup -> Maybe FocusPointInfo
 head (SampleGroup sg) = A.head sg
+
+length :: SampleGroup -> Int
+length (SampleGroup sg) = A.length sg
 
 parseJson :: String -> Either Error SampleGroup
 parseJson json = case runExcept $ readJSON json of
@@ -86,7 +89,7 @@ subset n (SampleGroup sg) = SampleGroup $ take n sg
 dims :: SampleGroup -> Int
 dims sg = case head sg of
   Nothing -> 0
-  Just (FocusPointInfo x) -> length x.dimNames
+  Just (FocusPointInfo x) -> A.length x.dimNames
 
 dimNames :: SampleGroup -> Array String
 dimNames sg = case head sg of

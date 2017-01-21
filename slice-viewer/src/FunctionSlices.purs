@@ -23,7 +23,6 @@ type DatasetInfo =
   { datasets :: Datasets
   , function :: String
   , dim :: Int
-  , sampleLimit :: Int
   }
 
 -- TODO: rewrite this to be a sum type of the possible data states
@@ -48,7 +47,6 @@ data Action
   | UpdateSamples (Either Error SampleGroup)
   | DimChange FormEvent
   | FunctionChange FormEvent
-  | UpdateSampleLimit FormEvent
   | OverviewView Overview.Action
 
 init :: State
@@ -68,11 +66,11 @@ update (UpdateDatasets (Left err)) state =
 update (UpdateDatasets (Right ds)) state =
   update RequestSamples $ LoadingSamples dsi
   where
-  dsi = {datasets: ds, function: "ackley", dim: 2, sampleLimit: 50}
+  dsi = {datasets: ds, function: "ackley", dim: 2}
 update (RequestSamples) state = case dsInfo state of
   Just dsi -> { state: LoadingSamples dsi
               , effects: [ do
-                  samples <- jsonSamples dsi.function dsi.dim dsi.sampleLimit
+                  samples <- jsonSamples dsi.function dsi.dim
                   pure $ UpdateSamples samples
                 ]
               }
@@ -95,15 +93,6 @@ update (FunctionChange ev) state = case dsInfo state of
   -- TODO: maybe some error checking?
   Just dsi -> update RequestSamples $ updateFunction ev.target.value dsi
   Nothing -> noEffects state
-update (UpdateSampleLimit ev) state = 
-  case dsi' of
-       Nothing -> noEffects state
-       Just d  -> update RequestSamples (LoadingSamples d)
-  where
-  dsi' = do
-    dsi <- dsInfo state
-    n' <- fromString ev.target.value
-    pure $ dsi {sampleLimit=n'}
 update (OverviewView action) (SamplesLoaded st@{overview:o}) =
   noEffects $ SamplesLoaded (st {overview=Overview.update action o})
 update (OverviewView action) state = noEffects state
@@ -149,15 +138,6 @@ viewControls' dsi (Just ds) =
         [ dimSelector dsi ds
         , funcSelector dsi ds
         , button [onClick (const RequestSamples)] [text "Fetch samples"]
-        ]
-    , div [className "sample-controls"]
-        [ input [ type_ "range", value (show dsi.sampleLimit)
-                , max "1000", min "0", step "50"
-                , onChange UpdateSampleLimit
-                ]
-                []
-        , input [ type_ "text", value (show dsi.sampleLimit)
-                , onChange UpdateSampleLimit] []
         ]
     ]
 
