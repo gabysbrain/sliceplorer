@@ -21,10 +21,14 @@ def slices():
   s = [{'dataset': ds, 'dims': d} for ds,d in slice_list()]
   return tojson(s)
 
+@app.route('/slice/<function>/<int:dims>', 
+           methods = ['GET'], 
+           defaults={'limit': None})
 @app.route('/slice/<function>/<int:dims>/<int:limit>', methods = ['GET'])
 def slice_req(function, dims, limit):
   s = get_slices(function, dims)
-  s = list(itertools.islice(s, limit))
+  if limit:
+    s = list(itertools.islice(s, limit))
   return tojson(s)
 
 @app.route('/trace', methods = ['GET'])
