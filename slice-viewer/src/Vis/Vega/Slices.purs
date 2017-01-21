@@ -2,7 +2,7 @@ module Vis.Vega.Slices where
 
 import Prelude 
 import Data.Function.Uncurried (runFn2)
-import Data.Array (concatMap, mapMaybe, snoc, last, findIndex, findLastIndex, (!!))
+import Data.Array (concatMap, mapMaybe, snoc, last, length, findIndex, findLastIndex, (!!))
 import Data.Foldable (foldl)
 import Data.Maybe
 import Data.Tuple (Tuple, fst, snd)
@@ -21,6 +21,8 @@ import Util (unsafeJust)
 
 import Vis.Vega (dataAttr, toVegaData)
 
+import Debug.Trace
+
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
 type VegaSlicePoint = 
@@ -36,7 +38,8 @@ type VegaHoverPoint = VegaSlicePoint
 type SliceHoverEvent = Array VegaSlicePoint
 
 data Action
-  = HoverSlice (Array VegaSlicePoint)
+  = UpdateSlices (Array VegaSlicePoint)
+  | HoverSlice (Array VegaSlicePoint)
   | HighlightNeighbors (Array VegaSlicePoint)
 
 type State = 
@@ -54,6 +57,9 @@ init sg =
   }
 
 update :: Action -> State -> State
+update (UpdateSlices s) state = state
+  { slices = s
+  }
 update (HoverSlice ev) state = state 
   { hoverSlice = ev
   }

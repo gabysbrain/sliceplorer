@@ -182,7 +182,7 @@ var VegaHistogram = React.createClass({
       if(highlightTicks) {
         vis.data('highlightTicks').insert(highlightTicks);
       }
-      //vis.data('bars').remove(function() {return true;}).insert(data);
+      vis.data('bars').remove(function() {return true;}).insert(data);
 
       vis.update();
     }

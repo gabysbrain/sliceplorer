@@ -1,13 +1,13 @@
 module App.Overview where
 
-import Prelude hiding (div)
-import Data.Array (modifyAt, length, (!!))
+import Prelude hiding (div, min, max)
+import Data.Array (modifyAt, length, (!!), zipWith)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.StrMap as SM
 import Data.Foldable (elem, find)
 import Data.Int as I
-import Pux.Html (Html, div, text, select, option)
-import Pux.Html.Attributes (className, value)
+import Pux.Html (Html, div, text, input, select, option)
+import Pux.Html.Attributes (className, value, type_, min, max, step)
 import Pux.Html.Events (onChange, FormEvent)
 import Util (mapEnum)
 import Stats (HistBin)
@@ -18,15 +18,18 @@ import Vis.Vega.ClusterSlices as CSV
 import Vis.Vega.Histogram as HV
 import App.DimView as DV
 
-import Data.Samples (SampleGroup, dimNames)
+import Data.Samples (SampleGroup, dimNames, subset)
 import DataFrame as DF
 import Data.SliceSample as Slice
 
+import Debug.Trace
+
 type State = 
   { samples :: AppData
+  , fullGroups :: Array {group :: Number, data :: AppData}
   , datasetName :: String
-  --, dims :: Int
   , dimNames :: Array String
+  , samplesToShow :: Int
   , groupMethod :: GroupMethod
   , focusPointFilter :: AppData
   --, metricRangeFilter :: Maybe MetricRangeFilter
@@ -34,7 +37,8 @@ type State =
   }
 
 data Action 
-  = ChangeGroupMethod FormEvent
+  = UpdateNumberFilter FormEvent
+  | ChangeGroupMethod FormEvent
   | DimViewAction Int DV.Action
 
 data GroupMethod = GroupByDim | GroupByCluster
@@ -46,17 +50,25 @@ instance showGroupMethod :: Show GroupMethod where
 init :: String -> SampleGroup -> State
 init name sg =
   { samples: df
+  , fullGroups: gdf
   , datasetName: name
-  --, dims: dims sg
   , dimNames: dns
+  , samplesToShow: 10
   , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
-  , dimViews: map (\{group: d, data: s} -> DV.init df (dimName dns (I.floor d)) s) gdf
+  , dimViews: initDimViews df dns $ trimGroups 10 gdf
   }
   where 
   df = DF.init $ Slice.create sg
   gdf = DF.run $ DF.groupBy groupByDim df
   dns = dimNames sg
+
+initDimViews :: AppData -> Array String 
+             -> Array {group :: Number, data :: AppData} 
+             -> Array DV.State
+initDimViews fullDf dimNames = map initDimView
+  where
+  initDimView {group: d, data: s} = DV.init fullDf (dimName dimNames (I.floor d)) s
 
 nDim :: State -> Int
 nDim state = length state.dimNames
@@ -74,6 +86,15 @@ filterRange dim metric hb (Slice.SliceSample s) =
        Nothing -> false
 
 update :: Action -> State -> State
+update (UpdateNumberFilter ev) state =
+  case I.fromString ev.target.value of
+       Nothing -> state
+       Just n' | n' <= 0 -> state -- Don't allow invalid numbers
+       Just n' -> let trimmedGroups = trimGroups n' state.fullGroups
+                      dvUpdate {data:s} dv = DV.update (DV.UpdateSamples s) dv
+                   in state { samplesToShow = n' 
+                            , dimViews = zipWith dvUpdate trimmedGroups state.dimViews
+                            }
 update (ChangeGroupMethod ev) state =
   case ev.target.value of
        "Dims"    -> state { groupMethod = GroupByDim
@@ -132,6 +153,12 @@ view state =
             [ option [value (show GroupByDim)]     [text (show GroupByDim)]
             , option [value (show GroupByCluster)] [text (show GroupByCluster)]
             ]
+        , input [ type_ "range", value (show state.samplesToShow)
+                , max (show (length (DF.runOrig state.samples))), min "0", step "10"
+                , onChange UpdateNumberFilter
+                ]
+                []
+        , input [type_ "text", value (show state.samplesToShow), onChange UpdateNumberFilter] []
         ]
     , viewDims state
     ]
@@ -144,4 +171,10 @@ viewDims state =
 
 dimName :: Array String -> Int -> String
 dimName dimNames d = fromMaybe ("Dim " <> show d) $ dimNames !! d
+
+trimGroups :: Int -> Array {group :: Number, data :: AppData} 
+                  -> Array {group ::Number, data :: AppData}
+trimGroups n = map f
+  where
+  f {group:d,data:dd} = {group: d, data: DF.takeFilter n dd}
 

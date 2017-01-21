@@ -25,6 +25,8 @@ import Vis.Vega.Slices as SV
 import Vis.Vega.ClusterSlices as CSV
 import Data.SliceSample as Slice
 
+import Debug.Trace
+
 type State =
   { dimName :: String
   , samples :: AppData
@@ -64,7 +66,7 @@ update :: Action -> State -> State
 update (ShowClusterView s) state = state {showClusters=s}
 update (UpdateSamples df) state =
   state { samples = df
-        , sliceView = SV.init df
+        , sliceView = SV.update (SV.UpdateSlices $ SV.samples2slices df) state.sliceView
         , histogramStates = map H.init $ metricHistograms' origDataRngs df
         }
   where 

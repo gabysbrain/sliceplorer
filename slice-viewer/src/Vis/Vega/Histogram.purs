@@ -32,6 +32,7 @@ init :: Histogram -> State
 init h = {histogram: h, highlightBar: Nothing, highlightTicks: []}
 
 update :: Action -> State -> State
+-- TODO: add data update action
 update (HoverBar ev) state = state 
   { highlightBar = ev
   , highlightTicks = []
