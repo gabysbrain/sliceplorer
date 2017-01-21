@@ -55,11 +55,11 @@ init name sg =
   , fullGroups: gdf
   , datasetName: name
   , dimNames: dns
-  , samplesToShow: 10
+  , samplesToShow: 50
   , totalSlices: Samples.length sg
   , groupMethod: GroupByDim
   , focusPointFilter: DF.filterAll df
-  , dimViews: initDimViews df dns $ trimGroups 10 gdf
+  , dimViews: initDimViews df dns $ trimGroups 50 gdf
   }
   where 
   df = DF.init $ Slice.create sg
