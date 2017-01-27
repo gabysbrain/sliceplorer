@@ -15,6 +15,7 @@ import Util (mapEnum, mapCombine, zipMap, unsafeJust)
 
 import Data.Slices (yLoc)
 import Data.Samples (combineMaps)
+import Data.Convert (samples2slices, sample2slice)
 
 import App.Core (AppData, DimData, GroupData)
 import DataFrame as DF
@@ -52,8 +53,8 @@ init origDf dn df =
   , samples: df
   , showClusters: false
   , sliceViewRange: unsafeJust svRange
-  , sliceView: SV.init df
-  , clusterSliceView: CSV.init df
+  , sliceView: SV.init $ samples2slices df
+  , clusterSliceView: CSV.init $ samples2slices df
   , histogramRanges: origDataHists
   , histogramStates: map H.init $ metricHistograms' origDataRngs df
   }
@@ -66,7 +67,7 @@ update :: Action -> State -> State
 update (ShowClusterView s) state = state {showClusters=s}
 update (UpdateSamples df) state =
   state { samples = df
-        , sliceView = SV.update (SV.UpdateSlices $ SV.samples2slices df) state.sliceView
+        , sliceView = SV.update (SV.UpdateSlices $ samples2slices df) state.sliceView
         , histogramStates = map H.init $ metricHistograms' origDataRngs df
         }
   where 
@@ -85,10 +86,10 @@ update (FocusPointFilter fp) state = state
   where 
   fps = DF.run fp
   nbrs = findNeighbors state.samples fps
-  hoverSlices = concatMap SV.sample2slice fps
-  neighborSlices = concatMap SV.sample2slice nbrs
-  cvHoverSlices = concatMap CSV.sample2slice fps
-  cvNeighborSlices = concatMap CSV.sample2slice nbrs
+  hoverSlices = concatMap sample2slice fps
+  neighborSlices = concatMap sample2slice nbrs
+  cvHoverSlices = concatMap sample2slice fps
+  cvNeighborSlices = concatMap sample2slice nbrs
   metricHighlights = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}

@@ -33,3 +33,31 @@ vegaChart attrs s d = fromReact (attrs <> [sa, da]) []
     sa = specAttr s
     da = dataAttr d
 
+type VegaSlicePoint = 
+  { slice_id :: Int
+  , cluster_id :: Int
+  , d :: Int
+  , x :: Number
+  , y :: Number
+  , fpX :: Number
+  , fpY :: Number
+  }
+type VegaHoverPoint = VegaSlicePoint
+
+type SliceHoverEvent = Array VegaSlicePoint
+
+initSlicePoint :: Int -> Int -> Int 
+               -> Number -> Number 
+               -> Number -> Number 
+               -> VegaSlicePoint
+initSlicePoint sid cid d x y fpx fpy =
+  { slice_id: sid
+  , cluster_id: cid
+  , d: d
+  , x: x
+  , y: y
+  , fpX: fpx
+  , fpY: fpy
+  }
+
+
