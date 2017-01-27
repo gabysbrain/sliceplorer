@@ -6,12 +6,16 @@ import App.Core (AppData)
 import Data.SliceSample as Slice
 import Data.Slices (Sample(..), xLoc, yLoc)
 import Vis.Vega (VegaSlicePoint, initSlicePoint)
+import Vis.Vega.Splom (VegaPoint(..))
 
 import DataFrame as DF
-import Util (unsafeJust)
-import Data.Array (concatMap, findIndex, last, (!!))
+import Util (unsafeJust, mapEnum)
+import Data.Array (concatMap, findIndex, last, snoc, (!!))
+import Data.Int (toNumber)
 import Data.Maybe
-import Data.Tuple (fst, snd)
+import Data.Samples (FocusPoint)
+import Data.StrMap as SM 
+import Data.Tuple (Tuple(..), fst, snd)
 
 samples2slices :: AppData -> Array VegaSlicePoint
 samples2slices df = concatMap sample2slice $ DF.run df
@@ -30,6 +34,14 @@ sample2slice (Slice.SliceSample s) =
     , fpX : focusPtX
     , fpY: predictValue s.slice focusPtX
     }
+
+splomData :: AppData -> Array VegaPoint
+splomData df = map (\(Slice.SliceSample s) -> splomDatum s.focusPointId s.focusPoint) $ DF.run df
+
+splomDatum :: Int -> FocusPoint -> VegaPoint
+splomDatum id fp = SM.fromFoldable $ named `snoc` (Tuple "id" (toNumber id))
+  where
+  named = mapEnum (\i x -> Tuple ("x"<>(show (i+1))) x) $ fp
 
 predictValue :: Array Sample -> Number -> Number
 predictValue slice x = 

@@ -11,12 +11,10 @@ import Data.Nullable as N
 import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
-import Util (mapEnum)
 import App.Core (AppData)
 
 import DataFrame as DF
 import Data.SliceSample as Slice
-import Data.Samples (FocusPoint)
 
 import Vis.Vega (dataAttr, toVegaData)
 
@@ -39,9 +37,9 @@ data Action
   = HoverPoint PointHoverEvent
   | HighlightNeighbors (Array NeighborRelation)
 
-init :: Array String -> AppData -> State
+init :: Array String -> Array VegaPoint -> State
 init fs sg = 
-  { focusPoints: splomData sg
+  { focusPoints: sg
   , fields: fs
   , hoverPoints: []
   , neighborPoints: []
@@ -67,12 +65,4 @@ attrs state = [da, fa, ha, hpa, na]
   fa = attr "fields" $ toVegaData state.fields
   hpa = attr "hoverPoint" $ toVegaData state.hoverPoints
   na = attr "data-neighbors" $ toVegaData state.neighborPoints
-
-splomData :: AppData -> Array VegaPoint
-splomData df = map (\(Slice.SliceSample s) -> splomDatum s.focusPointId s.focusPoint) $ DF.run df
-
-splomDatum :: Int -> FocusPoint -> VegaPoint
-splomDatum id fp = SM.fromFoldable $ named `snoc` (Tuple "id" (toNumber id))
-  where
-  named = mapEnum (\i x -> Tuple ("x"<>(show (i+1))) x) $ fp
 
