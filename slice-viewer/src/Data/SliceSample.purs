@@ -1,11 +1,13 @@
 module Data.SliceSample where
 
 import Prelude (($), map)
-import Data.Array (concat)
+import Data.Array (concat, zipWith)
 import Data.Samples (SampleGroup(..), FocusPoint, FocusPointInfo(..))
 import Data.Slices (Slice(..), Sample, Metrics)
 import Data.Tuple (Tuple(..))
-import Util (mapEnum, map2)
+import Util (mapEnum)
+
+import Debug.Trace
 
 data SliceSample = SliceSample
   { focusPointId :: Int
@@ -24,7 +26,7 @@ create (SampleGroup sg) =
 
 createFromFocusPoint :: FocusPointInfo -> Array SliceSample
 createFromFocusPoint (FocusPointInfo fp) =
-  map2 _create (mapEnum Tuple fp.dimNames) fp.slices
+  zipWith _create (mapEnum Tuple fp.dimNames) fp.slices
   where
   _create (Tuple d dn) s = createFromSlice fp.id d dn fp.neighborIds fp.focusPoint s
 

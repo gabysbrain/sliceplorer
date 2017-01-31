@@ -1,7 +1,7 @@
 module Util where
 
 import Prelude
-import Data.Array (zipWith, length, (..))
+import Data.Array (zipWith, length, snoc, (..))
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (foldl)
@@ -10,9 +10,6 @@ import Partial.Unsafe (unsafePartial)
 
 mapEnum :: forall a b. (Int -> a -> b) -> Array a -> Array b
 mapEnum f xs = zipWith f (0..(length xs - 1)) xs
-
-map2 :: forall a b c. (a -> b -> c) -> Array a -> Array b -> Array c
-map2 f x y = f <$> x <*> y
 
 mapCombine :: forall a b. (a -> b -> a) -> SM.StrMap a -> SM.StrMap b -> SM.StrMap a
 mapCombine f ma mb =
