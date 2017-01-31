@@ -196,7 +196,7 @@ var VegaSlices = React.createClass({
       vis.data('hover-highlight').insert(hoverSlice);
       vis.data('nbrs-highlight').remove(function() {return true;});
       vis.data('nbrs-highlight').insert(nbrSlices);
-      //vis.data('lines').remove(function() {return true;}).insert(data);
+      vis.data('lines').remove(function() {return true;}).insert(data);
 
       vis.update();
     }

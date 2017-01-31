@@ -21,7 +21,8 @@ import Vis.Vega (VegaSlicePoint, VegaHoverPoint, SliceHoverEvent, dataAttr, toVe
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
 data Action
-  = HoverSlice (Array VegaSlicePoint)
+  = UpdateSlices (Array VegaSlicePoint)
+  | HoverSlice (Array VegaSlicePoint)
   | HighlightNeighbors (Array VegaSlicePoint)
 
 type State = 
@@ -39,6 +40,9 @@ init pts =
   }
 
 update :: Action -> State -> State
+update (UpdateSlices s) state = state
+  { slices = s
+  }
 update (HoverSlice ev) state = state 
   { hoverSlice = ev
   }

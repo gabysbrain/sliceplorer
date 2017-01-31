@@ -69,6 +69,7 @@ update (ShowClusterView s) state = state {showClusters=s}
 update (UpdateSamples df) state =
   state { samples = df
         , sliceView = SV.update (SV.UpdateSlices $ samples2slices df) state.sliceView
+        , clusterSliceView = CSV.update (CSV.UpdateSlices $ samples2slices df) state.clusterSliceView
         , histogramStates = map H.init $ DF.runQuery (metricHistograms' origDataRngs) df
         }
   where 
