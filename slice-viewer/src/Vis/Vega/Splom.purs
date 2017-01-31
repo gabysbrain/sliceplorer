@@ -13,7 +13,6 @@ import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
 import App.Core (AppData)
 
-import DataFrame as DF
 import Data.SliceSample as Slice
 
 import Vis.Vega (dataAttr, toVegaData)

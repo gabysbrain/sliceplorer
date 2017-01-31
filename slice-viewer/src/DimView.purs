@@ -2,6 +2,7 @@ module App.DimView where
 
 import Prelude hiding (div)
 import Data.Array (modifyAt, zipWith, concatMap)
+import Data.Filterable (filtered)
 import Data.Foldable (elem, find, minimum, maximum)
 import Data.Int as I
 import Data.Maybe
@@ -11,14 +12,15 @@ import Stats (Histogram, histogram, histogram', histRanges)
 import Pux.Html (Html, div, text, h3)
 import Pux.Html.Attributes (className, key)
 --import Pux.Html.Events (onChange, FormEvent)
-import Util (mapEnum, mapCombine, zipMap, unsafeJust)
+import Util (mapEnum, mapCombine, zipMap, unsafeJust, numRange)
 
 import Data.Slices (yLoc)
 import Data.Samples (combineMaps)
 import Data.Convert (samples2slices, sample2slice)
 
-import App.Core (AppData, DimData, GroupData)
-import DataFrame as DF
+import App.Core (AppData, DimData)
+import Data.DataFrame (Query)
+import Data.DataFrame as DF
 import Data.ValueRange (ValueRange)
 
 import Vis.Vega.Histogram as H
@@ -47,50 +49,47 @@ data Action
   | ClusterSliceViewAction CSV.Action
   | HistoAction String H.Action
 
-init :: AppData -> String -> AppData -> State
-init origDf dn df = 
-  { dimName: dn
-  , samples: df
-  , showClusters: false
-  , sliceViewRange: unsafeJust svRange
-  , sliceView: SV.init $ samples2slices df
-  , clusterSliceView: CSV.init $ samples2slices df
-  , histogramRanges: origDataHists
-  , histogramStates: map H.init $ metricHistograms' origDataRngs df
-  }
-  where 
-  svRange = DF.range (\(Slice.SliceSample s) -> unsafeJust $ maximum $ map yLoc s.slice) origDf
-  origDataHists = metricHistograms 11 origDf
-  origDataRngs = map histRanges origDataHists
+init :: String -> AppData -> Query AppData State
+init dn df = do
+  origDataHists <- metricHistograms 11
+  yValRange <- functionRange
+  let origDataRngs = map histRanges origDataHists
+  pure $ { dimName: dn
+         , samples: df
+         , showClusters: false
+         , sliceViewRange: yValRange
+         , sliceView: SV.init $ samples2slices df
+         , clusterSliceView: CSV.init $ samples2slices df
+         , histogramRanges: origDataHists
+         , histogramStates: map H.init $ DF.runQuery (metricHistograms' origDataRngs) df
+         }
 
 update :: Action -> State -> State
 update (ShowClusterView s) state = state {showClusters=s}
 update (UpdateSamples df) state =
   state { samples = df
         , sliceView = SV.update (SV.UpdateSlices $ samples2slices df) state.sliceView
-        , histogramStates = map H.init $ metricHistograms' origDataRngs df
+        , histogramStates = map H.init $ DF.runQuery (metricHistograms' origDataRngs) df
         }
   where 
   origDataRngs = map histRanges state.histogramRanges
 update (FocusPointFilter fp) state = state
-  { sliceView = SV.update (SV.HighlightNeighbors neighborSlices) $
-                  SV.update (SV.HoverSlice hoverSlices) state.sliceView
-  , clusterSliceView = CSV.update (CSV.HighlightNeighbors cvNeighborSlices) $
-                  CSV.update (CSV.HoverSlice cvHoverSlices) state.clusterSliceView
-  , histogramStates = if SM.isEmpty metricHighlights
-                         then map (\s -> H.update (H.ShowTicks []) s) state.histogramStates
-                         else mapCombine (\s x -> H.update (H.ShowTicks x) s) 
-                                         state.histogramStates 
-                                         metricHighlights
+  { sliceView        = SV.update (SV.HoverSlice hoverSlices) state.sliceView
+  , clusterSliceView = CSV.update (CSV.HoverSlice hoverSlices) state.sliceView
+  --{ sliceView = SV.update (SV.HighlightNeighbors neighborSlices) $
+                  --SV.update (SV.HoverSlice hoverSlices) state.sliceView
+  --, clusterSliceView = CSV.update (CSV.HighlightNeighbors cvNeighborSlices) $
+                  --CSV.update (CSV.HoverSlice cvHoverSlices) state.clusterSliceView
+  , histogramStates = let mh = DF.runQuery metricHighlights fp
+                       in if SM.isEmpty mh
+                          then map (\s -> H.update (H.ShowTicks []) s) state.histogramStates
+                          else mapCombine (\s x -> H.update (H.ShowTicks x) s) 
+                                          state.histogramStates mh
   }
   where 
-  fps = DF.run fp
-  nbrs = findNeighbors state.samples fps
-  hoverSlices = concatMap sample2slice fps
-  neighborSlices = concatMap sample2slice nbrs
-  cvHoverSlices = concatMap sample2slice fps
-  cvNeighborSlices = concatMap sample2slice nbrs
-  metricHighlights = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
+  --nbrs = findNeighbors state.samples fp
+  hoverSlices = samples2slices fp
+  --neighborSlices = concatMap sample2slice nbrs
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}
 update (ClusterSliceViewAction a) state =
@@ -100,10 +99,10 @@ update (HistoAction n a) state =
   where 
   newHisto = SM.update (\hs -> Just $ H.update a hs) n state.histogramStates
 
-clusterGroups :: AppData -> GroupData
-clusterGroups = DF.groupBy groupByCluster
-  where
-  groupByCluster (Slice.SliceSample s) = I.toNumber s.clusterId
+metricHighlights :: Query AppData (SM.StrMap (Array Number))
+metricHighlights = do
+  q <- DF.summarize (\(Slice.SliceSample fp) -> fp.metrics)
+  pure $ combineMaps q
 
 view :: State -> Html Action
 view state =
@@ -145,28 +144,36 @@ viewMetricHistogram name h st =
   rng = Tuple h.min h.max
   maxCount = unsafeJust $ maximum h.counts
 
-metricHistograms :: Int -> AppData -> SM.StrMap Histogram
-metricHistograms bins df = map (histogram bins) $ metricData df
+metricHistograms :: Int -> Query AppData (SM.StrMap Histogram)
+metricHistograms bins = (map (histogram bins)) <$> metricData
 
-metricHistograms' :: SM.StrMap (Array ValueRange) -> AppData -> SM.StrMap Histogram
-metricHistograms' binMap df = map (uncurry histogram') $ zipMap binMap (metricData df)
+metricHistograms' :: SM.StrMap (Array ValueRange) -> Query AppData (SM.StrMap Histogram)
+metricHistograms' binMap = do
+  md <- metricData
+  pure $ map (uncurry histogram') $ zipMap binMap md
 
-histogramRanges :: AppData -> SM.StrMap ValueRange
-histogramRanges df = map rng $ metricData df
-  where
-  rng xs = Tuple (unsafeJust $ minimum xs) (unsafeJust $ maximum xs)
+histogramRanges :: Query AppData (SM.StrMap (Maybe ValueRange))
+histogramRanges = (map numRange) <$> metricData
 
-metricData :: AppData -> SM.StrMap (Array Number)
-metricData df = combineMaps $ map (\(Slice.SliceSample fp) -> fp.metrics) fps
-  where
-  fps = DF.run df
 
-findNeighbors :: AppData -> Array Slice.SliceSample -> Array Slice.SliceSample
-findNeighbors df [(Slice.SliceSample fp)] =
-  DF.run $ DF.rowFilter (neighborFilter fp.neighborIds) df
-findNeighbors _  _       = []
+metricData :: Query AppData (SM.StrMap (Array Number))
+metricData = do
+  metrics <- DF.summarize (\(Slice.SliceSample fp) -> fp.metrics)
+  pure $ combineMaps metrics
 
-neighborFilter :: Array Int -> Slice.SliceSample -> Boolean
-neighborFilter fpIds (Slice.SliceSample fp) = elem fp.focusPointId fpIds
+--findNeighbors :: AppData -> Array Slice.SliceSample -> Array Slice.SliceSample
+--findNeighbors df [(Slice.SliceSample fp)] =
+  --DF.rowFilter (neighborFilter fp.neighborIds) df
+--findNeighbors _  _       = []
 
+--neighborFilter :: Array Int -> Slice.SliceSample -> Boolean
+--neighborFilter fpIds (Slice.SliceSample fp) = elem fp.focusPointId fpIds
+
+functionRange :: Query AppData (Tuple Number Number)
+functionRange = do
+  yVals <- DF.summarize maxSliceYLoc
+  pure $ fromMaybe (Tuple 0.0 0.0) $ numRange (filtered yVals)
+
+maxSliceYLoc :: Slice.SliceSample -> Maybe Number
+maxSliceYLoc (Slice.SliceSample s) = maximum $ map yLoc s.slice
 

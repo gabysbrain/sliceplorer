@@ -8,9 +8,10 @@ import Data.Slices (Sample(..), xLoc, yLoc)
 import Vis.Vega (VegaSlicePoint, initSlicePoint)
 import Vis.Vega.Splom (VegaPoint(..))
 
-import DataFrame as DF
+import Data.DataFrame as DF
 import Util (unsafeJust, mapEnum)
 import Data.Array (concatMap, findIndex, last, snoc, (!!))
+import Data.Foldable (foldMap)
 import Data.Int (toNumber)
 import Data.Maybe
 import Data.Samples (FocusPoint)
@@ -18,7 +19,7 @@ import Data.StrMap as SM
 import Data.Tuple (Tuple(..), fst, snd)
 
 samples2slices :: AppData -> Array VegaSlicePoint
-samples2slices df = concatMap sample2slice $ DF.run df
+samples2slices df = foldMap sample2slice df
 
 sample2slice :: Slice.SliceSample -> Array VegaSlicePoint
 sample2slice (Slice.SliceSample s) =
@@ -36,7 +37,7 @@ sample2slice (Slice.SliceSample s) =
     }
 
 splomData :: AppData -> Array VegaPoint
-splomData df = map (\(Slice.SliceSample s) -> splomDatum s.focusPointId s.focusPoint) $ DF.run df
+splomData df = foldMap (\(Slice.SliceSample s) -> [splomDatum s.focusPointId s.focusPoint]) df
 
 splomDatum :: Int -> FocusPoint -> VegaPoint
 splomDatum id fp = SM.fromFoldable $ named `snoc` (Tuple "id" (toNumber id))

@@ -11,6 +11,9 @@ import Partial.Unsafe (unsafePartial)
 mapEnum :: forall a b. (Int -> a -> b) -> Array a -> Array b
 mapEnum f xs = zipWith f (0..(length xs - 1)) xs
 
+map2 :: forall a b c. (a -> b -> c) -> Array a -> Array b -> Array c
+map2 f x y = f <$> x <*> y
+
 mapCombine :: forall a b. (a -> b -> a) -> SM.StrMap a -> SM.StrMap b -> SM.StrMap a
 mapCombine f ma mb =
   foldl handleKey SM.empty $ SM.toList ma
@@ -26,6 +29,13 @@ zipMap m1 m2 =
   handleFold mm k v1 = case SM.lookup k m2 of
                             Just v2 -> SM.insert k (Tuple v1 v2) mm
                             Nothing -> mm
+
+numRange :: forall a. Ord a => Array a -> Maybe (Tuple a a)
+numRange = foldl range' Nothing
+  where
+  range' Nothing              x = Just (Tuple x x)
+  range' (Just (Tuple mn mx)) x = Just $
+    Tuple (if x < mn then x else mn) (if x > mx then x else mx)
 
 unsafeJust :: forall a. Maybe a -> a
 unsafeJust x = unsafePartial (fromJust x)

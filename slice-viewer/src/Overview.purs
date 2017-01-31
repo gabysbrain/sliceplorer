@@ -2,9 +2,13 @@ module App.Overview where
 
 import Prelude hiding (div, min, max)
 import Data.Array (modifyAt, length, (!!), zipWith)
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.StrMap as SM
+import Data.DataFrame (Query)
+import Data.DataFrame as DF
 import Data.Foldable (elem, find)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Monoid (mempty)
+import Data.StrMap as SM
+import Data.Tuple (Tuple(..))
 import Data.Int as I
 import Pux.Html (Html, div, text, input, select, option)
 import Pux.Html.Attributes (className, value, type_, min, max, step)
@@ -20,21 +24,17 @@ import App.DimView as DV
 
 import Data.Samples (SampleGroup, dimNames, subset)
 import Data.Samples as Samples
-import DataFrame as DF
 import Data.SliceSample as Slice
 
 import Debug.Trace
 
 type State = 
   { samples :: AppData
-  , fullGroups :: Array {group :: Number, data :: AppData}
   , datasetName :: String
   , dimNames :: Array String
   , samplesToShow :: Int
   , totalSlices :: Int
   , groupMethod :: GroupMethod
-  , focusPointFilter :: AppData
-  --, metricRangeFilter :: Maybe MetricRangeFilter
   , dimViews :: Array DV.State
   }
 
@@ -52,38 +52,58 @@ instance showGroupMethod :: Show GroupMethod where
 init :: String -> SampleGroup -> State
 init name sg =
   { samples: df
-  , fullGroups: gdf
   , datasetName: name
-  , dimNames: dns
+  , dimNames: dimNames sg
   , samplesToShow: 50
   , totalSlices: Samples.length sg
   , groupMethod: GroupByDim
-  , focusPointFilter: DF.filterAll df
-  , dimViews: initDimViews df dns $ trimGroups 50 gdf
+  , dimViews: DF.runQuery (initDimViews 50) df
   }
   where 
   df = DF.init $ Slice.create sg
-  gdf = DF.run $ DF.groupBy groupByDim df
-  dns = dimNames sg
 
-initDimViews :: AppData -> Array String 
-             -> Array {group :: Number, data :: AppData} 
-             -> Array DV.State
-initDimViews fullDf dimNames = map initDimView
+initDimViews :: Int -> Query AppData (Array DV.State)
+initDimViews n = do
+  df <- DF.reset
+  q <- trimmedGroups n `DF.chain` initDimViews'
+  pure $ map (flip DF.runQuery df) q
+
+initDimViews' :: Query DimData (Array (Query AppData DV.State))
+initDimViews' = DF.summarize initDimView
+
+initDimView :: {group :: Tuple Int String, data :: AppData} -> Query AppData DV.State
+initDimView {group: Tuple _ dn, data: s} = DV.init dn s
+
+trimmedGroups :: Int -> Query AppData DimData
+trimmedGroups n = groupByDim `DF.chain` trimDimData n
+
+trimDimData :: Int -> Query DimData DimData
+trimDimData n = DF.mutate trim'
   where
-  initDimView {group: d, data: s} = DV.init fullDf (dimName dimNames (I.floor d)) s
+  trim' dd@{data: s} = dd {data=DF.runQuery (DF.trim n) s}
 
 nDim :: State -> Int
 nDim state = length state.dimNames
 
-groupByDim :: Slice.SliceSample -> Number
-groupByDim (Slice.SliceSample s) = I.toNumber s.d
+groupByDim :: Query AppData DimData
+groupByDim = DF.group dimInfo
+  where
+  dimInfo (Slice.SliceSample s) = Tuple s.d s.dimName
 
-filterFocusIds :: Array Int -> Slice.SliceSample -> Boolean
-filterFocusIds ids (Slice.SliceSample s) = elem s.focusPointId ids
+filterAll :: Query AppData AppData
+filterAll = DF.filter $ const false
 
-filterRange :: Int -> String -> HistBin -> Slice.SliceSample -> Boolean
-filterRange dim metric hb (Slice.SliceSample s) =
+filterFocusIds :: Array Int -> Query AppData AppData
+filterFocusIds ids = DF.filter (filterFocusIds' ids)
+
+filterFocusIds' :: Array Int -> Slice.SliceSample -> Boolean
+filterFocusIds' ids (Slice.SliceSample s) = elem s.focusPointId ids
+
+filterRange :: Int -> String -> HistBin -> Query AppData AppData
+filterRange dim metric hb = DF.filter (filterRange' dim metric hb)
+
+filterRange' :: Int -> String -> HistBin -> Slice.SliceSample -> Boolean
+filterRange' dim metric hb (Slice.SliceSample s) =
   case SM.lookup metric s.metrics of
        Just v -> v >= hb.start && v <= hb.end
        Nothing -> false
@@ -93,35 +113,35 @@ update (UpdateNumberFilter ev) state =
   case I.fromString ev.target.value of
        Nothing -> state
        Just n' | n' <= 0 -> state -- Don't allow invalid numbers
-       Just n' -> let trimmedGroups = trimGroups n' state.fullGroups
+       Just n' -> let tg = DF.runQuery (trimmedGroups n' `DF.chain` DF.summarize id) state.samples
                       dvUpdate {data:s} dv = DV.update (DV.UpdateSamples s) dv
                    in state { samplesToShow = n' 
-                            , dimViews = zipWith dvUpdate trimmedGroups state.dimViews
+                            , dimViews = zipWith dvUpdate tg state.dimViews
                             }
 update (ChangeGroupMethod ev) state =
   case ev.target.value of
-       "Dims"    -> state { groupMethod = GroupByDim
-                          , dimViews = map (DV.update (DV.ShowClusterView false)) state.dimViews
-                          }
+       "Dims"     -> state { groupMethod = GroupByDim
+                           , dimViews = map (DV.update (DV.ShowClusterView false)) state.dimViews
+                           }
        "Clusters" -> state { groupMethod = GroupByCluster
                            , dimViews = map (DV.update (DV.ShowClusterView true)) state.dimViews
                            }
        otherwise -> state
 -- FIXME: see if there's a better way than this deep inspection
 update (DimViewAction dim a@(DV.ClusterSliceViewAction (CSV.HoverSlice hs))) state =
-  updateFocusPoint (DF.rowFilter (filterFocusIds hs') state.samples) state
+  updateFocusPoint (DF.runQuery (filterFocusIds hs') state.samples) state
   where 
   hs' = map (\x -> x.slice_id) hs
 update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
-  updateFocusPoint (DF.rowFilter (filterFocusIds hs') state.samples) state
+  updateFocusPoint (DF.runQuery (filterFocusIds hs') state.samples) state
   where 
   hs' = map (\x -> x.slice_id) hs
 update (DimViewAction dim a@(DV.HistoAction metric (HV.HoverBar rng))) state =
   updateDimView dim a $ updateFocusPoint df state -- maintain bar highlight
   where
   df = case rng of
-            Just r -> DF.rowFilter (filterRange dim metric r) state.samples
-            Nothing -> DF.filterAll state.samples
+            Just r -> DF.runQuery (filterRange dim metric r) state.samples
+            Nothing -> DF.runQuery filterAll state.samples
 update (DimViewAction dim a) state = 
   updateDimView dim a state
 
@@ -135,18 +155,15 @@ updateDimViewFocusPoints :: DimData -> Array DV.State -> Array DV.State
 updateDimViewFocusPoints dvFp dvStates =
   mapEnum updateDV dvStates
   where
-  dvFp' = DF.run dvFp
-  updateDV i state = case find (\{group:g} -> g==I.toNumber i) dvFp' of
+  updateDV i state = case find (\{group:Tuple g _} -> g==i) dvFp of
     Just {data:d} -> DV.update (DV.FocusPointFilter d) state
-    Nothing       -> DV.update (DV.FocusPointFilter DF.empty) state
+    Nothing       -> DV.update (DV.FocusPointFilter mempty) state
 
 updateFocusPoint :: AppData -> State -> State
 updateFocusPoint fp state = state
-  { focusPointFilter = fp
-  , dimViews = updateDimViewFocusPoints dvFp state.dimViews
-  }
+  { dimViews = updateDimViewFocusPoints dvFp state.dimViews }
   where
-  dvFp = DF.groupBy groupByDim fp
+  dvFp = DF.runQuery groupByDim fp
 
 view :: State -> Html Action
 view state =
@@ -171,13 +188,4 @@ viewDims state =
   div [] $ mapEnum initDV state.dimViews
   where
   initDV d s = map (DimViewAction d) $ DV.view s
-
-dimName :: Array String -> Int -> String
-dimName dimNames d = fromMaybe ("Dim " <> show d) $ dimNames !! d
-
-trimGroups :: Int -> Array {group :: Number, data :: AppData} 
-                  -> Array {group ::Number, data :: AppData}
-trimGroups n = map f
-  where
-  f {group:d,data:dd} = {group: d, data: DF.takeFilter n dd}
 
