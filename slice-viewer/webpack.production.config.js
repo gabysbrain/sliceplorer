@@ -6,8 +6,8 @@ module.exports = {
   entry: [ path.join(__dirname, 'support/index.js') ],
   output: {
     path: path.resolve('./dist'),
-    filename: '[name]-[hash].min.js',
-    publicPath: '/dist/'
+    filename: '/js/[name]-[hash].min.js',
+    publicPath: '/js/'
   },
   module: {
     loaders: [
