@@ -5,7 +5,7 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   entry: [ path.join(__dirname, 'support/index.js') ],
   output: {
-    path: path.resolve('./static/dist'),
+    path: path.resolve('./dist'),
     filename: '[name]-[hash].min.js',
     publicPath: '/dist/'
   },
