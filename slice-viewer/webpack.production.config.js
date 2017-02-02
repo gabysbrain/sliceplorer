@@ -21,12 +21,23 @@ module.exports = {
           warnings: false
         }
       },
-      { test: /\.scss$/, loaders: ['style', 'css?sourceMap', 'sass?sourceMap'] }
+      { 
+        test: /\.scss$/, 
+        use: [
+          { loader: 'style-loader' }, 
+          { loader: 'css-loader' }, 
+          {
+            loader: 'sass-loader',
+            options: {
+              includePaths: [
+                path.resolve(__dirname, './bower_components/foundation-sites/scss/'),
+                path.resolve(__dirname, './bower_components/')
+              ]
+            }
+          }
+        ]
+      }
     ],
-  },
-  sassLoader: {
-    includePaths: [path.resolve(__dirname, './bower_components/foundation-sites/scss/'),
-                   path.resolve(__dirname, './bower_components/')]
   },
   plugins: [
     new webpack.DefinePlugin({
