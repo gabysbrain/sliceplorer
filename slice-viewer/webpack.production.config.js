@@ -7,7 +7,6 @@ module.exports = {
   output: {
     path: path.resolve('./dist'),
     filename: '/js/[name]-[hash].min.js',
-    //publicPath: 'sliceplorer.cs.univie.ac.at'
     publicPath: ''
   },
   module: {

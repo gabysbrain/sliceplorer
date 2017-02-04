@@ -7,6 +7,7 @@ import Data.Array ((..), length, head)
 import Data.Int (fromString)
 import Control.Monad.Eff.Exception (Error, error)
 import Network.HTTP.Affjax (AJAX)
+import Node.Process (PROCESS)
 
 import Pux (EffModel, noEffects)
 import Pux.Html (Html, div, button, text, select, option, input)
@@ -53,7 +54,7 @@ init :: State
 init = LoadingDatasets
 
 -- FIXME: ideally unifying this type is handled at a higher level...
-update :: forall eff. Action -> State -> EffModel State Action (ajax :: AJAX | eff)
+update :: forall eff. Action -> State -> EffModel State Action (ajax :: AJAX, process :: PROCESS | eff)
 update RequestDatasets state =
   { state: LoadingDatasets
   , effects: [ do

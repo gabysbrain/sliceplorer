@@ -9,12 +9,15 @@ import Data.Maybe (Maybe(Just, Nothing))
 import Data.Either (Either(..))
 import Data.StrMap as SM
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
+import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (Error, error)
 import Control.Monad.Aff (Aff, attempt)
 import Network.HTTP.Affjax (AJAX, get)
+import Node.Process (PROCESS)
 import Util (unsafeJust)
 import Control.Monad.Except (runExcept)
 
+import Data.Config (fullUrl)
 import Stats (Histogram, histogram)
 
 type FocusPoint = Array Number
@@ -52,10 +55,12 @@ type MetricRangeFilter =
   , maxVal :: Number
   }
 
-jsonSamples :: forall eff. String -> Int -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
+jsonSamples :: forall eff
+            .  String 
+            -> Int 
+            -> Aff (ajax :: AJAX, process :: PROCESS | eff) (Either Error SampleGroup)
 jsonSamples fname d = do
-  let url = "http://localhost:5000/slice/" <> fname <> "/" <> (show d) <> "/500"
-  --res <- attempt $ get "/data/test.csv"
+  url <- liftEff $ fullUrl ("/slice/" <> fname <> "/" <> (show d) <> "/500")
   res <- attempt $ get url
   let samples = case res of
         Right r  -> parseJson r.response
