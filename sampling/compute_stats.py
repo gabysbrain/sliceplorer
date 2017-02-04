@@ -1,6 +1,8 @@
 
 import pandas as pd
 import numpy as np
+import os
+import gzip
 
 class SliceGroup(object):
   def __init__(self, group_id, sample_n, xs):
@@ -111,11 +113,20 @@ def gradients(slice, d):
   return gs
 
 def convert_slices(fname, dims):
-  fname = 'slice_samples/%s_%s_slices.csv' % (fname, dims)
+  csv_fname = 'slice_samples/%s_%s_slices.csv' % (fname, dims)
+  gz_fname = 'slice_samples/%s_%s_slices.csv.gz' % (fname, dims)
   # TODO: check for file existence
+  f = None
+  try:
+    if os.path.isfile(gz_fname):
+      f = gzip.open(gz_fname, 'r')
+    else:
+      f = open(csv_fname, 'r')
 
-  #s = pd.read_csv(fname, dtype='float64')
-  s = pd.read_csv(fname)
+    #s = pd.read_csv(fname, dtype='float64')
+    s = pd.read_csv(f)
+  finally:
+    f.close()
 
   return slice_groups(s)
 

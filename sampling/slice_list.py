@@ -13,13 +13,24 @@ from myio import MyEncoder
 
 JSONDIR = "json_cache"
 
-def slice_list():
-  curname = None
-  dimlist = []
+def csv_slices():
   for fname in sorted(iglob("slice_samples/*_*_slices.csv")):
     m = re.match(r"(.*?)_([0-9]*?)_slices\.csv", basename(fname))
     group_name = m.group(1)
     dims = int(m.group(2))
+    yield (group_name, dims)
+
+def gz_csv_slices():
+  for fname in sorted(iglob("slice_samples/*_*_slices.csv.gz")):
+    m = re.match(r"(.*?)_([0-9]*?)_slices\.csv\.gz", basename(fname))
+    group_name = m.group(1)
+    dims = int(m.group(2))
+    yield (group_name, dims)
+
+def slice_list():
+  curname = None
+  dimlist = []
+  for group_name, dims in sorted(list(csv_slices()) + list(gz_csv_slices())):
     if curname != group_name:
       dimlist.sort()
       if curname != None: yield (curname, dimlist)
