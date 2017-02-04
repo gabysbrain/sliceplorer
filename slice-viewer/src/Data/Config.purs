@@ -8,7 +8,8 @@ import Node.Process (PROCESS, lookupEnv)
 
 server :: forall eff. Eff (process :: PROCESS | eff) String
 server = do
-  devEnv <- fromMaybe "development" <$> lookupEnv "NODE_ENV"
+  -- if there's no NODE_ENV then we're probably on a web server
+  devEnv <- fromMaybe "production" <$> lookupEnv "NODE_ENV"
   pure $ if devEnv == "production"
             then "http://sliceplorer.cs.univie.ac.at"
             else "http://localhost:5000"
