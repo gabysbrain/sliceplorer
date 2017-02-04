@@ -28,7 +28,7 @@ namespace :appserver do
     desc "#{command} gunicorn server."
     task command do
       on roles(:app) do
-        execute "systemctl", command, "slice_server"
+        execute :sudo, "systemctl", command, "slice_server"
         #execute "/etc/init.d/unicorn_#{fetch(:application)} #{command}"
       end
     end
