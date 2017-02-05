@@ -18,15 +18,12 @@ import Stats (HistBin)
 import App.Core (AppData, DimData)
 
 import Vis.Vega.Slices as SV
-import Vis.Vega.ClusterSlices as CSV
 import Vis.Vega.Histogram as HV
 import App.DimView as DV
 
 import Data.Samples (SampleGroup, dimNames, subset)
 import Data.Samples as Samples
 import Data.SliceSample as Slice
-
-import Debug.Trace
 
 type State = 
   { samples :: AppData
@@ -128,10 +125,6 @@ update (ChangeGroupMethod ev) state =
                            }
        otherwise -> state
 -- FIXME: see if there's a better way than this deep inspection
-update (DimViewAction dim a@(DV.ClusterSliceViewAction (CSV.HoverSlice hs))) state =
-  updateFocusPoint (DF.runQuery (filterFocusIds hs') state.samples) state
-  where 
-  hs' = map (\x -> x.slice_id) hs
 update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
   updateFocusPoint (DF.runQuery (filterFocusIds hs') state.samples) state
   where 

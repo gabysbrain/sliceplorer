@@ -25,7 +25,6 @@ import Data.ValueRange (ValueRange)
 
 import Vis.Vega.Histogram as H
 import Vis.Vega.Slices as SV
-import Vis.Vega.ClusterSlices as CSV
 import Data.SliceSample as Slice
 
 import Debug.Trace
@@ -33,10 +32,8 @@ import Debug.Trace
 type State =
   { dimName :: String
   , samples :: AppData
-  , showClusters :: Boolean
   , sliceViewRange :: ValueRange
   , sliceView :: SV.State
-  , clusterSliceView :: CSV.State
   , histogramRanges :: SM.StrMap Histogram
   , histogramStates :: SM.StrMap H.State
   }
@@ -46,7 +43,6 @@ data Action
   | FocusPointFilter AppData
   | UpdateSamples AppData
   | SliceViewAction SV.Action
-  | ClusterSliceViewAction CSV.Action
   | HistoAction String H.Action
 
 init :: String -> AppData -> Query AppData State
@@ -56,31 +52,25 @@ init dn df = do
   let origDataRngs = map histRanges origDataHists
   pure $ { dimName: dn
          , samples: df
-         , showClusters: false
          , sliceViewRange: yValRange
          , sliceView: SV.init $ samples2slices df
-         , clusterSliceView: CSV.init $ samples2slices df
          , histogramRanges: origDataHists
          , histogramStates: map H.init $ DF.runQuery (metricHistograms' origDataRngs) df
          }
 
 update :: Action -> State -> State
-update (ShowClusterView s) state = state {showClusters=s}
+update (ShowClusterView s) state = state {sliceView = SV.update (SV.ShowClusters s) state.sliceView}
 update (UpdateSamples df) state =
   state { samples = df
         , sliceView = SV.update (SV.UpdateSlices $ samples2slices df) state.sliceView
-        , clusterSliceView = CSV.update (CSV.UpdateSlices $ samples2slices df) state.clusterSliceView
         , histogramStates = map H.init $ DF.runQuery (metricHistograms' origDataRngs) df
         }
   where 
   origDataRngs = map histRanges state.histogramRanges
 update (FocusPointFilter fp) state = state
   { sliceView        = SV.update (SV.HoverSlice hoverSlices) state.sliceView
-  , clusterSliceView = CSV.update (CSV.HoverSlice hoverSlices) state.sliceView
   --{ sliceView = SV.update (SV.HighlightNeighbors neighborSlices) $
                   --SV.update (SV.HoverSlice hoverSlices) state.sliceView
-  --, clusterSliceView = CSV.update (CSV.HighlightNeighbors cvNeighborSlices) $
-                  --CSV.update (CSV.HoverSlice cvHoverSlices) state.clusterSliceView
   , histogramStates = let mh = DF.runQuery metricHighlights fp
                        in if SM.isEmpty mh
                           then map (\s -> H.update (H.ShowTicks []) s) state.histogramStates
@@ -93,8 +83,6 @@ update (FocusPointFilter fp) state = state
   --neighborSlices = concatMap sample2slice nbrs
 update (SliceViewAction a) state =
   state {sliceView=SV.update a state.sliceView}
-update (ClusterSliceViewAction a) state =
-  state {clusterSliceView=CSV.update a state.clusterSliceView}
 update (HistoAction n a) state =
   state {histogramStates=newHisto}
   where 
@@ -121,12 +109,7 @@ viewName name = div [className "dim-name"] [text name]
 viewAllSlices :: State -> Html Action
 viewAllSlices state =
   div [className "slices-view"] 
-    [ sliceView state.showClusters ]
-  where 
-  sliceView false = 
-    map SliceViewAction $ SV.view state.sliceViewRange state.sliceView
-  sliceView true = 
-    map ClusterSliceViewAction $ CSV.view state.sliceViewRange state.clusterSliceView
+    [ map SliceViewAction $ SV.view state.sliceViewRange state.sliceView ]
 
 viewMetricHistograms :: State -> Html Action
 viewMetricHistograms state = 

@@ -1,4 +1,4 @@
-// module Vis.Vega.Slices
+// module Vis.Vega.ClusterSlices
 
 var React = require('react');
 var Component = React.Component;
@@ -7,14 +7,14 @@ var PureRenderMixin = require('react-addons-pure-render-mixin');
 var Pux = require('purescript-pux');
 var vg = require('vega');
 
-function _spec(minVal, maxVal) {
+function _spec(minVal, maxVal, showClusters) {
   return {
     'width': 340,
     'height': 170,
     'data': [
       {'name': 'lines'}, 
       {'name': 'hover-highlight'}, 
-      {'name': 'nbrs-highlight'}
+      {'name': 'nbrs-highlight'},
     ],
     'signals': [{
       'name': 'slicehover', 'init': null,
@@ -22,6 +22,8 @@ function _spec(minVal, maxVal) {
         {'type': '@sliceline:mouseover', 'expr': 'datum'},
         {'type': '@sliceline:mouseout', 'expr': 'null'}
       ]
+    }, {
+      'name': 'showclusters', 'init': showClusters
     }],
     'scales': [{
       'name': 'x',
@@ -35,6 +37,11 @@ function _spec(minVal, maxVal) {
       //'domain': {'data': 'lines', 'field': 'y'},
       'domain': [minVal, maxVal],
       'range': 'height'
+    }, {
+      'name': 'color',
+      'type': 'ordinal',
+      'domain': {'data': 'lines', 'field': 'cluster_id'},
+      'range': 'category10'
     }],
     'axes': [{
       'type': 'x',
@@ -64,7 +71,13 @@ function _spec(minVal, maxVal) {
             'y': { 'scale': 'y', 'field': 'y' },
             'interpolate': { 'value': 'basis'},
             'strokeWidth': { 'value': 1 },
-            'stroke': { 'value': 'black' },
+            'stroke': [{
+              'test': 'showclusters',
+              'scale': 'color',
+              'field': 'cluster_id'
+            }, {
+              'value': 'black'
+            }],
             'strokeOpacity': { 'value': 0.1 }
           }
         }
@@ -146,7 +159,8 @@ var VegaSlices = React.createClass({
     var handleHover = this.props.onSliceHover;
     var minVal = this.props['data-minVal'];
     var maxVal = this.props['data-maxVal'];
-    var spec = _spec(minVal, maxVal);
+    var showClusters = this.props['show-clusters'];
+    var spec = _spec(minVal, maxVal, showClusters);
     //spec.axes[0].title = this.props.xAxisName;
     var self = this;
 
@@ -181,8 +195,14 @@ var VegaSlices = React.createClass({
     var data = this.props.data;
     var hoverSlice = this.props.hoverSlice;
     var nbrSlices = this.props['data-neighbors'];
+    var showClusters = this.props['show-clusters'];
 
     if (vis) {
+      // TODO: transfer these to signals maybe
+      //vis.data('show-clusters').remove(function() {return true;});
+      //vis.data('show-clusters').insert(showClusters);
+      vis.signal('showclusters', showClusters);
+
       // update data in case it changed
       vis.data('hover-highlight').remove(function() {return true;});
       vis.data('hover-highlight').insert(hoverSlice);

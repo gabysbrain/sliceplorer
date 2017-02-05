@@ -16,12 +16,11 @@ import Data.ValueRange (ValueRange, minVal, maxVal)
 
 import Vis.Vega (VegaSlicePoint, VegaHoverPoint, SliceHoverEvent, dataAttr, toVegaData)
 
-import Debug.Trace
-
 foreign import fromReact :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 
 data Action
   = UpdateSlices (Array VegaSlicePoint)
+  | ShowClusters Boolean
   | HoverSlice (Array VegaSlicePoint)
   | HighlightNeighbors (Array VegaSlicePoint)
 
@@ -30,6 +29,7 @@ type State =
     slices :: Array VegaSlicePoint
   , hoverSlice :: Array VegaSlicePoint
   , neighbors :: Array VegaSlicePoint
+  , showClusters :: Boolean
   }
 
 init :: Array VegaSlicePoint -> State 
@@ -37,16 +37,14 @@ init pts =
   { slices: pts
   , hoverSlice: []
   , neighbors: []
+  , showClusters: false
   }
 
 update :: Action -> State -> State
-update (UpdateSlices s) state = state
-  { slices = s
-  }
-update (HoverSlice ev) state = state 
-  { hoverSlice = ev
-  }
-update (HighlightNeighbors nbrs) state = state {neighbors=nbrs}
+update (UpdateSlices s) state = state { slices = s }
+update (ShowClusters cs) state = state { showClusters = cs }
+update (HoverSlice ev) state = state { hoverSlice = ev }
+update (HighlightNeighbors nbrs) state = state { neighbors = nbrs }
 
 onSliceHover :: forall action. (SliceHoverEvent -> action) -> Attribute action
 onSliceHover s = runFn2 handler "onSliceHover" saniHandler
@@ -57,8 +55,9 @@ view :: ValueRange -> State -> Html Action
 view yRange state = fromReact (attrs yRange state) []
 
 attrs :: ValueRange -> State -> Array (Attribute Action)
-attrs yRange state = [da, na, fa, ha, mnv, mxv]
+attrs yRange state = [da, na, fa, ha, mnv, mxv, sc]
   where
+  sc = attr "show-clusters" state.showClusters
   mnv = attr "data-minVal" $ minVal yRange
   mxv = attr "data-maxVal" $ maxVal yRange
   da = dataAttr $ toVegaData state.slices
