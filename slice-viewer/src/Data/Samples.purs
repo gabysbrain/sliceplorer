@@ -13,7 +13,6 @@ import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (Error, error)
 import Control.Monad.Aff (Aff, attempt)
 import Network.HTTP.Affjax (AJAX, get)
-import Node.Process (PROCESS)
 import Util (unsafeJust)
 import Control.Monad.Except (runExcept)
 
@@ -58,9 +57,9 @@ type MetricRangeFilter =
 jsonSamples :: forall eff
             .  String 
             -> Int 
-            -> Aff (ajax :: AJAX, process :: PROCESS | eff) (Either Error SampleGroup)
+            -> Aff (ajax :: AJAX | eff) (Either Error SampleGroup)
 jsonSamples fname d = do
-  url <- liftEff $ fullUrl ("/slice/" <> fname <> "/" <> (show d) <> "/500")
+  let url = fullUrl ("/slice/" <> fname <> "/" <> (show d) <> "/500")
   res <- attempt $ get url
   let samples = case res of
         Right r  -> parseJson r.response

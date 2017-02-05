@@ -11,7 +11,6 @@ import Control.Monad.Eff.Exception (Error, error)
 import Control.Monad.Aff (Aff, attempt)
 import Control.Monad.Except (runExcept)
 import Network.HTTP.Affjax (AJAX, get)
-import Node.Process (PROCESS)
 
 import Data.Config (fullUrl)
 
@@ -28,9 +27,9 @@ instance datasetIsForeign :: IsForeign Dataset where
     d <- readProp "dims" json
     pure $ Dataset {name: n, dims: d}
 
-jsonDatasets :: forall eff. Aff (ajax :: AJAX, process :: PROCESS | eff) (Either Error Datasets)
+jsonDatasets :: forall eff. Aff (ajax :: AJAX | eff) (Either Error Datasets)
 jsonDatasets = do
-  url <- liftEff $ fullUrl "/slice"
+  let url = fullUrl "/slice"
   res <- attempt $ get url
   let datasets = case res of
         Right r -> parseJson r.response
