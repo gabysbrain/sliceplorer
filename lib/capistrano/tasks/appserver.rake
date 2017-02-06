@@ -41,7 +41,7 @@ namespace :appserver do
     task :clear do
       on roles(:app) do
         within fetch(:app_path, release_path) do
-          execute "rm", "-rf", "json_cache"
+          execute "rm", "json_cache/*"
         end
       end
     end
@@ -61,6 +61,19 @@ namespace :appserver do
       refresh the data/clustering cache (very slow)
       DESC
     task :refresh => [:clear, :create]
+
+    desc <<-DESC
+      link the cache directory to the shared directory
+      DESC
+    task :link do
+      on roles(:app) do
+        within fetch(:app_path, release_path) do
+          cachepath = "#{shared_path}/json_cache"
+          execute :mkdir, "-p", cachepath
+          execute :ln, "-s", cachepath, "json_cache"
+        end
+      end
+    end
   end
 
 end

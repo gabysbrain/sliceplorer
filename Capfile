@@ -54,4 +54,5 @@ after "deploy:updated", "frontend:build"
 # data
 after "deploy:updated", "data:upload"
 after "deploy:updated", "data:link"
+after "deploy:updated", "appserver:cache:link"
 
