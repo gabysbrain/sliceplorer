@@ -2,6 +2,7 @@
 from glob import iglob
 from os.path import basename
 import os
+import gzip
 import re
 import json
 import numpy
@@ -42,11 +43,11 @@ def slice_list():
     yield (curname, dimlist)
 
 def get(function, dims):
-  cachefile = JSONDIR + "/cache_%s_%s.json" % (function, dims)
+  cachefile = JSONDIR + "/cache_%s_%s.json.gz" % (function, dims)
   # TODO: check code hash and data mod date
   f = None
   try:
-    f = open(cachefile, 'r')
+    f = gzip.open(cachefile, 'rt')
     s = json.load(f)
     s = [SliceGroup.from_dict(sg) for sg in s]
   except OSError:
@@ -57,7 +58,7 @@ def get(function, dims):
     # save the cache file
     if not os.path.exists(JSONDIR):
       os.makedirs(JSONDIR)
-    f = open(cachefile, 'w')
+    f = gzip.open(cachefile, 'wt')
     json.dump(s, f, cls=MyEncoder)
   finally:
     if f: f.close()
