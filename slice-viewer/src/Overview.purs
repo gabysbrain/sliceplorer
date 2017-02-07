@@ -17,7 +17,7 @@ import Util (mapEnum)
 import Stats (HistBin)
 import App.Core (AppData, DimData)
 
-import Vis.Vega.Slices as SV
+import Vis.D3.SliceChart as SV
 import Vis.Vega.Histogram as HV
 import App.DimView as DV
 
@@ -128,7 +128,7 @@ update (ChangeGroupMethod ev) state =
 update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
   updateFocusPoint (DF.runQuery (filterFocusIds hs') state.samples) state
   where 
-  hs' = map (\x -> x.slice_id) hs
+  hs' = map (\(Slice.SliceSample x) -> x.focusPointId) hs
 update (DimViewAction dim a@(DV.HistoAction metric (HV.HoverBar rng))) state =
   updateDimView dim a $ updateFocusPoint df state -- maintain bar highlight
   where

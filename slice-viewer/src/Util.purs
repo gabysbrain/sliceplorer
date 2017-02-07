@@ -1,7 +1,8 @@
 module Util where
 
 import Prelude
-import Data.Array (zipWith, length, snoc, (..))
+import Data.Array (zipWith, length, snoc, fromFoldable, (..))
+import Data.DataFrame (DataFrame)
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (foldl)
@@ -36,4 +37,7 @@ numRange = foldl range' Nothing
 
 unsafeJust :: forall a. Maybe a -> a
 unsafeJust x = unsafePartial (fromJust x)
+
+df2a :: forall a. DataFrame a -> Array a
+df2a = fromFoldable
 
