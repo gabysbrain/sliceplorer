@@ -18,7 +18,7 @@ import Stats (HistBin)
 import App.Core (AppData, DimData)
 
 import Vis.D3.SliceChart as SV
-import Vis.Vega.Histogram as HV
+import Vis.D3.Histogram as HV
 import App.DimView as DV
 
 import Data.Samples (SampleGroup, dimNames, subset)

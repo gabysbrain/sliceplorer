@@ -1,4 +1,4 @@
-module Vis.Vega.Histogram where
+module Vis.D3.Histogram where
 
 import Prelude
 import Data.Function.Uncurried (runFn2)
@@ -9,8 +9,6 @@ import Stats (Histogram, HistBin)
 import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
-
-import Vis.Vega (dataAttr, toVegaData)
 
 import Data.ValueRange (ValueRange, minVal, maxVal)
 
@@ -53,15 +51,15 @@ view binRange maxCount state = fromReact (attrs binRange maxCount state) []
 attrs :: ValueRange -> Int -> State -> Array (Attribute Action)
 attrs barRange maxCount state = 
   case state.highlightBar of
-       Just h -> [bna, bxa, ca, da, fa, ta, attr "highlightBar" h]
+       Just h -> [bna, bxa, ca, da, fa, ta, attr "data-highlightBar" h]
        Nothing -> [bna, bxa, ca, da, fa, ta]
   where
   bna = attr "data-binMin" $ minVal barRange
   bxa = attr "data-binMax" $ maxVal barRange
   ca = attr "data-maxCount" maxCount
-  da = dataAttr $ toVegaData $ convert state.histogram
+  da = attr "data-histogram" $ convert state.histogram
   fa = onBarHover HoverBar
-  ta = attr "highlightTicks" $ toVegaData $ state.highlightTicks
+  ta = attr "data-highlight" state.highlightTicks
   convert histo =
     zipWith (\s c -> {bin_start: s, bin_end: s+histo.width, count: c})
       histo.binStarts histo.counts
