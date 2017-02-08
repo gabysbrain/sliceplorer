@@ -16,7 +16,6 @@ import Util (mapEnum, mapCombine, zipMap, unsafeJust, numRange, df2a)
 
 import Data.Slices (yLoc)
 import Data.Samples (combineMaps)
-import Data.Convert (samples2slices, sample2slice)
 
 import App.Core (AppData, DimData)
 import Data.DataFrame (Query)
