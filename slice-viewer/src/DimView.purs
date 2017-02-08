@@ -23,7 +23,7 @@ import Data.DataFrame (Query)
 import Data.DataFrame as DF
 import Data.ValueRange (ValueRange)
 
-import Vis.Vega.Histogram as H
+import Vis.D3.Histogram as H
 import Vis.D3.SliceChart as SV
 import Data.SliceSample as Slice
 
