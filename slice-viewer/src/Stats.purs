@@ -2,7 +2,7 @@ module Stats where
 
 import Prelude
 import Data.Array (span, snoc, cons, sort, length, zip, filter, head, last)
-import Data.Foldable (maximum, minimum)
+import Data.Foldable (sum, maximum, minimum)
 import Data.Tuple (Tuple(..))
 import Data.Int (toNumber)
 import Util (unsafeJust)
@@ -17,12 +17,14 @@ type Histogram =
   , binStarts :: Array Number
   , binEnds :: Array Number
   , counts :: Array Int
+  , percentages :: Array Number
   }
 
 type HistBin =
   { start :: Number
   , end :: Number
   , count :: Int
+  , percentage :: Number
   }
 
 {--instance showHistBin :: Show HistBin where--}
@@ -41,10 +43,12 @@ histogram' binSpecs nums =
   , binStarts: map (\x -> x.start) bins
   , binEnds: map (\x -> x.end) bins
   , counts: map (\x -> x.count) bins
+  , percentages: map (\x -> (toNumber x.count) / ttlCount) bins
   }
   where
   binCount rng = length $ filter (\x -> x >= minVal rng && x <= maxVal rng) nums
   bins = map (\rng -> {start: minVal rng, end: maxVal rng, count: binCount rng}) binSpecs
+  ttlCount = toNumber $ sum $ map (_.count) bins
 
 binRanges :: Int -> Array Number -> Array ValueRange
 binRanges numBins nums =

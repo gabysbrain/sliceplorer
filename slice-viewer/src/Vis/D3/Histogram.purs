@@ -43,7 +43,7 @@ update (ShowTicks ts) state = state
 onBarHover :: forall action. (BarHoverEvent -> action) -> Attribute action
 onBarHover h = runFn2 handler "onBarHover" saniHandler
   where
-    saniHandler e = h $ map (\x -> {start: x.bin_start, end: x.bin_end, count: x.count}) $ N.toMaybe e
+    saniHandler e = h $ map (\x -> {start: x.bin_start, end: x.bin_end, count: x.count, percentage: x.percentage}) $ N.toMaybe e
 
 view :: ValueRange -> Int -> State -> Html Action
 view binRange maxCount state = fromReact (attrs binRange maxCount state) []
@@ -61,6 +61,6 @@ attrs barRange maxCount state =
   fa = onBarHover HoverBar
   ta = attr "data-highlight" state.highlightTicks
   convert histo =
-    zipWith (\s c -> {bin_start: s, bin_end: s+histo.width, count: c})
-      histo.binStarts histo.counts
+    zipWith (\s p -> {bin_start: s, bin_end: s+histo.width, percentage: p})
+      histo.binStarts histo.percentages
 

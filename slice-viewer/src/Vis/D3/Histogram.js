@@ -24,7 +24,8 @@ var _chart = function() {
              .ticks(5)
              .tickFormat(d3.format('0.2f')),
     yAxis: d3.axisLeft(y)
-             .ticks(7),
+             .ticks(7)
+             .tickFormat(d3.format('.0%'))
   };
 }
 
@@ -36,10 +37,6 @@ function drawHisto(self, chart, data) {
   bars.enter()
     .append('rect')
       .attr('class', 'histbar')
-      .attr('x', function(d) {return x(d.bin_start);})
-      .attr('width', function(d) {return x(d.bin_end) - x(d.bin_start);})
-      .attr('height', function(d) {return y.range()[0] - y(d.count);})
-      .attr('y', function(d) {return y(d.count);})
       .attr('stroke', 'darkgrey')
       .attr('stroke-width', 1)
       .attr('fill', 'lightgrey')
@@ -49,6 +46,11 @@ function drawHisto(self, chart, data) {
       .on('mouseout', function() {
         handleHover(null);
       });
+  bars
+      .attr('x', function(d) {return x(d.bin_start);})
+      .attr('width', function(d) {return x(d.bin_end) - x(d.bin_start);})
+      .attr('height', function(d) {return y.range()[0] - y(d.percentage);})
+      .attr('y', function(d) {return y(d.percentage);})
   bars.exit().remove();
 }
 
@@ -76,8 +78,8 @@ function drawHighlights(self, chart, data) {
       .attr('class', 'highlight bar')
       .attr('x', function(d) {return x(d.start);})
       .attr('width', function(d) {return x(d.end) - x(d.start);})
-      .attr('height', function(d) {return y.range()[0] - y(d.count);})
-      .attr('y', function(d) {return y(d.count);})
+      .attr('height', function(d) {return y.range()[0] - y(d.percentage);})
+      .attr('y', function(d) {return y(d.percentage);})
       .attr('stroke', 'darkgrey')
       .attr('stroke-width', 1)
       .attr('fill', 'red')
@@ -117,7 +119,7 @@ function updateVis(self) {
   self.state.x.range([0, visWidth])
               .domain([minX, maxX]);
   self.state.y.range([visHeight, 0])
-              .domain([0, maxY]);
+              .domain([0, 1]);
 
   var xAxis = svg.select('g.x.axis');
   xAxis.attr('transform', 'translate(0,'+self.state.y.range()[0]+')')
