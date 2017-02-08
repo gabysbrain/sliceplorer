@@ -15,13 +15,16 @@ var _chart = function() {
   return {
     width: 163,
     height: 149,
-    margin: {left: 35, top: 10, right: 10, bottom: 20},
+    margin: {left: 35, top: 10, right: 10, bottom: 40},
 
     x: x,
     y: y,
 
-    xAxis: d3.axisBottom(x),
-    yAxis: d3.axisLeft(y),
+    xAxis: d3.axisBottom(x)
+             .ticks(5)
+             .tickFormat(d3.format('0.2f')),
+    yAxis: d3.axisLeft(y)
+             .ticks(7),
   };
 }
 
@@ -118,7 +121,14 @@ function updateVis(self) {
 
   var xAxis = svg.select('g.x.axis');
   xAxis.attr('transform', 'translate(0,'+self.state.y.range()[0]+')')
-       .call(self.state.xAxis);
+       .call(self.state.xAxis)
+    .selectAll("text")
+      //.attr("y", 0)
+      //.attr("x", 9)
+      .attr("dx", "-.8em")
+      .attr("dy", ".35em")
+      .attr("transform", "rotate(-45)")
+      .style("text-anchor", "end");
   var yAxis = svg.select('g.y.axis');
   yAxis.call(self.state.yAxis);
 
