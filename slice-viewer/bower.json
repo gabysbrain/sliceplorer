@@ -14,7 +14,7 @@
     "purescript-aff": "^2.0.2",
     "purescript-pux-devtool": "^4.1.0",
     "purescript-foreign": "^3.0.1",
-    "purescript-maps": "^2.0.2",
+    "purescript-maps": "^2.1.0",
     "purescript-nullable": "^2.0.0",
     "purescript-debug": "^2.0.0",
     "purescript-monoid": "^2.2.0",
