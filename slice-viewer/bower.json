@@ -1,8 +1,8 @@
 {
-  "name": "pux-starter-app",
+  "name": "sliceplorer",
   "homepage": "https://github.com/alexmingoia/pux-starter-app",
   "authors": [
-    "Alex Mingoia <talk@alexmingoia.com>"
+    "Thomas Torsney-Weir <thomas.torsney-weir@univie.ac.at>"
   ],
   "description": "Starter Pux application using webpack with hot-reloading.",
   "main": "support/index.js",
