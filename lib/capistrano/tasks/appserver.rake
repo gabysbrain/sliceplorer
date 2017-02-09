@@ -19,7 +19,7 @@ namespace :appserver do
     on roles(:app) do
       within fetch(:venv_path, release_path) do
         app_path = fetch(:app_path, release_path)
-        execute "bin/pip", "install", "-r", "#{app_path}/requirements_production.txt"
+        execute "bin/pip", "install", "-u", "-r", "#{app_path}/requirements_production.txt"
       end
     end
   end
