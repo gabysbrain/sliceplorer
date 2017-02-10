@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 n=500
-if [ "$DEPLOY_ENV" -eq "PRODUCTION"]; then
+if [ "$DEPLOY_ENV" == "production" ]; then
   host="http://sliceplorer.cs.univie.ac.at"
 else
   host="http://localhost:5000"

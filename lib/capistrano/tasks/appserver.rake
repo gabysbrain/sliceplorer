@@ -41,7 +41,7 @@ namespace :appserver do
     task :clear do
       on roles(:app) do
         within fetch(:app_path, release_path) do
-          execute "rm", "json_cache/*"
+          execute :rm, "-f", "json_cache/*"
         end
       end
     end

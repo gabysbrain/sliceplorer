@@ -34,7 +34,7 @@ server "sliceplorer.cs.univie.ac.at", user: "torsnet6cs", roles: %w{app db web}
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
 set :default_env, {
-  'DEPLOY_ENV': 'PRODUCTION'
+  'DEPLOY_ENV': 'production'
 }
 
 
