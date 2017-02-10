@@ -1,7 +1,11 @@
 #!/bin/sh
 
 n=500
-host="http://localhost:5000"
+if [ "$DEPLOY_ENV" -eq "PRODUCTION"]; then
+  host="http://sliceplorer.cs.univie.ac.at"
+else
+  host="http://localhost:5000"
+fi
 
 for file in `ls slice_samples/*_slices.csv*`; do
   tmp=${file#slice_samples/}
