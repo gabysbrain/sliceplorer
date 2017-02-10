@@ -2,7 +2,7 @@
 
 n=500
 if [ "$DEPLOY_ENV" == "production" ]; then
-  host="http://sliceplorer.cs.univie.ac.at"
+  host="http://localhost:8000"
 else
   host="http://localhost:5000"
 fi
