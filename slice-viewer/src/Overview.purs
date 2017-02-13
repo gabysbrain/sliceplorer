@@ -83,9 +83,10 @@ nDim :: State -> Int
 nDim state = length state.dimNames
 
 groupByDim :: Query AppData DimData
-groupByDim = DF.group dimInfo
+groupByDim = DF.group dimInfo `DF.chain` DF.sort ord
   where
   dimInfo (Slice.SliceSample s) = Tuple s.d s.dimName
+  ord {group:(Tuple d1 _)} {group:(Tuple d2 _)} = compare d1 d2
 
 filterAll :: Query AppData AppData
 filterAll = DF.filter $ const false
