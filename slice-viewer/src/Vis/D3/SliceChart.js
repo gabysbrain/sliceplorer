@@ -101,11 +101,13 @@ function updateVis(self) {
   var highlightData = self.props["data-highlight"];
   var minY = self.props['data-minVal'];
   var maxY = self.props['data-maxVal'];
+  var minX = self.props['data-minX'];
+  var maxX = self.props['data-maxX'];
   var showClusters = self.props['data-showclusters'];
 
   // Update axes and scales
   self.state.x.range([0, visWidth])
-              .domain([-5, 5]);
+              .domain([minX, maxX]);
   self.state.y.range([visHeight, 0])
               .domain([0, maxY]);
 

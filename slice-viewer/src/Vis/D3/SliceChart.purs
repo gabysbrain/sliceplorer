@@ -25,14 +25,16 @@ data Action
 
 type State = 
   { slices :: Array SliceSample
+  , xRange :: ValueRange
   , yRange :: ValueRange
   , highlight :: Array SliceSample
   , showClusters :: Boolean
   }
 
-init :: ValueRange -> Array SliceSample -> State
-init yRange slices =
+init :: ValueRange -> ValueRange -> Array SliceSample -> State
+init xRange yRange slices =
   { slices: slices
+  , xRange: xRange
   , yRange: yRange
   , highlight: []
   , showClusters: false
@@ -58,6 +60,8 @@ attrs state =
   , attr "data-showclusters" state.showClusters
   , attr "data-minVal" $ minVal state.yRange
   , attr "data-maxVal" $ maxVal state.yRange
+  , attr "data-minX" $ minVal state.xRange
+  , attr "data-maxX" $ maxVal state.xRange
   , onSliceHover HoverSlice
   ]
 

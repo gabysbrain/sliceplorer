@@ -1,7 +1,7 @@
 module App.DimView where
 
 import Prelude hiding (div)
-import Data.Array (modifyAt, zipWith, concatMap)
+import Data.Array (modifyAt, zipWith, concatMap, concat)
 import Data.Filterable (filtered)
 import Data.Foldable (elem, find, minimum, maximum)
 import Data.Int as I
@@ -14,7 +14,7 @@ import Pux.Html.Attributes (className, key)
 --import Pux.Html.Events (onChange, FormEvent)
 import Util (mapEnum, mapCombine, zipMap, unsafeJust, numRange, df2a)
 
-import Data.Slices (yLoc)
+import Data.Slices (xLoc, yLoc)
 import Data.Samples (combineMaps)
 
 import App.Core (AppData, DimData)
@@ -48,9 +48,10 @@ init dn df = do
   origDataHists <- metricHistograms 11
   yValRange <- functionRange
   let origDataRngs = map histRanges origDataHists
+      xValRange = DF.runQuery inputRange df
   pure $ { dimName: dn
          , samples: df
-         , sliceView: SV.init yValRange $ df2a df
+         , sliceView: SV.init xValRange yValRange $ df2a df
          , histogramRanges: origDataHists
          , histogramStates: map H.init $ DF.runQuery (metricHistograms' origDataRngs) df
          }
@@ -156,4 +157,12 @@ functionRange = do
 
 maxSliceYLoc :: Slice.SliceSample -> Maybe Number
 maxSliceYLoc (Slice.SliceSample s) = maximum $ map yLoc s.slice
+
+inputRange :: Query AppData (Tuple Number Number)
+inputRange = do
+  xVals <- DF.summarize sliceXLoc
+  pure $ fromMaybe (Tuple 0.0 0.0) $ numRange (concat xVals)
+
+sliceXLoc :: Slice.SliceSample -> Array Number
+sliceXLoc (Slice.SliceSample s) = map xLoc s.slice
 
