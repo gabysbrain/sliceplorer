@@ -72,7 +72,6 @@ function drawHighlights(self, chart, data) {
   var hlBar = self.props['data-highlightBar'];
   hlBar = hlBar === undefined ? [] : [hlBar];
   var bars = chart.selectAll('.highlight.bar').data(hlBar);
-  console.log(hlBar);
   bars.enter()
     .append('rect')
       .attr('class', 'highlight bar')
