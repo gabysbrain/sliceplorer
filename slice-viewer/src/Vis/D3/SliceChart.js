@@ -40,6 +40,7 @@ function createVis(self) {
 
 function drawSlices(self, chart, data, showClusters) {
   var handleHover = self.props.onSliceHover;
+  var handleClick = self.props.onSliceClick;
   var line = d3.line()
     .curve(d3.curveBasis)
     .x(function(d) { return self.state.x(d.value0); })
@@ -54,6 +55,9 @@ function drawSlices(self, chart, data, showClusters) {
                     })
                     .on('mouseout', function() {
                       handleHover([]);
+                    })
+                    .on('click', function() {
+                      handleClick(d3.select(this).data());
                     })
                     .attr('class', 'line')
                     .attr('d', function(d) {return line(d.value0.slice);})

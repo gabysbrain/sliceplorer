@@ -66,9 +66,9 @@ update (UpdateSamples df) state =
   where 
   origDataRngs = map histRanges state.histogramRanges
 update (FocusPointFilter fp) state = state
-  { sliceView       = SV.update (SV.HoverSlice $ df2a fp) state.sliceView
+  { sliceView       = SV.update (SV.HighlightSlices $ df2a fp) state.sliceView
   --{ sliceView = SV.update (SV.HighlightNeighbors neighborSlices) $
-                  --SV.update (SV.HoverSlice hoverSlices) state.sliceView
+                  --SV.update (SV.HighlightSlices hoverSlices) state.sliceView
   , histogramStates = let mh = DF.runQuery metricHighlights fp
                        in if SM.isEmpty mh
                           then map (\s -> H.update (H.ShowTicks []) s) state.histogramStates

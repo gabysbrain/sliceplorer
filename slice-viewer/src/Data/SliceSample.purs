@@ -1,6 +1,6 @@
 module Data.SliceSample where
 
-import Prelude (($), map)
+import Prelude (($), (==), map)
 import Data.Array (concat, zipWith)
 import Data.Samples (SampleGroup(..), FocusPoint, FocusPointInfo(..))
 import Data.Slices (Slice(..), Sample, Metrics)
@@ -42,4 +42,10 @@ createFromSlice i dim dimName ns fp (Slice s) = SliceSample
   , slice: s.slice
   }
 
+-- test if 2 focus points are equal
+fpEq :: SliceSample -> SliceSample -> Boolean
+fpEq (SliceSample {focusPointId:fp1}) (SliceSample {focusPointId:fp2}) = fp1 == fp2
+
+focusPointId :: SliceSample -> Int
+focusPointId (SliceSample s) = s.focusPointId
 
