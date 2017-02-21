@@ -1,12 +1,12 @@
 module Main where
 
-import Prelude (bind, pure)
+import Prelude (bind, id, pure)
 import App.Routes (match)
 import Control.Bind ((=<<))
 import App.Layout (Action(PageView), State, view, update)
 import Control.Monad.Eff (Eff)
 import Pux (App, Config, CoreEffects, renderToDOM, start)
-import Pux.Devtool (Action, start) as Pux.Devtool
+import Pux.Devtool (Action(ToggleOpen), start, update) as Pux.Devtool
 import Pux.Router (sampleUrl)
 import Signal ((~>))
 import App.Core (AppEffects)
@@ -28,7 +28,6 @@ config state = do
     , update: update
     , view: view
     , inputs: [routeSignal]
-    --, inputs: []
     }
 
 -- | Entry point for the browser.
@@ -43,6 +42,7 @@ main state = do
 debug :: State -> Eff (CoreEffects AppEffects) (App State (Pux.Devtool.Action Action))
 debug state = do
   app <- Pux.Devtool.start =<< config state
+  --app <- Pux.Devtool.update update Pux.Devtool.ToggleOpen =<< Pux.Devtool.start =<< config state
   renderToDOM "#app" app.html
   -- | Used by hot-reloading code in support/index.js
   pure app
