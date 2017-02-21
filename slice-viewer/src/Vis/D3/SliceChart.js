@@ -135,6 +135,16 @@ function updateVis(self) {
 
   var xAxis = svg.select('g.x.axis');
   xAxis.attr('transform', 'translate(0,'+self.state.y.range()[0]+')')
+       .on('mouseover', function() {
+         self.props.onXAxisHover(
+           self.state.x.invert(d3.mouse(this)[0])
+         );
+       })
+       .on('mouseout', function() {
+         self.props.onXAxisHover(
+           null
+         );
+       })
        .call(self.state.xAxis);
   var yAxis = svg.select('g.y.axis');
   yAxis.call(self.state.yAxis);

@@ -1,10 +1,11 @@
 module App.Overview where
 
 import Prelude hiding (div, min, max)
-import Data.Array (modifyAt, length, (!!), zipWith)
+import Math (abs)
+import Data.Array (modifyAt, length, (!!), zipWith, fromFoldable)
 import Data.DataFrame (Query)
 import Data.DataFrame as DF
-import Data.Foldable (elem, find, any)
+import Data.Foldable (elem, find, any, foldl)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Monoid (mempty)
 import Data.StrMap as SM
@@ -24,8 +25,6 @@ import App.DimView as DV
 import Data.Samples (SampleGroup, dimNames, subset)
 import Data.Samples as Samples
 import Data.SliceSample as Slice
-
-import Debug.Trace
 
 type State = 
   { samples :: AppData
@@ -113,14 +112,23 @@ filterRange' dim metric hb (Slice.SliceSample s) =
        Just v -> v >= hb.start && v <= hb.end
        Nothing -> false
 
+closestSlice :: Int -> Number -> AppData -> Maybe Slice.SliceSample
+closestSlice dim xval = foldl min' Nothing
+  where
+  min' Nothing  x = Just x
+  min' (Just x) y = Just $ fromMaybe x $ do
+    x1 <- Slice.focusPoint x !! dim
+    x2 <- Slice.focusPoint y !! dim
+    pure $ if abs (x1-xval) < abs (x2-xval) then x else y
+
 symDiff :: AppData -> AppData -> AppData
 symDiff d1 d2 | DF.rows d1 == 0 && DF.rows d2 == 0 = mempty
               | DF.rows d1 == 0 = d2
               | DF.rows d2 == 0 = d1
               | otherwise  = d1' <> d2'
   where 
-  d1' = spy $ DF.runQuery (DF.filter (\s -> elemBy Slice.fpEq d2 s)) d1
-  d2' = spy $ DF.runQuery (DF.filter (\s -> elemBy Slice.fpEq d1 s)) d2
+  d1' = DF.runQuery (DF.filter (\s -> elemBy Slice.fpEq d2 s)) d1
+  d2' = DF.runQuery (DF.filter (\s -> elemBy Slice.fpEq d1 s)) d2
 
 elemBy :: (Slice.SliceSample -> Slice.SliceSample -> Boolean) 
        -> AppData
@@ -152,18 +160,27 @@ update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverSlice hs))) state =
   updateFocusPoint (DF.runQuery (filterFocusIds hs') state.samples) state
   where 
   hs' = map Slice.focusPointId hs
+update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverXAxis (Just xval)))) state =
+  updateFocusPoint (DF.runQuery (filterFocusIds cs) state.samples) state
+  where 
+  cs = map Slice.focusPointId $
+       fromFoldable $
+       closestSlice dim xval state.samples
+update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverXAxis Nothing))) state =
+  updateFocusPoint mempty state
 update (DimViewAction dim a@(DV.HistoAction metric (HV.HoverBar rng))) state =
   updateDimView dim a $ updateFocusPoint df state -- maintain bar highlight
   where
   df = case rng of
             Just r -> DF.runQuery (filterRange dim metric r) state.samples
             Nothing -> DF.runQuery filterAll state.samples
+-- FIXME: clicking slices is a bit buggy right now...
 update (DimViewAction dim a@(DV.SliceViewAction (SV.ClickSlice hs))) state =
   updateFocusPoint mempty state'
   where 
   hs' = map Slice.focusPointId hs
   clickedSlices = DF.runQuery (filterFocusIds hs') state.samples
-  state' = spy $ state { clickedSamples = symDiff clickedSlices state.clickedSamples }
+  state' = state { clickedSamples = symDiff clickedSlices state.clickedSamples }
 update (DimViewAction dim a) state = 
   updateDimView dim a state
 

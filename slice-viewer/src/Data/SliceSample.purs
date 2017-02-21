@@ -49,3 +49,6 @@ fpEq (SliceSample {focusPointId:fp1}) (SliceSample {focusPointId:fp2}) = fp1 == 
 focusPointId :: SliceSample -> Int
 focusPointId (SliceSample s) = s.focusPointId
 
+focusPoint :: SliceSample -> FocusPoint
+focusPoint (SliceSample s) = s.focusPoint
+
