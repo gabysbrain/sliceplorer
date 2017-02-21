@@ -45,9 +45,9 @@ function drawSlices(self, chart, data, showClusters) {
     .x(function(d) { return self.state.x(d.value0); })
     .y(function(d) { return self.state.y(d.value1); });
 
-  var slices = chart.selectAll('.slice').data(data);
+  var slices = chart.selectAll('.slice.line').data(data);
   slices.enter()
-      .append('g').attr('class', 'slice')
+      .append('g').attr('class', 'slice line')
                   .append('path')
                     .on('mouseover', function() {
                       handleHover(d3.select(this).data());
@@ -70,14 +70,15 @@ function drawSlices(self, chart, data, showClusters) {
 }
 
 function drawHighlights(self, chart, data) {
+  // Highlights consist of both ticks to show the x values and lines
   var line = d3.line()
     .curve(d3.curveBasis)
     .x(function(d) { return self.state.x(d.value0); })
     .y(function(d) { return self.state.y(d.value1); });
 
-  var slices = chart.selectAll('.highlight').data(data);
+  var slices = chart.selectAll('.slice.highlight').data(data);
   slices.enter()
-      .append('g').attr('class', 'highlight')
+      .append('g').attr('class', 'slice highlight')
                   .append('path')
                     .attr('class', 'line')
                     .attr('d', function(d) {return line(d.value0.slice);})
@@ -86,6 +87,19 @@ function drawHighlights(self, chart, data) {
                     .style('stroke-opacity', 1)
                     .style('stroke', 'red');
   slices.exit().remove();
+
+  var ticks = chart.selectAll('.tick.highlight').data(data);
+  ticks.enter()
+      .append('line').attr('class', 'tick highlight')
+                     .attr('x1', function(d) {return self.state.x(d.value0.focusPoint[d.value0.d]);})
+                     .attr('x2', function(d) {return self.state.x(d.value0.focusPoint[d.value0.d]);})
+                     .attr('y1', self.state.y.range()[0]+5)
+                     .attr('y2', self.state.y.range()[0]-5)
+                     .style('fill', 'none')
+                     .style('stroke-width', 1)
+                     .style('stroke-opacity', 1)
+                     .style('stroke', 'red');
+  ticks.exit().remove();
 }
 
 function updateVis(self) {
