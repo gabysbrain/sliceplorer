@@ -12,8 +12,6 @@ import Pux.Html (Html, Attribute)
 import Pux.Html.Attributes (attr)
 import Pux.Html.Events (handler)
 
-import Debug.Trace
-
 type SliceHoverEvent = Array SliceSample
 type SliceClickEvent = Array SliceSample
 type XAxisHoverEvent = Maybe Number
@@ -65,7 +63,7 @@ onXAxisClick s = runFn2 handler "onXAxisClick" saniHandler
 onXAxisHover :: forall action. (XAxisHoverEvent -> action) -> Attribute action
 onXAxisHover s = runFn2 handler "onXAxisHover" saniHandler
   where
-  saniHandler e = s $ spy $ N.toMaybe e
+  saniHandler e = s $ N.toMaybe e
 
 update :: Action -> State -> State
 update (UpdateSlices s) state = state { slices = s }

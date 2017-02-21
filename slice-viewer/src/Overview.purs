@@ -181,6 +181,16 @@ update (DimViewAction dim a@(DV.SliceViewAction (SV.ClickSlice hs))) state =
   hs' = map Slice.focusPointId hs
   clickedSlices = DF.runQuery (filterFocusIds hs') state.samples
   state' = state { clickedSamples = symDiff clickedSlices state.clickedSamples }
+update (DimViewAction dim a@(DV.SliceViewAction (SV.ClickXAxis (Just xval)))) state =
+  updateFocusPoint mempty state'
+  where 
+  cs = map Slice.focusPointId $
+       fromFoldable $
+       closestSlice dim xval state.samples
+  clickedSlices = DF.runQuery (filterFocusIds cs) state.samples
+  state' = state { clickedSamples = symDiff clickedSlices state.clickedSamples }
+update (DimViewAction dim a@(DV.SliceViewAction (SV.ClickXAxis Nothing))) state =
+  updateFocusPoint mempty state
 update (DimViewAction dim a) state = 
   updateDimView dim a state
 

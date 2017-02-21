@@ -145,6 +145,11 @@ function updateVis(self) {
            null
          );
        })
+       .on('click', function() {
+         self.props.onXAxisClick(
+           self.state.x.invert(d3.mouse(this)[0])
+         );
+       })
        .call(self.state.xAxis);
   var yAxis = svg.select('g.y.axis');
   yAxis.call(self.state.yAxis);
