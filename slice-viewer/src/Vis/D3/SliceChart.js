@@ -91,8 +91,12 @@ function drawHighlights(self, chart, data) {
   var ticks = chart.selectAll('.tick.highlight').data(data);
   ticks.enter()
       .append('line').attr('class', 'tick highlight')
-                     .attr('x1', function(d) {return self.state.x(d.value0.focusPoint[d.value0.d]);})
-                     .attr('x2', function(d) {return self.state.x(d.value0.focusPoint[d.value0.d]);})
+                     .attr('x1', function(d) {
+                       return self.state.x(d.value0.focusPoint[d.value0.d]);
+                     })
+                     .attr('x2', function(d) {
+                       return self.state.x(d.value0.focusPoint[d.value0.d]);
+                     })
                      .attr('y1', self.state.y.range()[0]+5)
                      .attr('y2', self.state.y.range()[0]-5)
                      .style('fill', 'none')
