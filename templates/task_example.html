@@ -7,8 +7,8 @@
   <div class="three columns">&nbsp;</div>
 
   <div class="six columns">
-    <h1>$task$</h1>
-    <h2>$technique$</h2>
+    <h2>$task$</h2>
+    <h3>$technique$</h3>
 
     <a href="$imgUrl$">
       <img alt="example" src="$imgUrl$" />
@@ -18,7 +18,9 @@
       <li><b>Dataset:</b> $dataset$ $dims$D</li>
       <li><b>Number of samples:</b> $numSamples$</li>
       <li><b>Sampling method:</b> $samplingMethod$</li>
+      $if(neighborhoodMethod)$
       <li><b>Neighborhood method:</b> $neighborhoodMethod$</li>
+      $endif$
       $if(otherParams)$
       <li><b>Other parameters:</b> $otherParams$</li>
       $endif$
