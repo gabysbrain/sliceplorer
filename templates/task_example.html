@@ -1,0 +1,25 @@
+
+<div class="task-example">
+  <h1>$task$</h1>
+  <h2>$technique$</h2>
+
+  <img alt="example" src="$imgUrl$" />
+
+  <ul class="example-detail">
+    <li><b>Dataset:</b> $dataset$ $dims$D</li>
+    <li><b>Number of samples:</b> $numSamples$</li>
+    <li><b>Sampling method:</b> $samplingMethod$</li>
+    <li><b>Neighborhood method:</b> $neighborhoodMethod$</li>
+    $if(otherParams)$
+    <li><b>Other parameters:</b> $otherParams$</li>
+    $endif$
+  </ul>
+
+  $if(body)$
+  <h3>Description</h3>
+
+  $body$
+  $endif$
+
+</div>
+

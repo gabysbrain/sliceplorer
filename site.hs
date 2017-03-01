@@ -1,7 +1,8 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-import       Data.Monoid (mappend)
+import       Data.Monoid ((<>))
 import       Hakyll
+import       Control.Monad                   (forM_)
 
 
 --------------------------------------------------------------------------------
@@ -15,53 +16,76 @@ main = hakyll $ do
     route   idRoute
     compile compressCssCompiler
 
-  match (fromList ["about.rst", "contact.markdown"]) $ do
-    route   $ setExtension "html"
-    compile $ pandocCompiler
-      >>= loadAndApplyTemplate "templates/default.html" defaultContext
-      >>= relativizeUrls
+  -- create all the example pages
+  {-forM_ taskExamples $ \ex ->-}
+    {-create [exUrl ex] $ do-}
+      {-route idRoute-}
+      {-compile $ do-}
+        {-let exContext = exCtx ex-}
+        {-makeItem ""-}
+          {->>= loadAndApplyTemplate "templates/task_example.html" exContext-}
+          {->>= loadAndApplyTemplate "templates/default.html" exContext-}
+          {->>= relativizeUrls-}
 
-  match "posts/*" $ do
+  match "examples/*.md" $ do
     route $ setExtension "html"
     compile $ pandocCompiler
-      >>= loadAndApplyTemplate "templates/post.html"  postCtx
-      >>= loadAndApplyTemplate "templates/default.html" postCtx
+      >>= loadAndApplyTemplate "templates/task_example.html" exCtx
+      >>= loadAndApplyTemplate "templates/default.html" defaultContext
       >>= relativizeUrls
-
-  create ["archive.html"] $ do
-    route idRoute
-    compile $ do
-      posts <- recentFirst =<< loadAll "posts/*"
-      let archiveCtx =
-          listField "posts" postCtx (return posts) `mappend`
-          constField "title" "Archives"            `mappend`
-          defaultContext
-
-      makeItem ""
-        >>= loadAndApplyTemplate "templates/archive.html" archiveCtx
-        >>= loadAndApplyTemplate "templates/default.html" archiveCtx
-        >>= relativizeUrls
-
 
   match "index.html" $ do
     route idRoute
     compile $ do
-      posts <- recentFirst =<< loadAll "posts/*"
-      let indexCtx =
-          listField "posts" postCtx (return posts) `mappend`
-          constField "title" "Home"                `mappend`
-          defaultContext
-
       getResourceBody
-        >>= applyAsTemplate indexCtx
-        >>= loadAndApplyTemplate "templates/default.html" indexCtx
+        >>= applyAsTemplate defaultContext
+        >>= loadAndApplyTemplate "templates/default.html" defaultContext
         >>= relativizeUrls
 
   match "templates/*" $ compile templateBodyCompiler
 
 
 --------------------------------------------------------------------------------
-postCtx :: Context String
-postCtx =
-  dateField "date" "%B %e, %Y" `mappend`
+exCtx :: Context String
+exCtx =
+  constField "imgUrl" "http://lorempixel.com/400/200" <>
   defaultContext
+
+{-data Task = Lookup-}
+
+{-data Technique -}
+  {-= Sliceplorer -}
+  {-| Hyperslice-}
+  {--- | TopoSpines-}
+
+{-data Ex = Ex-}
+  {-{ task :: Task-}
+  {-, technique :: Technique-}
+  {-, dataset :: String-}
+  {-, dims :: Int-}
+  {-, numSamples :: Int-}
+  {-, samplingMethod :: String-}
+  {-, neighborhoodMethod :: String-}
+  {-, otherParams :: String-}
+  {-}-}
+
+{-taskExamples =-}
+  {-[ Ex Lookup Sliceplorer "Ackley" 2 50  "Sobol" "N/A" ""-}
+  {-, Ex Lookup Hyperslice  "Ackley" 2 150 "Sobol" "N/A" ""-}
+  {-]-}
+
+{-exUrl :: Ex -> String-}
+{-exUrl ex = "/examples/" <> taskId ex <> "/" <> techniqueId ex <> ".html"-}
+
+{-exImgUrl :: Ex -> String-}
+{-exImgUrl ex = "/images/" <> taskId ex <> "/" <> techniqueId ex <> ".pdf"-}
+
+{-taskId :: Ex -> String-}
+{-taskId ex = case task ex of-}
+    {-Lookup -> "lookup"-}
+
+{-techniqueId :: Ex -> String-}
+{-techniqueId ex = case technique ex of-}
+  {-Sliceplorer -> "sliceplorer"-}
+  {-Hyperslice -> "hs"-}
+
