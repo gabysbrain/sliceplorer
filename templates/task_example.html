@@ -1,25 +1,32 @@
 
-<div class="task-example">
-  <h1>$task$</h1>
-  <h2>$technique$</h2>
+<nav class="breadcrumbs">
+  <a href="/index.html">Overview</a>
+</nav>
 
-  <img alt="example" src="$imgUrl$" />
+<div class="task-example row">
+  <div class="three columns">&nbsp;</div>
 
-  <ul class="example-detail">
-    <li><b>Dataset:</b> $dataset$ $dims$D</li>
-    <li><b>Number of samples:</b> $numSamples$</li>
-    <li><b>Sampling method:</b> $samplingMethod$</li>
-    <li><b>Neighborhood method:</b> $neighborhoodMethod$</li>
-    $if(otherParams)$
-    <li><b>Other parameters:</b> $otherParams$</li>
-    $endif$
-  </ul>
+  <div class="six columns">
+    <h1>$task$</h1>
+    <h2>$technique$</h2>
 
-  $if(body)$
-  <h3>Description</h3>
+    <a href="$imgUrl$">
+      <img alt="example" src="$imgUrl$" />
+    </a>
 
-  $body$
-  $endif$
+    <ul class="example-detail">
+      <li><b>Dataset:</b> $dataset$ $dims$D</li>
+      <li><b>Number of samples:</b> $numSamples$</li>
+      <li><b>Sampling method:</b> $samplingMethod$</li>
+      <li><b>Neighborhood method:</b> $neighborhoodMethod$</li>
+      $if(otherParams)$
+      <li><b>Other parameters:</b> $otherParams$</li>
+      $endif$
+    </ul>
 
+    $body$
+  </div>
+
+  <div class="three columns">&nbsp;</div>
 </div>
 
