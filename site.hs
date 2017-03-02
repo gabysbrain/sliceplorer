@@ -3,6 +3,7 @@
 import       Data.Monoid ((<>))
 import       Hakyll
 import       Control.Monad                   (forM_)
+import System.FilePath (replaceExtension, replaceDirectory)
 
 
 --------------------------------------------------------------------------------
@@ -52,8 +53,16 @@ main = hakyll $ do
 --------------------------------------------------------------------------------
 exCtx :: Context String
 exCtx =
-  constField "imgUrl" "http://lorempixel.com/400/200" <>
+  imgField "imgUrl" <>
   defaultContext
+
+imgField :: String -> Context String
+imgField fld = field fld $ 
+  return . itemImgPath
+
+itemImgPath = 
+  (`replaceDirectory` "/images/") . (`replaceExtension` "pdf") .
+  toFilePath . itemIdentifier
 
 {-data Task = Lookup-}
 

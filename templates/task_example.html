@@ -10,9 +10,12 @@
     <h2>$task$</h2>
     <h3>$technique$</h3>
 
-    <a href="$imgUrl$">
-      <img alt="example" src="$imgUrl$" />
-    </a>
+    <!--<a href="$imgUrl$">-->
+      <!--<img alt="example" src="$imgUrl$" />-->
+    <object data="$imgUrl$" type="application/pdf" class="example-img" width="100%">
+      alt : <a href="$imgUrl$">example</a>
+    </object>
+    <!--</a>-->
 
     <ul class="example-detail">
       <li><b>Dataset:</b> $dataset$ $dims$D</li>
