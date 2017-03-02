@@ -1,6 +1,6 @@
 ---
 task: Cluster
-technique: HyperSlice
+technique: 1D slices
 dataset: Borehole
 dims: 8
 samplingMethod: Sobol

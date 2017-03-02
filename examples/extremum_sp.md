@@ -1,6 +1,6 @@
 ---
 task: Find extremum
-technique: HyperSlice
+technique: 1D slices
 dataset: Ackley
 dims: 2
 samplingMethod: Sobol

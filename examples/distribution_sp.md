@@ -1,6 +1,6 @@
 ---
 task: Characterize distribution
-technique: HyperSlice
+technique: 1D slices
 dataset: Rosenbrock
 dims: 5
 samplingMethod: Sobol
