@@ -1,10 +1,12 @@
 ---
 task: Cluster
 technique: HyperSlice
-dataset: ???
-dims: ???
+dataset: Borehole
+dims: 8
 samplingMethod: Sobol
 numSamples: 50
-neighborhoodMethod: N/A
 ---
+
+We show the cluster view for only the *Tu* parameter but we can see that we
+have clustered the first 3 "bumps" in the function into separate clusters.
 

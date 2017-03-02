@@ -1,10 +1,14 @@
 ---
 task: Correlate
 technique: HyperSlice
-dataset: ???
-dims: ???
+dataset: Boston housing 26 node neural network
+dims: 13
 samplingMethod: Sobol
 numSamples: 50
-neighborhoodMethod: N/A
 ---
+
+Here we would like to understand what factors are contributing to the overall
+low home price across all *crim* values. We can investigate one slice at a
+time (as the image shows) but that does not give a good intuition overall
+as to which, if any factors contribute to this behavior.
 
