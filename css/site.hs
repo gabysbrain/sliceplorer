@@ -32,13 +32,13 @@ overviewPage = do
             fontSize (px 0)
             color transparent
        star # ".color-code" # ".code-0" ?
-         do backgroundColor (rgb 254 235 226)
+         do backgroundColor (rgb 242 240 247)
        star # ".color-code" # ".code-1" ?
-         do backgroundColor (rgb 251 180 185)
+         do backgroundColor (rgb 203 201 226)
        star # ".color-code" # ".code-2" ?
-         do backgroundColor (rgb 247 104 161)
+         do backgroundColor (rgb 158 154 200)
        star # ".color-code" # ".code-3" ?
-         do backgroundColor (rgb 174   1 126)
+         do backgroundColor (rgb 106  81 163)
 
 exPage :: Css
 exPage = do
