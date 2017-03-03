@@ -37,7 +37,7 @@ view :: State -> Html Action
 view state@{route: Home} =
   div
     []
-    [ h1 [] [ text "Slice viewer" ]
+    [ h1 [] [ text "Sliceplorer" ]
     , map SliceView $ Slices.view state.slices
     ]
 view state@{route: NotFound} = NotFound.view state
