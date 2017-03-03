@@ -13,7 +13,7 @@ var _chart = function() {
   return {
     width: 340,
     height: 170,
-    margin: {left: 35, top: 10, right: 10, bottom: 20},
+    margin: {left: 50, top: 10, right: 10, bottom: 20},
 
     x: x,
     y: y,
