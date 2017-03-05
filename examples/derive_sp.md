@@ -1,6 +1,4 @@
 ---
-task: Compute derived value
-technique: 1D slices
 dataset: Borehole
 dims: 8
 samplingMethod: Sobol

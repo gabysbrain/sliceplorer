@@ -1,6 +1,4 @@
 ---
-task: Cluster
-technique: HyperSlice
 dataset: ???
 dims: ???
 samplingMethod: Sobol

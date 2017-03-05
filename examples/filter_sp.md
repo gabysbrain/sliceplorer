@@ -1,6 +1,4 @@
 ---
-task: Filter
-technique: 1D slices
 dataset: Rosenbrock
 dims: 5
 samplingMethod: Sobol

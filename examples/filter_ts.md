@@ -1,6 +1,4 @@
 ---
-task: Filter
-technique: HyperSlice
 dataset: ???
 dims: ???
 samplingMethod: Sobol

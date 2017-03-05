@@ -1,6 +1,4 @@
 ---
-task: Determine range
-technique: HyperSlice
 dataset: ???
 dims: ???
 samplingMethod: Sobol

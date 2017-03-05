@@ -1,6 +1,4 @@
 ---
-task: Compute derived value
-technique: HyperSlice
 dataset: ???
 dims: ???
 samplingMethod: Sobol

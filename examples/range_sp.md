@@ -1,6 +1,4 @@
 ---
-task: Determine range
-technique: 1D slices
 dataset: Boston housing 26 node neural network
 dims: 13
 samplingMethod: Sobol

@@ -9,5 +9,6 @@ executable site
                   , hakyll == 4.8.*
                   , clay == 0.10.*
                   , filepath
+                  , split
   ghc-options:      -threaded
   default-language: Haskell2010

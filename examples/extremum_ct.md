@@ -1,6 +1,4 @@
 ---
-task: Find extremum
-technique: Contour tree
 dataset: Neghip
 dims: 3
 samplingMethod: Given (Cartesian)

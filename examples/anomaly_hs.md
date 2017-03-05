@@ -1,6 +1,4 @@
 ---
-task: Find anomalies
-technique: HyperSlice
 dataset: ???
 dims: ???
 samplingMethod: Sobol

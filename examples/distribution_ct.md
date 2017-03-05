@@ -1,6 +1,4 @@
 ---
-task: Characterize distribution
-technique: HyperSlice
 dataset: ???
 dims: ???
 samplingMethod: Sobol

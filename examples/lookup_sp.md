@@ -1,6 +1,4 @@
 ---
-task: Retrieve value
-technique: 1D slices
 dataset: Ackley
 dims: 6
 samplingMethod: Sobol

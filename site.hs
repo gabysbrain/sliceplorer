@@ -3,7 +3,8 @@
 import       Data.Monoid ((<>))
 import       Hakyll
 import       Control.Monad                   (forM_)
-import System.FilePath (replaceExtension, replaceDirectory)
+import System.FilePath (replaceExtension, replaceDirectory, takeFileName)
+import Data.List.Split (splitOneOf)
 
 
 --------------------------------------------------------------------------------
@@ -53,16 +54,52 @@ main = hakyll $ do
 --------------------------------------------------------------------------------
 exCtx :: Context String
 exCtx =
-  imgField "imgUrl" <>
+  taskField      "task"      <>
+  techniqueField "technique" <>
+  imgField       "imgUrl"    <>
   defaultContext
 
 imgField :: String -> Context String
 imgField fld = field fld $ 
   return . itemImgPath
 
+taskField :: String -> Context String
+taskField fld = field fld $ 
+  return . humanizeTaskCode . itemTaskCode
+
+techniqueField :: String -> Context String
+techniqueField fld = field fld $
+  return . humanizeTechniqueCode . itemTechniqueCode
+
+itemTaskCode =
+  (!! 0) . (splitOneOf "_.") . takeFileName . toFilePath . itemIdentifier
+
+itemTechniqueCode =
+  (!! 1) . (splitOneOf "_.") . takeFileName . toFilePath . itemIdentifier
+
 itemImgPath = 
   (`replaceDirectory` "/images/") . (`replaceExtension` "pdf") .
   toFilePath . itemIdentifier
+
+humanizeTaskCode :: String -> String
+humanizeTaskCode "anomaly"      = "Find anomalies"
+humanizeTaskCode "cluster"      = "Cluster"
+humanizeTaskCode "correlate"    = "Correlate"
+humanizeTaskCode "derive"       = "Derive"
+humanizeTaskCode "distribution" = "Distribution"
+humanizeTaskCode "extremum"     = "Find extrema"
+humanizeTaskCode "filter"       = "Filter"
+humanizeTaskCode "lookup"       = "Lookup"
+humanizeTaskCode "range"        = "Range"
+humanizeTaskCode code           = error $ "Unknown task code: " <> code
+
+humanizeTechniqueCode :: String -> String
+humanizeTechniqueCode "ct" = "Contour tree"
+humanizeTechniqueCode "hs" = "HyperSlice"
+humanizeTechniqueCode "ms" = "Morse-smale complex (Gerber et al.)"
+humanizeTechniqueCode "sp" = "1D slices"
+humanizeTechniqueCode "ts" = "Topological spine"
+humanizeTechniqueCode code = error $ "Unknown technique code: " <> code
 
 {-data Task = Lookup-}
 

@@ -1,6 +1,4 @@
 ---
-task: Compute derived value
-technique: Contour tree
 dataset: Fuel
 dims: 3
 samplingMethod: Given (Cartesian)

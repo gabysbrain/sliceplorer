@@ -1,6 +1,4 @@
 ---
-task: Retrieve value
-technique: HyperSlice
 dataset: ???
 dims: ???
 samplingMethod: Sobol

@@ -1,6 +1,4 @@
 ---
-task: Correlate
-technique: Contour tree
 dataset: Ackley
 dims: 6
 samplingMethod: Sobol

@@ -1,6 +1,4 @@
 ---
-task: Correlate
-technique: HyperSlice
 dataset: ???
 dims: ???
 samplingMethod: Sobol

@@ -1,6 +1,4 @@
 ---
-task: Find extremum
-technique: HyperSlice
 dataset: ???
 dims: ???
 samplingMethod: Sobol
