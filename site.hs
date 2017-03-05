@@ -8,8 +8,14 @@ import Data.List.Split (splitOneOf)
 
 
 --------------------------------------------------------------------------------
+
+config :: Configuration
+config = defaultConfiguration
+  { deployCommand = "rsync -avr --delete _site/ torsnet6cs@sliceplorer.cs.univie.ac.at:comparison_site/"
+  }
+
 main :: IO ()
-main = hakyll $ do
+main = hakyllWith config $ do
   match "images/*" $ do
     route   idRoute
     compile copyFileCompiler
