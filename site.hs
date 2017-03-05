@@ -28,17 +28,6 @@ main = hakyllWith config $ do
     route $ setExtension "css"
     compile $ getResourceString >>= withItemBody (unixFilter "runghc" [])
 
-  -- create all the example pages
-  {-forM_ taskExamples $ \ex ->-}
-    {-create [exUrl ex] $ do-}
-      {-route idRoute-}
-      {-compile $ do-}
-        {-let exContext = exCtx ex-}
-        {-makeItem ""-}
-          {->>= loadAndApplyTemplate "templates/task_example.html" exContext-}
-          {->>= loadAndApplyTemplate "templates/default.html" exContext-}
-          {->>= relativizeUrls-}
-
   match "examples/*.md" $ do
     route $ setExtension "html"
     compile $ pandocCompiler
