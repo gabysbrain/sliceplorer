@@ -11,7 +11,7 @@ import Data.List.Split (splitOneOf)
 
 config :: Configuration
 config = defaultConfiguration
-  { deployCommand = "rsync -avr --delete _site/ torsnet6cs@sliceplorer.cs.univie.ac.at:comparison_site/"
+  { deployCommand = "rsync -avr --delete _site/ torsnet6cs@sliceplorer.cs.univie.ac.at:evaluation_site/"
   }
 
 main :: IO ()
