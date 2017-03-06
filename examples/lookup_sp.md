@@ -1,5 +1,4 @@
 ---
-dataset: Ackley
 dims: 6
 samplingMethod: Sobol
 numSamples: 50

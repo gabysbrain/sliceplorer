@@ -1,5 +1,4 @@
 ---
-dataset: Rosenbrock
 dims: 5
 samplingMethod: Sobol
 numSamples: 50

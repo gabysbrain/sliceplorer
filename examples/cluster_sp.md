@@ -1,5 +1,4 @@
 ---
-dataset: Borehole
 dims: 8
 samplingMethod: Sobol
 numSamples: 50

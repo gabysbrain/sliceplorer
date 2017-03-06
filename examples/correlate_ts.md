@@ -1,5 +1,4 @@
 ---
-dataset: ???
 dims: ???
 samplingMethod: Sobol
 numSamples: 50
