@@ -149,15 +149,15 @@ datasetInfo "ackley6d" =
   constField "dims" "6"
 datasetInfo "rosenbrock" =
   constField "name" "Rosenbrock function" <>
-  constField "dims" "???"
+  constField "dims" "5"
 datasetInfo "borehole" =
-  constField "name" "borehole" <>
+  constField "name" "Borehole" <>
   constField "dims" "8"
 datasetInfo "boston-svm" =
-  constField "name" "SVM w/ radial basis on Boston housing dataset" <>
+  constField "name" "SVM w/ radial basis" <>
   constField "dims" "13"
 datasetInfo "boston-nn" =
-  constField "name" "Neural network w/ 26 node hidden layer on Boston housing dataset" <>
+  constField "name" "Neural network w/ 26 node hidden layer" <>
   constField "dims" "13"
 datasetInfo "fuel" =
   constField "name" "Fuel dataset" <>
