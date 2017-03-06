@@ -1,5 +1,4 @@
 ---
-dims: 6
 samplingMethod: Sobol
 numSamples: 6000
 neighborhoodMethod: Gabriel graph

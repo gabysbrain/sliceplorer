@@ -1,5 +1,4 @@
 ---
-dims: 13
 samplingMethod: Sobol
 numSamples: 50
 ---

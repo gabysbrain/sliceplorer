@@ -1,5 +1,4 @@
 ---
-dims: 3
 samplingMethod: Given (Cartesian)
 numSamples: 64x64x64
 neighborhoodMethod: Cartesian
