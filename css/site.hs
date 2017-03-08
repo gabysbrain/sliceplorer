@@ -7,6 +7,7 @@ import Data.Monoid ((<>))
 site :: Css
 site = do
   overviewPage
+  taskPage
   exPage
 
 overviewPage :: Css
@@ -42,11 +43,20 @@ overviewPage = do
 
 exPage :: Css
 exPage = do
-  star # ".task-example" ?
-    do h2 <> h3 ?
-         do textAlign (alignSide sideCenter)
-       ul ?
-         do listStyleType none
+  star # ".dataset-examples" ?
+    do star # ".task-example" ?
+         do h2 <> h3 ?
+              do textAlign (alignSide sideCenter)
+            ul ?
+              do listStyleType none
+
+taskPage :: Css
+taskPage = do
+  star # ".examples" ?
+    do display flex
+       flexDirection row
+       "flex-wrap" -: "none"
+       "flex-shrink" -: 1
 
 main :: IO ()
 main = putCss site

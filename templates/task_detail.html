@@ -10,15 +10,19 @@ $body$
     </li>
   $endfor$
 </ul>
-<div class="tab-content">
+<div class="tab-content dataset-examples">
   $for(datasets)$
-    <div class="tab-pane examples" id="$code$">
+    <div class="tab-pane" id="$code$">
+      <ul class="examples">
       $for(imgs)$
-        <div class="thumbnail">
-          <img class=".u-max-full-width" src="$pngUrl$" alt="thumbnail for $code$" />
+        <a href="$pdfUrl$">
+        <li class="thumbnail">
+          <img src="$pngUrl$" alt="thumbnail for $code$" />
           <h4>$name$</h4>
-        </div>
+        </li>
+        </a>
       $endfor$
+      </ul>
     </div>
   $endfor$
 </div>
