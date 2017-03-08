@@ -19,8 +19,9 @@ config = defaultConfiguration
   { deployCommand = "rsync -avr --delete _site/ torsnet6cs@sliceplorer.cs.univie.ac.at:evaluation_site/"
   }
 
-datasets = ["ackley6d"]
-technique = ["ct"]
+datasets = [ "sinc2d", "ackley6d", "rosenbrock", "borehole"
+           , "boston-svm", "boston-nn", "fuel", "neghip"]
+techniques = ["ms", "ct", "ts", "hs", "sp"]
 
 main :: IO ()
 main = hakyllWith config $ do
@@ -40,6 +41,10 @@ main = hakyllWith config $ do
     route $ setExtension "css"
     compile $ getResourceString >>= withItemBody (unixFilter "runghc" [])
 
+  match "js/*" $ do
+    route idRoute
+    compile copyFileCompiler
+
   match "solutions/*.md" $ do
     route $ setExtension "html"
     compile $ do
@@ -52,10 +57,10 @@ main = hakyllWith config $ do
   match "tasks/*.md" $ do
     route $ setExtension "html"
     compile $ do
-      exImgs <- loadAll "images/*.png"
-      exDescs <- loadAll "solutions/*.html"
+      --exImgs <- loadAll "images/*.png"
+      --exDescs <- loadAll "solutions/*.html"
       pandocCompiler
-        >>= loadAndApplyTemplate "templates/task_detail.html" (taskCtx exImgs exDescs)
+        >>= loadAndApplyTemplate "templates/task_detail.html" taskCtx
         >>= loadAndApplyTemplate "templates/default.html" defaultContext
         >>= relativizeUrls
 
@@ -86,21 +91,21 @@ dsExCtx exImgs =
   --imgField       "imgUrl"    <>
   defaultContext
 
-taskCtx :: [Item CopyFile] -> [Item String] -> Context String
-taskCtx imgs descs = 
+taskCtx :: Context String
+taskCtx =
   taskField "name" <>
-  datasetListField "datasets" datasetCtx (map makeItem datasets) descs <>
+  listField "datasets" datasetCtx (mapM makeItem datasets) <>
   defaultContext
 
-datasetListField :: String -> [Item String] -> Context String -> [Item String] -> Context b
-datasetListField fld descs ctx ds = 
-  listFieldWith fld ctx 
-  field' fld $ \i ->
-    let ctx' = ctx $ filter (\ex -> itemTaskCode ex == itemBody i) descs
-     in ListField ctx' ds
+{-datasetListField :: String -> [Item String] -> Context String -> [Item String] -> Context b-}
+{-datasetListField fld descs ctx ds = -}
+  {-listFieldWith fld ctx $ \i-}
+  {-field' fld $ \i ->-}
+    {-let ctx' = ctx $ filter (\ex -> itemTaskCode ex == itemBody i) descs-}
+     {-in ListField ctx' ds-}
 
-  listFieldWith fld ctx $ \i -> -- i here is the task we're looking at
-    itemBody i
+  --listFieldWith fld ctx $ \i -> -- i here is the task we're looking at
+    --itemBody i
     --return $ taskExs i descs
 
 taskDataCtx :: Context String
@@ -114,13 +119,31 @@ taskDataCtx = defaultContext
 
 datasetCtx :: Context String
 datasetCtx = 
-  bodyField "name" <> -- technically this is the name but whatever
+  bodyField "code" <>
+  imgs <>
   dsInfo
   where
+  imgs = listFieldWith "imgs" imgTaskCtx $ \i -> do
+    let tt = map (++ ("_" ++ itemBody i)) techniques :: [String]
+    mapM makeItem tt
   dsInfo =
     Context $ \f a i ->
       let (Context c) = datasetInfo $ itemBody i
       in c f a i
+
+imgTaskCtx :: Context String
+imgTaskCtx =
+  bodyField "code"     <>
+  pngUrlField "pngUrl" <>
+  pdfUrlField "pdfUrl"
+
+pngUrlField :: String -> Context String
+pngUrlField fld = field fld $ \i ->
+  return $ "/images/" <> itemBody i <> ".png"
+
+pdfUrlField :: String -> Context String
+pdfUrlField fld = field fld $ \i ->
+  return $ "/images/" <> itemBody i <> ".pdf"
 
 imgField :: String -> Context String
 imgField fld = field fld $ 
