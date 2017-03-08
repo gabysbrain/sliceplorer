@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 import       Data.Monoid ((<>))
 import       Hakyll
+import Control.Applicative ((<|>))
 import       Control.Monad                   (forM_)
 import System.FilePath (replaceExtension, replaceDirectory, takeFileName, takeBaseName)
 import Data.List.Split (splitOneOf)
@@ -17,6 +18,10 @@ config :: Configuration
 config = defaultConfiguration
   { deployCommand = "rsync -avr --delete _site/ torsnet6cs@sliceplorer.cs.univie.ac.at:evaluation_site/"
   }
+
+datasets = [ "sinc2d", "ackley6d", "rosenbrock", "borehole"
+           , "boston-svm", "boston-nn", "fuel", "neghip"]
+techniques = ["ms", "ct", "ts", "hs", "sp"]
 
 main :: IO ()
 main = hakyllWith config $ do
@@ -36,17 +41,26 @@ main = hakyllWith config $ do
     route $ setExtension "css"
     compile $ getResourceString >>= withItemBody (unixFilter "runghc" [])
 
-  match "examples/*.md" $ do
+  match "js/*" $ do
+    route idRoute
+    compile copyFileCompiler
+
+  match "solutions/*.md" $ do
     route $ setExtension "html"
     compile $ do
-      --let images = (fmap.map) (flip Item ()) $ getMatches $ (.&&.) hasNoVersion $ fromGlob "images/*_*.png"
-          --ctx = listField "imgs" exCtx images <> defaultContext
-      --exImgs <- getMatches $ fromGlob "images/*.png"
       exImgs <- loadAll "images/*.png"
-      {-let ctx = listField "exImages" exImgCtx (return exImgs) <>-}
-                {-exCtx-}
       pandocCompiler
-        >>= loadAndApplyTemplate "templates/task_example.html" (exCtx exImgs)
+        >>= loadAndApplyTemplate "templates/task_solution.html" (exCtx exImgs)
+        >>= loadAndApplyTemplate "templates/default.html" defaultContext
+        >>= relativizeUrls
+
+  match "tasks/*.md" $ do
+    route $ setExtension "html"
+    compile $ do
+      --exImgs <- loadAll "images/*.png"
+      --exDescs <- loadAll "solutions/*.html"
+      pandocCompiler
+        >>= loadAndApplyTemplate "templates/task_detail.html" taskCtx
         >>= loadAndApplyTemplate "templates/default.html" defaultContext
         >>= relativizeUrls
 
@@ -64,21 +78,72 @@ main = hakyllWith config $ do
 --------------------------------------------------------------------------------
 exCtx :: [Item CopyFile] -> Context String
 exCtx exImgs = 
-  imgListField "exImages" exImgCtx exImgs <>
+  --imgListField "exImages" exImgCtx exImgs <>
   taskField      "task"      <>
   techniqueField "technique" <>
   imgField       "imgUrl"    <>
   defaultContext
 
-exImgCtx :: Context CopyFile
-exImgCtx =
-  urlField "url" <>
-  datasetInfoCtx
+dsExCtx :: [Item CopyFile] -> Context String
+dsExCtx exImgs = 
+  taskField      "task"      <>
+  techniqueField "technique" <>
+  --imgField       "imgUrl"    <>
+  defaultContext
 
-datasetInfoCtx :: Context a
-datasetInfoCtx = Context $ \f a i ->
-  let (Context c) = datasetInfo $ imgDataCode i
-  in c f a i
+taskCtx :: Context String
+taskCtx =
+  taskField "name" <>
+  listField "datasets" datasetCtx (mapM makeItem datasets) <>
+  defaultContext
+
+{-datasetListField :: String -> [Item String] -> Context String -> [Item String] -> Context b-}
+{-datasetListField fld descs ctx ds = -}
+  {-listFieldWith fld ctx $ \i-}
+  {-field' fld $ \i ->-}
+    {-let ctx' = ctx $ filter (\ex -> itemTaskCode ex == itemBody i) descs-}
+     {-in ListField ctx' ds-}
+
+  --listFieldWith fld ctx $ \i -> -- i here is the task we're looking at
+    --itemBody i
+    --return $ taskExs i descs
+
+taskDataCtx :: Context String
+taskDataCtx = defaultContext
+  --exImgCtx
+
+{-exImgCtx :: Context CopyFile-}
+{-exImgCtx =-}
+  {-urlField "url" <>-}
+  {-datasetInfoCtx-}
+
+datasetCtx :: Context String
+datasetCtx = 
+  bodyField "code" <>
+  imgs <>
+  dsInfo
+  where
+  imgs = listFieldWith "imgs" imgTaskCtx $ \i -> do
+    let tt = map (++ ("_" ++ itemBody i)) techniques :: [String]
+    mapM makeItem tt
+  dsInfo =
+    Context $ \f a i ->
+      let (Context c) = datasetInfo $ itemBody i
+      in c f a i
+
+imgTaskCtx :: Context String
+imgTaskCtx =
+  bodyField "code"     <>
+  pngUrlField "pngUrl" <>
+  pdfUrlField "pdfUrl"
+
+pngUrlField :: String -> Context String
+pngUrlField fld = field fld $ \i ->
+  return $ "/images/" <> itemBody i <> ".png"
+
+pdfUrlField :: String -> Context String
+pdfUrlField fld = field fld $ \i ->
+  return $ "/images/" <> itemBody i <> ".pdf"
 
 imgField :: String -> Context String
 imgField fld = field fld $ 
@@ -86,7 +151,7 @@ imgField fld = field fld $
 
 imgListField :: String -> Context CopyFile -> [Item CopyFile] -> Context a
 imgListField fld ctx imgs = 
-  listFieldWith fld ctx $ \i -> do
+  listFieldWith fld ctx $ \i -> 
     return $ itemImages i imgs
 
 taskField :: String -> Context String
@@ -166,43 +231,12 @@ datasetInfo "neghip" =
   constField "name" "Neghip dataset" <>
   constField "dims" "3"
 datasetInfo code = mempty
---fail $ "Unknown dataset code: " <> code
 
-{-data Task = Lookup-}
-
-{-data Technique -}
-  {-= Sliceplorer -}
-  {-| Hyperslice-}
-  {--- | TopoSpines-}
-
-{-data Ex = Ex-}
-  {-{ task :: Task-}
-  {-, technique :: Technique-}
-  {-, dataset :: String-}
-  {-, dims :: Int-}
-  {-, numSamples :: Int-}
-  {-, samplingMethod :: String-}
-  {-, neighborhoodMethod :: String-}
-  {-, otherParams :: String-}
-  {-}-}
-
-{-taskExamples =-}
-  {-[ Ex Lookup Sliceplorer "Ackley" 2 50  "Sobol" "N/A" ""-}
-  {-, Ex Lookup Hyperslice  "Ackley" 2 150 "Sobol" "N/A" ""-}
-  {-]-}
-
-{-exUrl :: Ex -> String-}
-{-exUrl ex = "/examples/" <> taskId ex <> "/" <> techniqueId ex <> ".html"-}
-
-{-exImgUrl :: Ex -> String-}
-{-exImgUrl ex = "/images/" <> taskId ex <> "/" <> techniqueId ex <> ".pdf"-}
-
-{-taskId :: Ex -> String-}
-{-taskId ex = case task ex of-}
-    {-Lookup -> "lookup"-}
-
-{-techniqueId :: Ex -> String-}
-{-techniqueId ex = case technique ex of-}
-  {-Sliceplorer -> "sliceplorer"-}
-  {-Hyperslice -> "hs"-}
+-- combine 2 lists using the key functions
+-- FIXME: not efficient at all!
+innerJoin :: (Eq c) => (a -> c) -> (b -> c) -> [a] -> [b] -> [(a,b)]
+innerJoin k1 k2 l1 l2 =
+  concatMap pairKey l1
+  where
+  pairKey e1 = map (\e2 -> (e1, e2)) $ filter (\e2 -> k1 e1 == k2 e2) l2
 

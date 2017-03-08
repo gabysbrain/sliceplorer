@@ -1,0 +1,24 @@
+
+<h1>$name$</h1>
+
+$body$
+
+<ul class="tab-nav">
+  $for(datasets)$
+    <li>
+      <a class="button" href="#$code$">$name$ $dims$D</a>
+    </li>
+  $endfor$
+</ul>
+<div class="tab-content">
+  $for(datasets)$
+    <div class="tab-pane examples" id="$code$">
+      $for(imgs)$
+        <div class="thumbnail">
+          <img class=".u-max-full-width" src="$pngUrl$" alt="thumbnail for $code$" />
+        </div>
+      $endfor$
+    </div>
+  $endfor$
+</div>
+
