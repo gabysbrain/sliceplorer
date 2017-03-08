@@ -15,12 +15,12 @@ $body$
     <div class="tab-pane" id="$code$">
       <ul class="examples">
       $for(imgs)$
-        <a href="$pdfUrl$">
         <li class="thumbnail">
-          <img src="$pngUrl$" alt="thumbnail for $code$" />
-          <h4>$name$</h4>
+          <a href="$pdfUrl$">
+            <img class="u-max-full-width" src="$pngUrl$" alt="thumbnail for $code$" />
+            <h4>$name$</h4>
+          </a>
         </li>
-        </a>
       $endfor$
       </ul>
     </div>
