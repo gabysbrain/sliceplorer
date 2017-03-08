@@ -134,8 +134,15 @@ datasetCtx =
 imgTaskCtx :: Context String
 imgTaskCtx =
   bodyField "code"     <>
+  imgTaskNameField "name" <>
   pngUrlField "pngUrl" <>
   pdfUrlField "pdfUrl"
+
+imgTaskNameField :: String -> Context String
+imgTaskNameField fld = field fld $ 
+  return . humanizeTechniqueCode . getTechnique . itemBody
+  where
+  getTechnique = (!! 0) . splitOneOf "_."
 
 pngUrlField :: String -> Context String
 pngUrlField fld = field fld $ \i ->
