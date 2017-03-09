@@ -38,6 +38,11 @@
         $$(a).addClass("code-" + a.innerHTML.trim());
         console.log(a);
       });
+
+      $$("#table-section tbody tr").click(function() {
+        if($$(this).data("href"))
+          window.location = $$(this).data("href");
+      });
     });
   </script>
 

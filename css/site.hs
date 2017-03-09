@@ -24,6 +24,8 @@ overviewPage = do
     do table ?
          do fontSize (pct 60.0)
             "table-layout" -: "fixed"
+       tbody |> tr # ":hover" ?
+         do boxShadow 0 0 (px 60) (setA 30 black)
        td ?
          do height (pct 100.0)
        td ** a # ".color-code" ?
@@ -56,17 +58,19 @@ taskPage = do
     do "list-style" -: "none"
        display flex
        flexDirection row
-       "flex-wrap" -: "none"
-       "flex-shrink" -: "1"
-       "flex-grow" -: "1"
+       --"flex-wrap" -: "none"
+       flexGrow 1
        "justify-content" -: "space-between"
-       "align-items" -: "flex-end"
-       star # ".thumbnail" ** a ?
-         do color black
-            textDecoration none
-            textAlign center
-       star # ".thumbnail" ** h4 ?
-         do fontSize (em 1.1)
+       "align-items" -: "flex-start"
+       star # ".thumbnail" ?
+         do flexGrow 1
+       star # ".thumbnail" ?
+         do a ?
+             do color black
+                textDecoration none
+                textAlign center
+            h4 ?
+              do fontSize (em 1.1)
 
 main :: IO ()
 main = putCss site
