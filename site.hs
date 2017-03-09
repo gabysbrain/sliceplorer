@@ -1,10 +1,12 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 import       Data.Monoid ((<>))
 import       Hakyll
 import Control.Applicative ((<|>))
 import       Control.Monad                   (forM_)
 import System.FilePath (replaceExtension, replaceDirectory, takeFileName, takeBaseName)
+import System.Cmd (rawSystem, system)
 import Data.List.Split (splitOneOf)
 import Data.Strings (strStartsWith)
 import           Data.Typeable (Typeable)
@@ -13,6 +15,16 @@ import           Data.Binary                   (Binary)
 import Debug.Trace
 
 --------------------------------------------------------------------------------
+
+newtype Image = Image (Int,Int,FilePath)
+  deriving (Show,Eq,Ord,Binary,Typeable)
+
+instance Writable Image where
+  write dst (Item _ (Image (w,h,src))) = let r = "convert -resize " ++ show w ++ "x" ++ show h ++ "\\> \"" ++ src ++ "\" \"" ++  dst ++ "\""
+	in system r  >> return ()
+
+imageResizeCompiler :: Int -> Int -> Compiler (Item Image)
+imageResizeCompiler w h = getUnderlying >>= \y -> return (Item y $ Image (w,h,toFilePath y))
 
 config :: Configuration
 config = defaultConfiguration
@@ -25,7 +37,11 @@ techniques = ["ms", "ct", "ts", "hs", "sp"]
 
 main :: IO ()
 main = hakyllWith config $ do
-  match "images/*" $ do
+  match "images/*.png" $ do
+    route   idRoute
+    compile $ imageResizeCompiler 350 350
+
+  match "images/*.pdf" $ do
     route   idRoute
     compile copyFileCompiler
 
