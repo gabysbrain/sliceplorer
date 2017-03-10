@@ -30,8 +30,7 @@ overviewPage = do
             --padding nil nil nil nil
   star # "#table-section" ?
     do table ?
-         do fontSize (pct 60.0)
-            "table-layout" -: "fixed"
+         do "table-layout" -: "fixed"
        tbody |> tr # ":hover" ?
          do linkPopout
        td ?
