@@ -64,11 +64,10 @@ main = hakyllWith config $ do
   match "solutions/*.md" $ do
     route $ setExtension "html"
     compile $ do
-      exImgs <- loadAll "images/*.png"
       pandocCompiler
-        >>= loadAndApplyTemplate "templates/task_solution.html" (exCtx exImgs)
-        >>= loadAndApplyTemplate "templates/default.html" defaultContext
-        >>= relativizeUrls
+        -- >>= loadAndApplyTemplate "templates/task_solution.html" (exCtx exImgs)
+        -- >>= loadAndApplyTemplate "templates/default.html" defaultContext
+        -- >>= relativizeUrls
 
   match "tasks/*.md" $ do
     route $ setExtension "html"
@@ -92,60 +91,32 @@ main = hakyllWith config $ do
 
 
 --------------------------------------------------------------------------------
-exCtx :: [Item CopyFile] -> Context String
-exCtx exImgs = 
-  --imgListField "exImages" exImgCtx exImgs <>
-  taskField      "task"      <>
-  techniqueField "technique" <>
-  imgField       "imgUrl"    <>
-  defaultContext
-
-dsExCtx :: [Item CopyFile] -> Context String
-dsExCtx exImgs = 
-  taskField      "task"      <>
-  techniqueField "technique" <>
-  --imgField       "imgUrl"    <>
-  defaultContext
-
 taskCtx :: Context String
 taskCtx =
   taskField "name" <>
   listField "datasets" datasetCtx (mapM makeItem datasets) <>
   defaultContext
 
-{-datasetListField :: String -> [Item String] -> Context String -> [Item String] -> Context b-}
-{-datasetListField fld descs ctx ds = -}
-  {-listFieldWith fld ctx $ \i-}
-  {-field' fld $ \i ->-}
-    {-let ctx' = ctx $ filter (\ex -> itemTaskCode ex == itemBody i) descs-}
-     {-in ListField ctx' ds-}
-
-  --listFieldWith fld ctx $ \i -> -- i here is the task we're looking at
-    --itemBody i
-    --return $ taskExs i descs
-
-taskDataCtx :: Context String
-taskDataCtx = defaultContext
-  --exImgCtx
-
-{-exImgCtx :: Context CopyFile-}
-{-exImgCtx =-}
-  {-urlField "url" <>-}
-  {-datasetInfoCtx-}
-
 datasetCtx :: Context String
 datasetCtx = 
   bodyField "code" <>
   imgs <>
+  --exs <>
   dsInfo
   where
   imgs = listFieldWith "imgs" imgTaskCtx $ \i -> do
     let tt = map (++ ("_" ++ itemBody i)) techniques :: [String]
     mapM makeItem tt
+  {-exs = listFieldWith "explanations" exCtx $ \i -> do-}
+    {-let tt = map (\t -> (traceShowId $ takeBaseName $ toFilePath $ itemIdentifier i) <> "_" <> t) techniques :: [String]-}
+    {-mapM (\e -> load $ traceShowId $ fromFilePath ("/explanations/" ++ e ++ ".html")) tt-}
+    --mapM makeItem tt
   dsInfo =
     Context $ \f a i ->
       let (Context c) = datasetInfo $ itemBody i
       in c f a i
+
+exCtx = defaultContext
 
 imgTaskCtx :: Context String
 imgTaskCtx =
