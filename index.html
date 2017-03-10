@@ -1,111 +1,241 @@
 
 <div id="table-section">
-  <table>
-  <thead>
-    <tr>
-      <th class="task">Task</th>
-      <th class="description">Discrete</th>
-      <th class="description">Continuous</th>
-      <th class="technique">HyperSlice</th>
-      <th class="technique">Topological Spines</th>
-      <th class="technique">Contour tree</th>
-      <th class="technique">Gerber et al.</th>
-      <th class="technique">1D slices</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr data-href="tasks/lookup.html">
-      <td>Retrieve value</td>
-      <td>"Given a set of specific cases, find attributes of those cases"</td>
-      <td>Given an x, what is the function value?</td>
-      <td>3</td>
-      <td>1</td>
-      <td>1</td>
-      <td>1</td>
-      <td>2</td>
-    </tr>
-    <tr data-href="tasks/filter.html">
-      <td>Filter</td>
-      <td>"Given some concrete conditions attribute values, find data cases satisfying those conditions."</td>
-      <td>For what parameter values is the function equal or over x?</td>
-      <td>2</td>
-      <td>3</td>
-      <td>2</td>
-      <td>2</td>
-      <td>3</td>
-    </tr>
-    <tr data-href="tasks/derive.html">
-      <td>Compute derived value</td>
-      <td>"Given a set of data cases, compute an aggregate numeric representation of those data cases"</td>
-      <td>Summary statistics: variance, mean, SA</td>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-      <td>1</td>
-      <td>3</td>
-    </tr>
-    <tr data-href="tasks/extremum.html">
-      <td>Find extremum</td>
-      <td>"Find data cases possessing an extreme value of an attribute over its range within the data set"</td>
-      <td>Find local/global min/max</td>
-      <td>0</td>
-      <td>3</td>
-      <td>3</td>
-      <td>3</td>
-      <td>3</td>
-    </tr>
-    <tr data-href="tasks/range.html">
-      <td>Determine range</td>
-      <td>"Given a set of data cases and an attribute of interest, find the span of values within the set"</td>
-      <td>What is the range of possible outputs?</td>
-      <td>1</td>
-      <td>1</td>
-      <td>3</td>
-      <td>3</td>
-      <td>3</td>
-    </tr>
-    <tr data-href="tasks/distribution.html">
-      <td>Characterize Distribution</td>
-      <td>"Given a set of data cases and a quantitative attribute of interest, characterize the distribution of that attribute’s values over the set"</td>
-      <td>What types of shapes do the manifolds have</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>3</td>
-    </tr>
-    <tr data-href="tasks/anomaly.html">
-      <td>Find anomalies</td>
-      <td>"Identify any anomalies within a given set of data cases with respect to a given relationship or expectation, e.g. statistical outliers"</td>
-      <td>Do areas of the manifold have shapes unlike any others</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>3</td>
-    </tr>
-    <tr data-href="tasks/cluster.html">
-      <td>Cluster</td>
-      <td> "Given a set of data cases, find clusters of similar attribute values"</td>
-      <td>Areas of the manifold have similar shapes</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-      <td>3</td>
-    </tr>
-    <tr data-href="tasks/correlate.html">
-      <td>Correlate</td>
-      <td>"Given a set of data cases and two attributes, determine useful relationships between the values of those attributes"</td>
-      <td>1D vs 2D relationships</td>
-      <td>3</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-  </table>
+  <p>
+    The following table shows the results of evaluating how easy it was to
+    perform each task with each technique
+    on a 4-point scale where the colors mean:
+    <span class="color-code">0</span>none,
+    <span class="color-code">1</span>partially, 
+    <span class="color-code">2</span>mostly, 
+    <span class="color-code">3</span>fully.
+  </p>
+  <ul class="tab-nav">
+    <li>
+      <a class="button active" href="#qri">Qualitative results inspection</a>
+    </li>
+    <li>
+      <a class="button" href="#es">Expert study</a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane active" id="qri">
+      <table>
+      <thead>
+        <tr>
+          <th class="task">Task</th>
+          <th class="description">Task description for discrete data items from <a href="https://doi.org/10.1109/INFVIS.2005.1532136">Amar and Stasko</a></th>
+          <th class="description">Our adaption to continuous scalar functions</th>
+          <th class="technique">Gerber&nbsp;et&nbsp;al.</th>
+          <th class="technique">Contour&nbsp;tree</th>
+          <th class="technique">Topological&nbsp;spines</th>
+          <th class="technique">HyperSlice</th>
+          <th class="technique">1D&nbsp;slices</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-href="tasks/lookup.html">
+          <td>Retrieve value</td>
+          <td>"Given a set of specific cases, find attributes of those cases"</td>
+          <td>Given an x, what is the function value?</td>
+          <td>1</td>
+          <td>1</td>
+          <td>1</td>
+          <td>3</td>
+          <td>3</td>
+        </tr>
+        <tr data-href="tasks/filter.html">
+          <td>Filter</td>
+          <td>"Given some concrete conditions attribute values, find data cases satisfying those conditions."</td>
+          <td>For what parameter values is the function equal or over x?</td>
+          <td>2</td>
+          <td>2</td>
+          <td>3</td>
+          <td>2</td>
+          <td>3</td>
+        </tr>
+        <tr data-href="tasks/derive.html">
+          <td>Compute derived value</td>
+          <td>"Given a set of data cases, compute an aggregate numeric representation of those data cases"</td>
+          <td>Summary statistics: variance, mean, SA</td>
+          <td>1</td>
+          <td>0</td>
+          <td>1</td>
+          <td>0</td>
+          <td>3</td>
+        </tr>
+        <tr data-href="tasks/extremum.html">
+          <td>Find extremum</td>
+          <td>"Find data cases possessing an extreme value of an attribute over its range within the data set"</td>
+          <td>Find local/global min/max</td>
+          <td>3</td>
+          <td>3</td>
+          <td>3</td>
+          <td>0</td>
+          <td>3</td>
+        </tr>
+        <tr data-href="tasks/range.html">
+          <td>Determine range</td>
+          <td>"Given a set of data cases and an attribute of interest, find the span of values within the set"</td>
+          <td>What is the range of possible outputs?</td>
+          <td>3</td>
+          <td>3</td>
+          <td>1</td>
+          <td>1</td>
+          <td>3</td>
+        </tr>
+        <tr data-href="tasks/distribution.html">
+          <td>Characterize Distribution</td>
+          <td>"Given a set of data cases and a quantitative attribute of interest, characterize the distribution of that attribute’s values over the set"</td>
+          <td>What types of shapes do the manifolds have</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>1</td>
+          <td>3</td>
+        </tr>
+        <tr data-href="tasks/anomaly.html">
+          <td>Find anomalies</td>
+          <td>"Identify any anomalies within a given set of data cases with respect to a given relationship or expectation, e.g. statistical outliers"</td>
+          <td>Do areas of the manifold have shapes unlike any others</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>1</td>
+          <td>3</td>
+        </tr>
+        <tr data-href="tasks/cluster.html">
+          <td>Cluster</td>
+          <td> "Given a set of data cases, find clusters of similar attribute values"</td>
+          <td>Areas of the manifold have similar shapes</td>
+          <td>1</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>3</td>
+        </tr>
+        <tr data-href="tasks/correlate.html">
+          <td>Correlate</td>
+          <td>"Given a set of data cases and two attributes, determine useful relationships between the values of those attributes"</td>
+          <td>1D vs 2D relationships</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>3</td>
+          <td>1</td>
+        </tr>
+      </tbody>
+      </table>
+    </div>
+    <div class="tab-pane" id="es">
+      <table>
+      <thead>
+        <tr>
+          <th class="task">Task</th>
+          <th class="description">Task description for discrete data items from <a href="https://doi.org/10.1109/INFVIS.2005.1532136">Amar and Stasko</a></th>
+          <th class="description">Our adaption to continuous scalar functions</th>
+          <th class="technique">Gerber&nbsp;et&nbsp;al.</th>
+          <th class="technique">Contour&nbsp;tree</th>
+          <th class="technique">Topological&nbsp;spines</th>
+          <th class="technique">HyperSlice</th>
+          <th class="technique">1D&nbsp;slices</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-href="tasks/lookup.html">
+          <td>Retrieve value</td>
+          <td>"Given a set of specific cases, find attributes of those cases"</td>
+          <td>Given an x, what is the function value?</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>2</td>
+          <td>2</td>
+        </tr>
+        <tr data-href="tasks/filter.html">
+          <td>Filter</td>
+          <td>"Given some concrete conditions attribute values, find data cases satisfying those conditions."</td>
+          <td>For what parameter values is the function equal or over x?</td>
+          <td>0</td>
+          <td>1</td>
+          <td>0</td>
+          <td>1</td>
+          <td>2</td>
+        </tr>
+        <tr data-href="tasks/derive.html">
+          <td>Compute derived value</td>
+          <td>"Given a set of data cases, compute an aggregate numeric representation of those data cases"</td>
+          <td>Summary statistics: variance, mean, SA</td>
+          <td>1</td>
+          <td>0</td>
+          <td>0</td>
+          <td>2</td>
+          <td>2</td>
+        </tr>
+        <tr data-href="tasks/extremum.html">
+          <td>Find extremum</td>
+          <td>"Find data cases possessing an extreme value of an attribute over its range within the data set"</td>
+          <td>Find local/global min/max</td>
+          <td>2</td>
+          <td>2</td>
+          <td>1</td>
+          <td>1</td>
+          <td>2</td>
+        </tr>
+        <tr data-href="tasks/range.html">
+          <td>Determine range</td>
+          <td>"Given a set of data cases and an attribute of interest, find the span of values within the set"</td>
+          <td>What is the range of possible outputs?</td>
+          <td>1</td>
+          <td>1</td>
+          <td>0</td>
+          <td>2</td>
+          <td>2</td>
+        </tr>
+        <tr data-href="tasks/distribution.html">
+          <td>Characterize Distribution</td>
+          <td>"Given a set of data cases and a quantitative attribute of interest, characterize the distribution of that attribute’s values over the set"</td>
+          <td>What types of shapes do the manifolds have</td>
+          <td>2</td>
+          <td>1</td>
+          <td>1</td>
+          <td>1</td>
+          <td>2</td>
+        </tr>
+        <tr data-href="tasks/anomaly.html">
+          <td>Find anomalies</td>
+          <td>"Identify any anomalies within a given set of data cases with respect to a given relationship or expectation, e.g. statistical outliers"</td>
+          <td>Do areas of the manifold have shapes unlike any others</td>
+          <td>1</td>
+          <td>0</td>
+          <td>1</td>
+          <td>1</td>
+          <td>2</td>
+        </tr>
+        <tr data-href="tasks/cluster.html">
+          <td>Cluster</td>
+          <td> "Given a set of data cases, find clusters of similar attribute values"</td>
+          <td>Areas of the manifold have similar shapes</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>2</td>
+        </tr>
+        <tr data-href="tasks/correlate.html">
+          <td>Correlate</td>
+          <td>"Given a set of data cases and two attributes, determine useful relationships between the values of those attributes"</td>
+          <td>1D vs 2D relationships</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>2</td>
+          <td>1</td>
+        </tr>
+      </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <h2>Study design</h2>
