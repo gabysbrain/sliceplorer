@@ -4,6 +4,8 @@ import Clay
 import Prelude hiding ((**))
 import Data.Monoid ((<>))
 
+linkPopout = boxShadow 3 3 (px 4) (setA 30 black)
+
 site :: Css
 site = do
   overviewPage
@@ -12,28 +14,40 @@ site = do
 
 overviewPage :: Css
 overviewPage = do
-  th # ".task" ?
-    do width (pct 20.0)
-  th # ".description" ?
-    do width (pct 40.0)
-  th # ".technique" ?
-    do transform $ rotate (deg 315)
-       width (px 20)
-       overflow visible
+  thead ?
+    do tr ?
+         do height (em 8)
+       th ?
+         verticalAlign vAlignBottom
+       th # ".task" ?
+         do width (pct 20.0)
+       th # ".description" ?
+         do width (pct 40.0)
+       th # ".technique" ?
+         do transform $ rotate (deg 315)
+            maxWidth (em 1)
+            overflow visible
+            --padding nil nil nil nil
   star # "#table-section" ?
     do table ?
          do fontSize (pct 60.0)
             "table-layout" -: "fixed"
        tbody |> tr # ":hover" ?
-         do boxShadow 0 0 (px 60) (setA 30 black)
+         do linkPopout
        td ?
          do height (pct 100.0)
-       td ** a # ".color-code" ?
-         do height (pct 100.0)
-            display block
-            lineHeight (px 0)
-            fontSize (px 0)
+       star # ".color-code" ?
+         do height (em 1)
+            width (em 1)
+            display inlineBlock
+            --lineHeight (px 0)
+            --fontSize (px 0)
             color transparent
+            border solid (px 1) (rgb 105 105 105)
+            sym borderRadius (pct 50.0)
+       td ** ".color-code" ?
+         do height (em 2)
+            width (em 2)
        star # ".color-code" # ".code-0" ?
          do backgroundColor (rgb 242 240 247)
        star # ".color-code" # ".code-1" ?
@@ -71,6 +85,8 @@ taskPage = do
                 textAlign center
             h4 ?
               do fontSize (em 1.1)
+       --star # ".thumbnail" # ":hover" ?
+         --do linkPopout
 
 main :: IO ()
 main = putCss site

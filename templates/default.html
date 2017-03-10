@@ -33,10 +33,14 @@
   <script src="/js/skeleton-tabs.js"></script>
   <script type="application/javascript">
     $$(document).ready(function() {
-      $$("#table-section td a").each(function(i, a) {
-        $$(a).addClass("color-code");
+      $$("#table-section tbody td").each(function(i, a) {
+        var content = a.innerHTML.trim();
+        if(+content >= 0 && +content <= 3) {
+          a.innerHTML = '<span class="color-code">' + content + '</span>';
+        }
+      });
+      $$(".color-code").each(function(i, a) {
         $$(a).addClass("code-" + a.innerHTML.trim());
-        console.log(a);
       });
 
       $$("#table-section tbody tr").click(function() {
