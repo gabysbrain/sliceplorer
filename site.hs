@@ -183,18 +183,18 @@ humanizeTaskCode :: String -> String
 humanizeTaskCode "anomaly"      = "Find anomalies"
 humanizeTaskCode "cluster"      = "Cluster"
 humanizeTaskCode "correlate"    = "Correlate"
-humanizeTaskCode "derive"       = "Derive"
-humanizeTaskCode "distribution" = "Distribution"
+humanizeTaskCode "derive"       = "Compute derived value"
+humanizeTaskCode "distribution" = "Characterize distribution"
 humanizeTaskCode "extremum"     = "Find extrema"
 humanizeTaskCode "filter"       = "Filter"
-humanizeTaskCode "lookup"       = "Lookup"
-humanizeTaskCode "range"        = "Range"
+humanizeTaskCode "lookup"       = "Retrieve value"
+humanizeTaskCode "range"        = "Determine range"
 humanizeTaskCode code           = fail $ "Unknown task code: " <> code
 
 humanizeTechniqueCode :: String -> String
 humanizeTechniqueCode "ct" = "Contour tree"
 humanizeTechniqueCode "hs" = "HyperSlice"
-humanizeTechniqueCode "ms" = "Morse-smale complex (Gerber et al.)"
+humanizeTechniqueCode "ms" = "Gerber et al."
 humanizeTechniqueCode "sp" = "1D slices"
 humanizeTechniqueCode "ts" = "Topological spine"
 humanizeTechniqueCode code = fail $ "Unknown technique code: " <> code
