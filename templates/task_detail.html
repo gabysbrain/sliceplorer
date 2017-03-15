@@ -14,30 +14,48 @@ $body$
   larger version.
 </p>
 
-<ul class="tab-nav">
-  $for(datasets)$
-    <li>
-      <a class="button" href="#$code$">$name$ $dims$D</a>
-    </li>
-  $endfor$
-</ul>
-<div class="tab-content dataset-examples">
-  $for(datasets)$
-    <div class="tab-pane" id="$code$">
-      <ul class="examples">
-      $for(imgs)$
-        <li class="thumbnail" style="width: 20%;">
-          <a href="$pdfUrl$">
-            <h4>$name$</h4>
-            <img class="u-max-full-width" src="$pngUrl$" alt="thumbnail for $code$" />
-            <p class="u-max-full-width">
-              Description here
-            </p>
-          </a>
-        </li>
-      $endfor$
-      </ul>
+<div class="examples">
+  <div class="labels row">
+    $for(techniques)$
+    <div style="width: 20%;">
+      <h4>$name$</h4>
     </div>
-  $endfor$
+    $endfor$
+  </div>
+
+  <div class="datasets row">
+    <label for="dataset-selector">Dataset</label>
+    <select id="dataset-selector">
+      $for(datasets)$
+      <option value="#$code$">$name$</option>
+      $endfor$
+    </select>
+    <div class="image-content">
+      $for(datasets)$
+      <div class="image-pane" id="$code$">
+        <ul class="examples">
+        $for(imgs)$
+          <li class="thumbnail" style="width: 20%;">
+            <a href="$pdfUrl$">
+              <img class="u-max-full-width" src="$pngUrl$" alt="thumbnail for $code$" />
+            </a>
+          </li>
+        $endfor$
+        </ul>
+      </div>
+      $endfor$
+    </div>
+  </div>
+
+  <div class="solutions row">
+    $for(solutions)$
+    <div class="solution-text" style="width: 20%;">
+      $body$
+    </div>
+    $endfor$
+  </div>
+
+
+
 </div>
 

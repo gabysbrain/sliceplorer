@@ -21,7 +21,7 @@ newtype Image = Image (Int,Int,FilePath)
 
 instance Writable Image where
   write dst (Item _ (Image (w,h,src))) = let r = "convert -resize " ++ show w ++ "x" ++ show h ++ "\\> \"" ++ src ++ "\" \"" ++  dst ++ "\""
-	in system r  >> return ()
+    in system r  >> return ()
 
 imageResizeCompiler :: Int -> Int -> Compiler (Item Image)
 imageResizeCompiler w h = getUnderlying >>= \y -> return (Item y $ Image (w,h,toFilePath y))
@@ -63,17 +63,11 @@ main = hakyllWith config $ do
 
   match "solutions/*.md" $ do
     route $ setExtension "html"
-    compile $ do
-      pandocCompiler
-        -- >>= loadAndApplyTemplate "templates/task_solution.html" (exCtx exImgs)
-        -- >>= loadAndApplyTemplate "templates/default.html" defaultContext
-        -- >>= relativizeUrls
+    compile pandocCompiler
 
   match "tasks/*.md" $ do
     route $ setExtension "html"
     compile $ do
-      --exImgs <- loadAll "images/*.png"
-      --exDescs <- loadAll "solutions/*.html"
       pandocCompiler
         >>= loadAndApplyTemplate "templates/task_detail.html" taskCtx
         >>= loadAndApplyTemplate "templates/default.html" defaultContext
@@ -94,29 +88,24 @@ main = hakyllWith config $ do
 taskCtx :: Context String
 taskCtx =
   taskField "name" <>
+  listField "techniques" techniqueCtx (mapM makeItem techniques) <>
   listField "datasets" datasetCtx (mapM makeItem datasets) <>
+  listFieldWith "solutions" taskSolutionCtx taskSolutions <>
   defaultContext
 
 datasetCtx :: Context String
 datasetCtx = 
   bodyField "code" <>
   imgs <>
-  --exs <>
   dsInfo
   where
   imgs = listFieldWith "imgs" imgTaskCtx $ \i -> do
     let tt = map (++ ("_" ++ itemBody i)) techniques :: [String]
     mapM makeItem tt
-  {-exs = listFieldWith "explanations" exCtx $ \i -> do-}
-    {-let tt = map (\t -> (traceShowId $ takeBaseName $ toFilePath $ itemIdentifier i) <> "_" <> t) techniques :: [String]-}
-    {-mapM (\e -> load $ traceShowId $ fromFilePath ("/explanations/" ++ e ++ ".html")) tt-}
-    --mapM makeItem tt
   dsInfo =
     Context $ \f a i ->
       let (Context c) = datasetInfo $ itemBody i
       in c f a i
-
-exCtx = defaultContext
 
 imgTaskCtx :: Context String
 imgTaskCtx =
@@ -124,6 +113,24 @@ imgTaskCtx =
   imgTaskNameField "name" <>
   pngUrlField "pngUrl" <>
   pdfUrlField "pdfUrl"
+
+techniqueCtx = 
+  bodyField "code" <>
+  dsInfo
+  where
+  dsInfo =
+    Context $ \f a i ->
+      let (Context c) = constField "name" $ humanizeTechniqueCode $ itemBody i
+      in c f a i
+
+taskSolutionCtx = defaultContext
+
+taskSolutions task = mapM (taskSolution tc) techniques
+  where
+  tc = itemTaskCode task
+
+taskSolution taskCd techniqueCd =
+  load . fromFilePath $ "solutions/" <> taskCd <> "_" <> techniqueCd <> ".md"
 
 imgTaskNameField :: String -> Context String
 imgTaskNameField fld = field fld $ 
