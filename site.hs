@@ -3,7 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 import       Data.Monoid ((<>))
 import       Hakyll
-import Control.Applicative ((<|>))
+import Control.Applicative (Alternative(empty), (<|>))
 import       Control.Monad                   (forM_)
 import System.FilePath (replaceExtension, replaceDirectory, takeFileName, takeBaseName)
 import System.Cmd (rawSystem, system)
@@ -11,6 +11,7 @@ import Data.List.Split (splitOneOf)
 import Data.Strings (strStartsWith)
 import           Data.Typeable (Typeable)
 import           Data.Binary                   (Binary)
+import Data.Maybe (fromMaybe)
 
 import Debug.Trace
 
@@ -85,7 +86,7 @@ main = hakyllWith config $ do
 
 
 --------------------------------------------------------------------------------
-taskCtx :: Context String
+--taskCtx :: Context a
 taskCtx =
   taskField "name" <>
   listField "techniques" techniqueCtx (mapM makeItem techniques) <>
@@ -93,7 +94,7 @@ taskCtx =
   listFieldWith "solutions" taskSolutionCtx taskSolutions <>
   defaultContext
 
-datasetCtx :: Context String
+--datasetCtx :: Context a
 datasetCtx = 
   bodyField "code" <>
   imgs <>
@@ -114,6 +115,7 @@ imgTaskCtx =
   pngUrlField "pngUrl" <>
   pdfUrlField "pdfUrl"
 
+techniqueCtx :: Context String
 techniqueCtx = 
   bodyField "code" <>
   dsInfo
@@ -139,29 +141,21 @@ imgTaskNameField fld = field fld $
   getTechnique = (!! 0) . splitOneOf "_."
 
 pngUrlField :: String -> Context String
-pngUrlField fld = field fld $ \i ->
-  return $ "/images/" <> itemBody i <> ".png"
+pngUrlField fld = field fld $ \i -> do
+  imgRoute <- getRoute $ fromFilePath $ "images/" <> itemBody i <> ".png"
+  noImgRoute <- getRoute $ fromFilePath "images/not_found.png"
+  case noImgRoute of
+    Just rt -> return $ toUrl (fromMaybe rt imgRoute)
+    Nothing -> fail "can't find no example image (images/not_found.png)"
 
 pdfUrlField :: String -> Context String
-pdfUrlField fld = field fld $ \i ->
-  return $ "/images/" <> itemBody i <> ".pdf"
+pdfUrlField fld = field fld $ \i -> do
+  imgRoute <- getRoute $ fromFilePath $ "images/" <> itemBody i <> ".pdf"
+  return $ maybe empty toUrl imgRoute
 
-imgField :: String -> Context String
-imgField fld = field fld $ 
-  return . itemImgPath
-
-imgListField :: String -> Context CopyFile -> [Item CopyFile] -> Context a
-imgListField fld ctx imgs = 
-  listFieldWith fld ctx $ \i -> 
-    return $ itemImages i imgs
-
-taskField :: String -> Context String
+--taskField :: String -> Context a
 taskField fld = field fld $ 
   return . humanizeTaskCode . itemTaskCode
-
-techniqueField :: String -> Context String
-techniqueField fld = field fld $
-  return . humanizeTechniqueCode . itemTechniqueCode
 
 itemTaskCode = itemCode 0
 
@@ -169,15 +163,6 @@ itemTechniqueCode = itemCode 1
 
 itemTaskTechniqueCode i =
   itemTaskCode i <> "_" <> itemTechniqueCode i
-
-itemImages i = filter cmp
-  where
-  cmp = (`strStartsWith` itemTechniqueCode i) 
-      . takeBaseName . toFilePath . itemIdentifier
-
-itemImgPath = 
-  (`replaceDirectory` "/images/") . (`replaceExtension` "pdf") .
-  toFilePath . itemIdentifier
 
 imgTechniqueCode = itemCode 0
 
@@ -206,7 +191,7 @@ humanizeTechniqueCode "sp" = "1D slices"
 humanizeTechniqueCode "ts" = "Topological spine"
 humanizeTechniqueCode code = fail $ "Unknown technique code: " <> code
 
-datasetInfo :: String -> Context a
+--datasetInfo :: String -> Context a
 datasetInfo "sinc2d" =
   constField "name" "Sinc function" <>
   constField "dims" "2"
