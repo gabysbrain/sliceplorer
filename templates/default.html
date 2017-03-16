@@ -21,7 +21,6 @@
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <link rel="stylesheet" href="/css/normalize.css">
   <link rel="stylesheet" href="/css/skeleton.css">
-  <link rel="stylesheet" href="/css/skeleton-tabs.css">
   <link rel="stylesheet" href="/css/site.css">
 
   <!-- Favicon
@@ -31,24 +30,6 @@
   <!-- Javascript -->
   <script   src="https://code.jquery.com/jquery-3.1.1.slim.min.js"   integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="   crossorigin="anonymous"></script>
   <script src="/js/site.js"></script>
-  <script type="application/javascript">
-    $$(document).ready(function() {
-      $$("#table-section tbody td").each(function(i, a) {
-        var content = a.innerHTML.trim();
-        if(+content >= 0 && +content <= 3) {
-          a.innerHTML = '<span class="color-code">' + content + '</span>';
-        }
-      });
-      $$(".color-code").each(function(i, a) {
-        $$(a).addClass("code-" + a.innerHTML.trim());
-      });
-
-      $$("#table-section tbody tr").click(function() {
-        if($$(this).data("href"))
-          window.location = $$(this).data("href");
-      });
-    });
-  </script>
 
 </head>
 <body>
