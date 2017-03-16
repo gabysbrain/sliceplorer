@@ -1,10 +1,7 @@
----
-samplingMethod: Sobol
-numSamples: 50
----
 
-The projections of slices allow the user to visually determine the 
-distribution of slices. For example, the dark line around $y=80$ indicates
-that the average response value is $80$. We can also see that the average
-gradient with respect to parameters ??? is essentially $0$.
+
+The projections of slices allow the user to visually determine the distribution
+of slices. For example, the dark lines indicate that the average response value
+is that y value. We can also visually estimate the variance of the function by
+noting the wavinees of the lines.
 
