@@ -14,26 +14,29 @@ $body$
   larger version.
 </p>
 
-<div class="examples">
+<div class="controls">
+  <label for="dataset-selector">Dataset</label>
+  <select id="dataset-selector">
+    $for(datasets)$
+    <option value="#$code$">$name$</option>
+    $endfor$
+  </select>
+</div>
+
+<div class="technique-examples">
   <div class="labels row">
     $for(techniques)$
-    <div style="width: 20%;">
+    <div class="column" style="width: 20%;">
       <h4>$name$</h4>
     </div>
     $endfor$
   </div>
 
-  <div class="datasets row">
-    <label for="dataset-selector">Dataset</label>
-    <select id="dataset-selector">
-      $for(datasets)$
-      <option value="#$code$">$name$</option>
-      $endfor$
-    </select>
+  <div class="datasets">
     <div class="image-content">
       $for(datasets)$
-      <div class="image-pane" id="$code$">
-        <ul class="examples">
+      <div class="image-pane row" id="$code$">
+        <ul class="examples columns twelve-columns">
         $for(imgs)$
           <li class="thumbnail" style="width: 20%;">
             <a href="$pdfUrl$">

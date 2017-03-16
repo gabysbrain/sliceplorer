@@ -67,11 +67,23 @@ exPage = do
 
 taskPage :: Css
 taskPage = do
+  star # ".controls" ** label ? do
+    display inline
+  star # ".technique-examples" ? do 
+    star # ".row" ? do 
+      display flex
+      flexDirection row
+      flexGrow 1
+      "justify-content" -: "space-between"
+      "align-items" -: "flex-start"
+    h4 ? do 
+      fontSize (em 1.5)
+      textAlign center
+    
   ul # ".examples" ?
     do "list-style" -: "none"
        display flex
        flexDirection row
-       --"flex-wrap" -: "none"
        flexGrow 1
        "justify-content" -: "space-between"
        "align-items" -: "flex-start"
@@ -82,10 +94,6 @@ taskPage = do
              do color black
                 textDecoration none
                 textAlign center
-            h4 ?
-              do fontSize (em 1.1)
-       --star # ".thumbnail" # ":hover" ?
-         --do linkPopout
 
 main :: IO ()
 main = putCss site
