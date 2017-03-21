@@ -19,10 +19,9 @@ import Stats (HistBin)
 import App.Core (AppData, DimData)
 
 import Vis.D3.SliceChart as SV
-import Vis.D3.Histogram as HV
 import App.DimView as DV
 
-import Data.Samples (SampleGroup, dimNames, subset)
+import Data.Samples (SampleGroup, dimNames)
 import Data.Samples as Samples
 import Data.SliceSample as Slice
 
@@ -168,12 +167,6 @@ update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverXAxis (Just xval)))) st
        closestSlice dim xval state.samples
 update (DimViewAction dim a@(DV.SliceViewAction (SV.HoverXAxis Nothing))) state =
   updateFocusPoint mempty state
-update (DimViewAction dim a@(DV.HistoAction metric (HV.HoverBar rng))) state =
-  updateDimView dim a $ updateFocusPoint df state -- maintain bar highlight
-  where
-  df = case rng of
-            Just r -> DF.runQuery (filterRange dim metric r) state.samples
-            Nothing -> DF.runQuery filterAll state.samples
 -- FIXME: clicking slices is a bit buggy right now...
 update (DimViewAction dim a@(DV.SliceViewAction (SV.ClickSlice hs))) state =
   updateFocusPoint mempty state'
