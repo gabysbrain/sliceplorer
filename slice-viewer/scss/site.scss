@@ -30,12 +30,13 @@ h3 {
   }
 }
 
+.dim-views {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
 .dim-view {
-  //@include grid-row;
-  display: block;
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
 
   border-bottom: 1px solid darkgrey;
 
@@ -68,7 +69,7 @@ h3 {
 }
 
 .slices-view {
-  min-width: 420px;
+  //min-width: 405px;
   display: inline-block;
 }
 

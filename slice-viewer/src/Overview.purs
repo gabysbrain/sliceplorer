@@ -227,7 +227,7 @@ view state =
 
 viewDims :: State -> Html Action
 viewDims state =
-  div [] $ mapEnum initDV state.dimViews
+  div [className "dim-views"] $ mapEnum initDV state.dimViews
   where
   initDV d s = map (DimViewAction d) $ DV.view s
 
