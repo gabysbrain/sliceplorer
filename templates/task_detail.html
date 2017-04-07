@@ -3,7 +3,7 @@
   <a href="/index.html">Overview</a>
 </nav>
 
-<h1>$name$</h1>
+<h2>$name$</h2>
 
 $body$
 
@@ -27,7 +27,7 @@ $body$
   <div class="labels row">
     $for(techniques)$
     <div class="column" style="width: 20%;">
-      <h4>$name$</h4>
+      <h4><a href="#$code$">$name$</a></h4>
     </div>
     $endfor$
   </div>
@@ -54,15 +54,17 @@ $body$
     </div>
   </div>
 
-  <div class="solutions row">
-    $for(solutions)$
-    <div class="solution-text" style="width: 20%;">
-      $body$
-    </div>
-    $endfor$
-  </div>
+</div>
 
+<hr />
 
+<h3>Solution descriptions</h3>
 
+<div class="solutions row">
+  $for(solutions)$
+    <h4>$technique$</h4>
+    <a name="$code$" />
+    $body$
+  $endfor$
 </div>
 

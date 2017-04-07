@@ -1,10 +1,10 @@
  
 {-# LANGUAGE OverloadedStrings #-}
 import Clay
-import Prelude hiding ((**))
+import Prelude hiding ((**), span)
 import Data.Monoid ((<>))
 
-linkPopout = boxShadow 3 3 (px 4) (setA 30 black)
+linkPopout = boxShadow (px 3) (px 3) (px 9) (setA 0.5 black)
 
 site :: Css
 site = do
@@ -15,9 +15,7 @@ site = do
 overviewPage :: Css
 overviewPage = do
   thead ?
-    do tr ?
-         do height (em 8)
-       th ?
+    do th ?
          verticalAlign vAlignBottom
        th # ".task" ?
          do width (pct 20.0)
@@ -31,22 +29,22 @@ overviewPage = do
   star # "#table-section" ?
     do table ?
          do "table-layout" -: "fixed"
+            marginTop (em 4)
        tbody |> tr # ":hover" ?
          do linkPopout
        td ?
          do height (pct 100.0)
        star # ".color-code" ?
-         do height (em 1)
-            width (em 1)
+         do height (em 1.5)
+            width (em 1.5)
             display inlineBlock
             --lineHeight (px 0)
             --fontSize (px 0)
             color transparent
             border solid (px 1) (rgb 105 105 105)
             sym borderRadius (pct 50.0)
-       td ** ".color-code" ?
-         do height (em 2)
-            width (em 2)
+       td <> th ?
+         do padding (em 0.4) (em 0.6) (em 0.4) (em 0.6)
        star # ".color-code" # ".code-0" ?
          do backgroundColor (rgb 242 240 247)
        star # ".color-code" # ".code-1" ?
@@ -55,6 +53,11 @@ overviewPage = do
          do backgroundColor (rgb 158 154 200)
        star # ".color-code" # ".code-3" ?
          do backgroundColor (rgb 106  81 163)
+       star # ".legend" ?
+         do listStyleType none
+            span # ".color-code" ?
+              do marginRight (em 0.5)
+                 verticalAlign middle
 
 exPage :: Css
 exPage = do
@@ -79,6 +82,9 @@ taskPage = do
     h4 ? do 
       fontSize (em 1.5)
       textAlign center
+      a ?
+        do color inherit
+           textDecoration inherit
     
   ul # ".examples" ?
     do "list-style" -: "none"
@@ -89,11 +95,13 @@ taskPage = do
        "align-items" -: "flex-start"
        star # ".thumbnail" ?
          do flexGrow 1
-       star # ".thumbnail" ?
-         do a ?
-             do color black
-                textDecoration none
-                textAlign center
+            a ?
+              do color inherit
+                 textDecoration inherit
+       star # ".thumbnail" # ":hover" ?
+         do linkPopout
+            zIndex 10 -- to the top!
+
 
 main :: IO ()
 main = putCss site

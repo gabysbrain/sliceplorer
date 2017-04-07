@@ -125,7 +125,10 @@ techniqueCtx =
       let (Context c) = constField "name" $ humanizeTechniqueCode $ itemBody i
       in c f a i
 
-taskSolutionCtx = defaultContext
+taskSolutionCtx = 
+  techniqueCodeField "code" <>
+  techniqueField "technique" <>
+  defaultContext
 
 taskSolutions task = mapM (taskSolution tc) techniques
   where
@@ -156,6 +159,12 @@ pdfUrlField fld = field fld $ \i -> do
 --taskField :: String -> Context a
 taskField fld = field fld $ 
   return . humanizeTaskCode . itemTaskCode
+
+techniqueField fld = field fld $
+  return . humanizeTechniqueCode . itemTechniqueCode
+
+techniqueCodeField fld = field fld $
+  return . itemTechniqueCode
 
 itemTaskCode = itemCode 0
 
