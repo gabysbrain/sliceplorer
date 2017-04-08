@@ -69,8 +69,11 @@ main = hakyllWith config $ do
   match "tasks/*.md" $ do
     route $ setExtension "html"
     compile $ do
+      --tasks <- loadAll "tasks/*.md"
+      let ctx = --listField "tasks" defaultContext (return tasks) <>
+                taskCtx
       pandocCompiler
-        >>= loadAndApplyTemplate "templates/task_detail.html" taskCtx
+        >>= loadAndApplyTemplate "templates/task_detail.html" ctx
         >>= loadAndApplyTemplate "templates/default.html" defaultContext
         >>= relativizeUrls
 
@@ -87,12 +90,18 @@ main = hakyllWith config $ do
 
 --------------------------------------------------------------------------------
 --taskCtx :: Context a
-taskCtx =
-  taskField "name" <>
-  listField "techniques" techniqueCtx (mapM makeItem techniques) <>
-  listField "datasets" datasetCtx (mapM makeItem datasets) <>
-  listFieldWith "solutions" taskSolutionCtx taskSolutions <>
-  defaultContext
+taskCtx = mconcat
+  [ taskField "name"
+  , field "prevTaskUrl" previousTaskUrl
+  , field "nextTaskUrl" nextTaskUrl
+  , field "prevTaskName" previousTaskName
+  , field "nextTaskName" nextTaskName
+  --, listField "tasks" defaultContext tasks
+  , listField "techniques" techniqueCtx (mapM makeItem techniques)
+  , listField "datasets" datasetCtx (mapM makeItem datasets)
+  , listFieldWith "solutions" taskSolutionCtx taskSolutions
+  , defaultContext
+  ]
 
 --datasetCtx :: Context a
 datasetCtx = 
@@ -136,6 +145,34 @@ taskSolutions task = mapM (taskSolution tc) techniques
 
 taskSolution taskCd techniqueCd =
   load . fromFilePath $ "solutions/" <> taskCd <> "_" <> techniqueCd <> ".md"
+
+taskName getTask task = do
+  tasks <- getMatches "tasks/*.md"
+  let myid = getTask tasks $ itemIdentifier task
+  return $ maybe empty (humanizeTaskCode . taskCode) myid
+  where
+  taskCode = (!! 0) . splitOneOf "_." . takeFileName . toFilePath
+  --return $ tn
+
+taskUrl getTask task = do
+  tasks <- getMatches "tasks/*.md"
+  let myid = getTask tasks $ itemIdentifier task
+  maybe empty (fmap (maybe empty toUrl) . getRoute) myid
+
+previousTaskName :: Item String -> Compiler String
+previousTaskName = taskName itemBefore
+
+nextTaskName :: Item String -> Compiler String
+nextTaskName = taskName itemAfter
+
+previousTaskUrl :: Item String -> Compiler String
+previousTaskUrl = taskUrl itemBefore
+
+nextTaskUrl :: Item String -> Compiler String
+nextTaskUrl = taskUrl itemAfter
+
+itemAfter xs x = lookup x $ zip xs (tail xs <> [head xs])
+itemBefore xs x = lookup x $ zip (tail xs <> [head xs]) xs
 
 imgTaskNameField :: String -> Context String
 imgTaskNameField fld = field fld $ 
