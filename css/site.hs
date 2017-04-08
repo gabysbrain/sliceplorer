@@ -70,6 +70,19 @@ exPage = do
 
 taskPage :: Css
 taskPage = do
+  nav # ".browser" |> ul ? 
+    do "list-style" -: "none"
+       li ? display inline
+       li # ".prev" ? 
+         do paddingRight (em 1)
+            a # ":before" ?
+              do "content" -: "\"\\F100  \""
+                 "font-family" -: "FontAwesome"
+       li # ".next" ? 
+         do paddingLeft  (em 1)
+            a # ":after" ?
+              do "content" -: "\"  \\F101\""
+                 "font-family" -: "FontAwesome"
   star # ".controls" ** label ? do
     display inline
   star # ".technique-examples" ? do 
