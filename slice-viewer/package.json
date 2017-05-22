@@ -32,9 +32,9 @@
   "dependencies": {
     "d3": "4.5.0",
     "purescript": "0.10.7",
-    "react": "15.0.0",
+    "react": "15.0.1",
     "react-addons-pure-render-mixin": "15.0.1",
-    "react-dom": "15.0.0"
+    "react-dom": "15.0.1"
   },
   "devDependencies": {
     "bower": "*",
@@ -57,5 +57,8 @@
     "webpack-dev-middleware": "1.8.3",
     "webpack-hot-middleware": "2.12.2",
     "webpack-strip": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": "15.0.1"
   }
 }
