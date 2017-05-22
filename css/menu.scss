@@ -1,0 +1,71 @@
+
+$menu-bg-color: #1e1e1f;
+$menu-text-color: #b9c1c1;
+$bar-height: 2em;
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  //justify-content: center;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+
+  background: $menu-bg-color;
+  //color: white;
+  height: $bar-height;
+  font-size: 1.2em;
+  font-weight: bold;
+
+  .menu {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    padding-left: 0.5em;
+
+    li {
+      &:hover {
+        background: lighten($menu-bg-color, 15%);
+      }
+
+      &, & a {
+        text-decoration: none;
+        color: $menu-text-color;
+      }
+
+      &.active {
+        background: lighten($menu-bg-color, 15%);
+        //color: darken($menu-text-color, 50%);
+      }
+
+      display: flex;
+      align-items: center;
+      float: left;
+      height: $bar-height;
+      padding-left: 0.5em;
+      padding-right: 0.5em;
+
+      // borders are complicated :)
+      border-left:  1px solid $menu-text-color;
+      &:last-child {
+        border-right: 1px solid $menu-text-color;
+      }
+
+      &.site-title {
+        //font-size: 1.5rem;
+        border-left: none;
+        margin-right: 3em;
+        &:hover {
+          background: $menu-bg-color;
+        }
+      }
+    }
+  }
+
+  // leave space for the next element
+  & ~ * {
+    margin-top: $bar-height + 1em;
+  }
+}
+

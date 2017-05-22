@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 import       Data.Monoid ((<>))
 import       Hakyll
+import Hakyll.Web.Sass (sassCompiler)
 import Control.Applicative (Alternative(empty), (<|>))
 import       Control.Monad                   (forM_)
 import System.FilePath (replaceExtension, replaceDirectory, takeFileName, takeBaseName)
@@ -53,6 +54,11 @@ main = hakyllWith config $ do
   match "css/*.css" $ do
     route   idRoute
     compile compressCssCompiler
+
+  match "css/*.scss" $ do
+    route $ setExtension "css"
+    let compressCssItem = fmap compressCss
+    compile (compressCssItem <$> sassCompiler)
 
   match "css/*.hs" $ do
     route $ setExtension "css"
