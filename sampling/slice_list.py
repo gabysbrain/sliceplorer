@@ -62,6 +62,9 @@ def get(function, dims):
     json.dump(s, f, cls=MyEncoder)
   finally:
     if f: f.close()
+  # s = convert_slices(function, dims)
+  # s = identify_clusters(s)
+  # s = slice_neighbors(s)
   return s
 
 if __name__ == '__main__':
