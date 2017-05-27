@@ -110,6 +110,11 @@ def dim_groups(sample_n, slices):
 def gradients(slice, d):
   diffs = slice.diff()
   gs = diffs.iloc[:,-1] / diffs.iloc[:,d]
+  gs[diffs.iloc[:,d]==0] = 0
+  #print(gs)
+  #for i in range(len(gs)):
+    #if diffs.iloc[:,d] == 0:
+      #gs[i] = 0
   return gs
 
 def convert_slices(fname, dims):
