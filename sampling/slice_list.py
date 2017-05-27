@@ -46,25 +46,25 @@ def get(function, dims):
   cachefile = JSONDIR + "/cache_%s_%s.json.gz" % (function, dims)
   # TODO: check code hash and data mod date
   f = None
-  # try:
-    # f = gzip.open(cachefile, 'rt')
-    # s = json.load(f)
-    # s = [SliceGroup.from_dict(sg) for sg in s]
-  # except OSError:
-    # s = convert_slices(function, dims)
-    # s = identify_clusters(s)
-    # s = slice_neighbors(s)
+  try:
+    f = gzip.open(cachefile, 'rt')
+    s = json.load(f)
+    s = [SliceGroup.from_dict(sg) for sg in s]
+  except OSError:
+    s = convert_slices(function, dims)
+    s = identify_clusters(s)
+    s = slice_neighbors(s)
 
-    # # save the cache file
-    # if not os.path.exists(JSONDIR):
-      # os.makedirs(JSONDIR)
-    # f = gzip.open(cachefile, 'wt')
-    # json.dump(s, f, cls=MyEncoder)
-  # finally:
-    # if f: f.close()
-  s = convert_slices(function, dims)
-  s = identify_clusters(s)
-  s = slice_neighbors(s)
+    # save the cache file
+    if not os.path.exists(JSONDIR):
+      os.makedirs(JSONDIR)
+    f = gzip.open(cachefile, 'wt')
+    json.dump(s, f, cls=MyEncoder)
+  finally:
+    if f: f.close()
+  # s = convert_slices(function, dims)
+  # s = identify_clusters(s)
+  # s = slice_neighbors(s)
   return s
 
 if __name__ == '__main__':
