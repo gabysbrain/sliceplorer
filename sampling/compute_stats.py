@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 import gzip
+import re
 
 class SliceGroup(object):
   def __init__(self, group_id, sample_n, xs):
@@ -130,6 +131,12 @@ def convert_slices(fname, dims):
 
     #s = pd.read_csv(fname, dtype='float64')
     s = pd.read_csv(f)
+
+    # make sure file has column headers
+    h = list(s.columns.values)
+    #print(h)
+    if not re.match(r'\w', h[0].strip()):
+      raise Exception("%s_%s has no header" % (fname, dims))
   finally:
     f.close()
 
