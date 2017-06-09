@@ -71,10 +71,10 @@ metricHighlights = do
 view :: State -> Html Action
 view state =
   div [className "dim-view"]
-    [ viewName state.dimName
-    , div [className "dim-charts"]
+    [ div [className "dim-charts"]
       [ viewAllSlices state
       ]
+    , viewName state.dimName
     ]
 
 viewName :: String -> Html Action

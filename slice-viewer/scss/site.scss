@@ -4,6 +4,8 @@
 @import "menu";
 @import "spinner";
 
+$chart-border-color: darkgrey;
+
 
 h3 {
   text-align: center;
@@ -39,21 +41,18 @@ h3 {
 
 .dim-view {
 
-  border-bottom: 1px solid darkgrey;
+  border-left: 1px solid $chart-border-color;
+  border-bottom: 1px solid $chart-border-color;
 
   .dim-name {
-    display: table-cell;
-    //display: inline-block;
-    min-width: 3em;
+    width: 100%;
+    display: block;
 
-    vertical-align: middle;
-    transform: rotate(-90deg);
-    justify-content: center;
+    text-align: center;
   }
 
   .group-views {
     display: table-cell;
-    //display: block;
 
     .dim-charts {
       display: block;
@@ -61,8 +60,6 @@ h3 {
   }
 
   .dim-charts {
-    border-left: 1px solid lightgrey;
-    display: table-cell;
     white-space: nowrap;
     overflow: auto;
   }
@@ -70,15 +67,11 @@ h3 {
 }
 
 .slices-view {
-  //min-width: 405px;
   display: inline-block;
 }
 
 .metric-histograms {
   display: inline-block;
-  /*&:before{*/
-    /*display: table;*/
-  /*}*/
 }
 
 .chart-title {
