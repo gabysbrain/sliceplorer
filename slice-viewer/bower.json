@@ -32,6 +32,7 @@
     "purescript-maybe": "^2.0.0",
     "purescript-distributive": "^2.0.0",
     "purescript-tuples": "^3.0.0",
+    "purescript-integers": "^2.1.0",
     "purescript-invariant": "^2.0.0",
     "purescript-either": "^2.0.0",
     "purescript-control": "^2.0.0",
