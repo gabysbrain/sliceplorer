@@ -47,6 +47,7 @@
     "purescript-nonempty": "^3.0.0",
     "purescript-tailrec": "^2.0.0",
     "purescript-identity": "^2.0.0",
-    "purescript-bifunctors": "^2.0.0"
+    "purescript-bifunctors": "^2.0.0",
+    "purescript-globals": "^2.0.0"
   }
 }
